@@ -8,11 +8,6 @@ const values = [
   { icon: ArrowRight, title: "Continuity", desc: "Care doesn't end at discharge. We track the full lifecycle from first referral to long-term follow-up and everything between." },
 ];
 
-const team = [
-  { name: "Dr. Priya Patel", title: "Chief Medical Officer", bg: "from-primary/20 to-primary/5" },
-  { name: "Arjun Mehta", title: "VP of Engineering", bg: "from-secondary/20 to-secondary/5" },
-  { name: "Kavita Sharma", title: "Head of Product", bg: "from-primary/20 to-primary/5" },
-];
 
 const milestones = [
   { year: "2024", event: "Founded in Dehradun by Yaduraj Singh" },
@@ -107,25 +102,6 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* Team */}
-      <Section className="bg-card/30">
-        <FadeUp>
-          <h2 className="text-3xl font-display font-bold tracking-[-0.03em] text-foreground mb-12">Leadership</h2>
-        </FadeUp>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {team.map((t, i) => (
-            <FadeUp key={t.name} delay={i * 0.1}>
-              <ClinicalCard>
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${t.bg} flex items-center justify-center mb-4`}>
-                  <Sparkles className="w-6 h-6 text-primary" strokeWidth={1.5} />
-                </div>
-                <h3 className="font-display font-bold text-foreground">{t.name}</h3>
-                <p className="text-sm text-muted-foreground font-body">{t.title}</p>
-              </ClinicalCard>
-            </FadeUp>
-          ))}
-        </div>
-      </Section>
 
       {/* Timeline */}
       <Section>
