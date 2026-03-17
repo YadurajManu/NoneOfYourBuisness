@@ -1,0 +1,3243 @@
+MEDILIFECYCLE
+PLATFORM
+Full Patient Lifecycle Management | AI-Integrated | B2B SaaS
+One Platform. Every User. Every Stage. From First Contact to Final
+
+Discharge.
+
+Comprehensive B2B Product Guide for Hospital & Clinic Partners
+Version 2.0 — Confidential & For Internal Team Distribution
+Patient Family Primary Doctor Specialist AI Assistant
+Comprehensive Internal Guide — All Sections — Do Not Distribute Externally
+Table of Contents
+01 Platform Philosophy & Vision
+02 Architecture: The Five User Experiences
+03 The Complete 10-Stage Patient Lifecycle
+04 Document Intelligence & Upload Management
+05 The AI Assistant — Deep Dive by Role
+06 Real-Time Notifications & Live Family Updates
+07 Clinical Workflows & Order Management
+08 EHR Integration & Technical Architecture
+09 Data Security, Compliance & Governance
+10 Hospital & Clinic Administration
+11 Analytics, Reporting & Performance Dashboards
+12 Implementation Playbook
+13 Pricing, SLAs & Support Model
+14 Frequently Asked Questions
+15 Glossary of Terms
+01 Platform Philosophy & Vision
+Why MediLifecycle Exists and What Problem It Solves
+The Problem We Solve
+
+Healthcare delivery has long suffered from a fundamental structural failure: the people who matter
+
+most in a patient's care journey — the patient, their family, their primary doctor, their specialists, and
+the clinical support team — all work in different systems, receive different information, and often
+
+discover critical updates too late or not at all. A specialist may not know the patient's GP changed a
+
+medication last week. A family member waits in a corridor with no information for six hours. A
+patient is handed a discharge summary written in language they cannot understand and is expected
+
+to self-manage a complex chronic condition.
+
+MediLifecycle was built to solve this problem at its root. It does not add another point solution to an
+
+already fragmented ecosystem. It replaces fragmentation with a single, living, continuously updated
+platform that every participant in the care journey accesses — according to their role, their
+
+permissions, and their needs.
+
+!
+Core Insight
+The most dangerous moments in healthcare are transitions — when a patient moves from ED to
+ward, from hospital to home, from primary care to specialist. MediLifecycle eliminates information
+loss at every transition by keeping all stakeholders on a single, shared, real-time record.
+Design Principles
+
+Every feature and workflow in MediLifecycle is governed by five inviolable design principles that
+your team should understand deeply before deploying the platform.
+
+Principle What It Means in Practice
+One Record, Many
+Views
+There is a single patient record. Different users see different views of
+that record based on their role and permissions — but there is never
+duplication, never version divergence, never a situation where the doctor
+and the specialist are looking at different versions of the truth.
+Role-Appropriate AI The AI assistant serves every user, but it speaks a different language to
+each. A cardiologist asking about troponin trends receives clinical depth
+and literature context. A patient's daughter asking 'is my dad okay?'
+receives warmth, plain language, and just enough information to be
+reassured without being overwhelmed.
+Proactive Over Reactive The platform does not wait for users to log in and check. It watches the
+record at all times and pushes alerts the moment something requires
+attention. A critical lab result at 3 AM triggers an immediate notification to
+the on-call physician — not a flag that sits unseen until morning rounds.
+Continuous Lifecycle The patient record is never closed or zeroed out between episodes. A
+patient who was treated three years ago and returns today has their full
+history immediately available. The AI uses this longitudinal context to
+surface patterns, trends, and risks that would be invisible in an episodic
+system.
+Consent-First
+Architecture
+Every data sharing decision flows from the patient's explicit consent.
+Family access, specialist access, data export — all require documented
+patient authorisation. The platform enforces these permissions
+technically, not just contractually.
+What MediLifecycle Is Not
+
+To position this correctly with your hospital or clinic leadership, it is equally important to be clear
+about what MediLifecycle is not.
+
+It is not an EHR replacement. MediLifecycle integrates with your existing EHR (Epic, Cerner,
+Meditech, eClinicalWorks, and others) via HL7 FHIR. It adds a coordination, communication,
+and AI intelligence layer on top of your existing clinical data infrastructure.
+It is not a telemedicine platform. While it supports secure messaging and communication
+between all parties, it does not replace video consultation platforms. It complements them.
+It is not a billing system. It generates billing-relevant data and flags discrepancies, but it
+does not replace your practice management or revenue cycle management systems.
+It is not a standalone AI diagnostic tool. The AI provides clinical decision support and
+documentation assistance, but all clinical decisions remain the responsibility of the licensed
+physician.
+Quantified Value Proposition for Hospital Partners
+
+The following metrics are drawn from outcomes reported by early-adopter partner institutions across
+the first 12 months of deployment.
+
+Metric Outcome & Driver
+Reduction in missed
+follow-up events
+41% decrease. AI proactive alerts ensure no overdue follow-up
+slips through the cracks.
+Reduction in critical result
+notification time
+From average 47 minutes to under 4 minutes. Automated
+real-time alert routing to responsible clinician.
+Family call volume to ward
+nursing staff
+58% reduction. Family members self-serve updates via the
+platform instead of calling the ward.
+Time spent per discharge
+summary (physician)
+Reduced from 22 minutes to 6 minutes. AI drafts the summary;
+physician reviews and approves.
+Prior authorisation first-pass
+approval rate
+Improved from 67% to 89%. AI pre-validates PA requests against
+payer rules before submission.
+Document misfiling / lost
+results
+Reduced by 94%. All uploads are AI-classified, indexed, and
+linked to the correct patient and encounter.
+Readmission rate (30-day,
+early adopters)
+
+12% reduction. AI post-discharge monitoring flags deterioration
+before it becomes a readmission.
+Patient satisfaction score
+(HCAHPS Communication)
+
+Average +18 percentile improvement. Patients report better
+communication and fewer information gaps.
+02
+Architecture: The Five User Experiences
+A Deep Dive Into Every Role, Permission Set, and AI Capability
+MediLifecycle is a single platform with five distinct front-end experiences, each designed from the
+
+ground up for its user's context, technical literacy, emotional state, and information needs. A nurse
+practitioner and a patient's spouse should never be looking at the same interface — and with
+
+MediLifecycle, they never are.
+
+2.1 The Patient Experience
+
+P Patient Portal & Mobile App
+The patient is the owner of their own health journey. The patient interface is built around clarity,
+accessibility, and empowerment. It presents complex clinical information in plain language, guides
+the patient through their care plan step by step, and gives them genuine control over who sees their
+data. The interface is available as a web portal and a native iOS/Android mobile application. It
+supports 14 languages and includes an accessibility mode for users with visual impairments.
+Platform Permissions & Access
+View full personal health timeline: every visit, every diagnosis, every uploaded document, every
+care plan — in chronological order
+Upload documents from any device: photos of physical documents, PDFs, CSV exports from
+home monitoring devices
+Manage family access: grant or revoke access for individual family members, set access levels
+(view-only, full updates, emergency contact), and see a log of who accessed their record and
+when
+Receive and review their care plan in plain language, with each step explained and upcoming
+appointments highlighted
+Message the care team directly through the platform; AI drafts suggested responses for physician
+review
+Accept or decline specific data sharing requests (e.g., research anonymisation, specialist referral
+data transfer)
+Download a complete personal health summary PDF at any time
+Complete digital consent forms, pre-appointment questionnaires, and satisfaction surveys
+Access medication schedules with daily reminders, refill alerts, and side-effect reporting
+AI Assistant Capabilities
+Plain-language AI explanations of any diagnosis, medication, or procedure — the patient can ask
+'what does this mean for me?' about anything in their record
+Symptom logging: patient describes symptoms in their own words; AI structures and tags the
+entry and alerts the care team if the description matches a red-flag pattern
+Medication adherence support: AI sends personalised reminders, explains why each medication
+matters, and asks the patient to confirm doses taken
+Pre-appointment preparation: AI generates a plain-language summary of what to expect at the
+next appointment, what questions to ask, and what to bring
+Post-discharge monitoring: AI checks in daily via push notification, asks structured questions
+about symptoms and recovery, and escalates to the care team if answers suggest deterioration
+Document explanation: patient uploads any document (including letters from other providers) and
+the AI explains it in accessible language
+Access Restrictions
+Cannot view raw clinical notes until the primary physician marks them as patient-visible
+Cannot modify clinical data — patient uploads are additive, never overwriting existing records
+Cannot access billing data beyond their own invoices and insurance claim statuses
+2.2 The Family Member Experience
+
+F Family Member Portal & App
+Family members are often the most anxious participants in a patient's care journey — and the most
+underserved by existing clinical systems. MediLifecycle gives authorised family members a
+dedicated, emotionally calibrated interface that keeps them informed without overwhelming them
+with clinical detail they are not equipped to interpret. The family interface is activated by the patient
+(or, in cases of incapacity, by a nominated Power of Attorney holder) and is fully configurable at the
+patient level.
+Platform Permissions & Access
+View real-time lifecycle stage updates: know exactly which stage of care the patient is at, with
+AI-generated plain-language explanations of what each stage means
+Receive push notifications, SMS, and email for configurable key events (e.g., procedure started,
+procedure ended, discharge confirmed, new care plan posted)
+View documents and results that the patient has explicitly granted access to
+Submit questions to the care team via a structured form — questions are routed to the
+appropriate team member and answered through the platform
+View the patient's upcoming appointment schedule (dates, locations, what to prepare)
+Access post-discharge instructions and home care checklist when the patient transitions home
+View the patient's medication schedule (with patient permission) to support adherence at home
+AI Assistant Capabilities
+Ask the AI plain-language questions about the patient's current status, recent events, and next
+steps — AI responds within the bounds of the patient's permission settings
+Receive AI-generated procedural updates during active procedures (e.g., 'The surgical team has
+completed the procedure and the patient is now in recovery')
+Receive AI-generated discharge preparation guides: what to prepare at home, when to seek
+emergency help, how to support medication adherence
+Ask the AI to explain any clinical term, diagnosis, or procedure in plain language
+Request an AI-generated summary of the care plan at any time
+Access Restrictions
+Cannot access any information beyond what the patient has explicitly granted
+Cannot upload documents to the patient's medical record
+Cannot message the care team directly — only via the structured question form
+Cannot view financial or billing information under any circumstances
+Access is immediately suspended if the patient revokes it, in real time
+2.3 The Primary Doctor Experience
+
+Dr Primary Physician Dashboard
+The primary doctor is the clinical lead and the overall case owner. Their interface is built for speed,
+depth, and decision quality. It surfaces the most clinically relevant information first, integrates with
+their existing EHR workflow, and uses AI as a tireless clinical assistant that has read and
+remembered every line of the patient's record. The primary doctor's dashboard gives them a
+bird's-eye view across all their active patients while enabling drill-down to any individual case in
+seconds.
+Platform Permissions & Access
+Full read/write access to the patient's complete clinical record, including all uploaded documents,
+prior history, and care plans
+Initiate, modify, and close lifecycle stages — their actions drive the official status of the patient's
+care journey
+Place orders: prescriptions, labs, imaging, referrals, DME, specialist consultations — all from a
+single order entry interface
+Review, annotate, and sign off on AI-drafted documents (referral letters, discharge summaries,
+care plan updates, PA requests)
+Manage the care team: add or remove specialist doctors, grant or modify team member access
+Review and respond to family questions submitted through the platform
+Access the patient's full medication history, allergy record, and immunisation schedule
+View real-time billing status and respond to billing discrepancy alerts
+Configure which elements of the patient's record are visible to the patient and family
+Access population-level analytics across their full patient panel
+AI Assistant Capabilities
+Clinical Query Engine: ask the AI any clinical question grounded in the patient's actual record
+('What is her eGFR trend over 12 months?', 'Has this patient ever had a reaction to penicillin?',
+'What does current evidence say about dosing in this patient's weight range?')
+Proactive Alert Feed: AI surfaces — without being asked — every item that requires the
+physician's attention: overdue results, unreviewed specialist notes, flagged symptom reports,
+expiring medications, and outstanding orders
+Document Drafting Suite: AI generates complete draft referral letters, discharge summaries, care
+plan updates, prior authorisation letters, and patient correspondence — all populated with the
+patient's real clinical data, ready for physician review and approval in under 60 seconds
+Differential Diagnosis Support: AI presents a ranked differential diagnosis list for any symptom
+cluster, with supporting clinical rationale drawn from the patient's history
+Drug Interaction Checker: real-time check against the patient's complete current medication list
+whenever a new prescription is being written
+Risk Stratification: AI continuously scores the patient's deterioration risk, readmission risk, and
+medication non-adherence risk based on all available signals
+2.4 The Specialist Doctor Experience
+
+SP Specialist Consultation Dashboard
+Specialist doctors are added to the care team by the primary physician and receive a focused view
+of the patient's record, filtered to the information most relevant to their specialty. A cardiologist sees
+cardiac-relevant labs, ECGs, and echo reports front and centre. A nephrologist sees renal function
+trends, fluid balance, and medication nephrotoxicity risks. This filtering is AI-driven and automatically
+calibrates to the specialist's registered specialty. The specialist can see everything if they choose to,
+but the default view eliminates noise.
+Platform Permissions & Access
+Focused clinical record view: AI pre-filters the full record to show specialty-relevant results,
+reports, imaging, and notes by default
+Full record access on demand: specialist can expand to the complete record at any time
+Upload specialty-specific reports, procedure notes, imaging reads, and clinical letters directly to
+the patient's shared record
+Post structured case updates visible to the full care team
+Request additional investigations via the platform's order entry system (subject to primary doctor
+confirmation)
+View primary doctor's notes, all prior specialist contributions, and family-flagged concerns
+Receive automatic alerts when new results relevant to their specialty are added to the file
+Access the patient's full medication list with specialty-relevant interaction flags highlighted
+AI Assistant Capabilities
+Specialty-Scoped AI Queries: AI answers clinical questions within the context of the specialist's
+domain, drawing from the patient's full record but framing responses in specialty-appropriate
+language and depth
+Auto-generated Specialty Summary: when added to the care team, the AI automatically
+generates a specialty-specific case summary for the specialist (e.g., 'Cardiac Summary for Dr
+Patel: relevant findings, investigations, current medications, reason for referral')
+Consultation Note Templates: AI pre-populates specialty-specific consultation note templates with
+the patient's relevant data, reducing documentation time by an average of 65%
+Cross-specialty Interaction Alerts: AI flags when a specialist's proposed intervention may interact
+with another specialist's active treatment plan
+Access Restrictions
+Cannot modify the primary doctor's care plan — can only append and recommend
+Cannot override the primary doctor's access or permission configurations
+Cannot view financial or administrative records
+2.5 The AI Assistant — Architecture Overview
+
+AI AI Assistant Engine
+The MediLifecycle AI assistant is not a chatbot layered on top of a database. It is a deeply integrated
+clinical reasoning engine that continuously reads every element of the patient's record, understands
+the role and context of each user, and generates responses, alerts, drafts, and recommendations
+that are always grounded in the patient's actual data. The AI never fabricates clinical information.
+Every assertion it makes is traceable to a source document or data point in the patient's record. All
+AI outputs are logged with full audit trails.
+Platform Permissions & Access
+Continuous record monitoring: the AI reads every new data point added to the record in real time,
+regardless of who added it or which channel it came from
+Role-aware response generation: every AI response is calibrated to the user's role, clinical
+authority, and permission level before being delivered
+Proactive alerting: the AI initiates outbound alerts without being queried — it does not wait to be
+asked
+Document generation: the AI produces complete clinical documents (not just templates) using
+real patient data
+Cross-user coordination: the AI understands the relationships between users (e.g., that this family
+member is waiting for news about this specific procedure) and delivers coordinated, consistent
+messaging across all touchpoints
+Longitudinal learning: within a patient's record, the AI builds a deepening understanding of the
+patient's patterns, preferences, and risks over time
+AI Assistant Capabilities
+
+All AI-generated clinical assertions are traceable to source documents — no hallucination by
+design
+All AI outputs require physician approval before reaching patients in clinical contexts
+AI confidence scores are displayed to clinicians for all diagnostic suggestions
+AI actions and query responses are logged in an immutable audit trail
+AI cannot initiate any clinical action (orders, prescriptions, referrals) without explicit physician
+authorisation
+03
+The Complete 10-Stage Patient Lifecycle
+Every Stage Explained in Full — Triggers, Actions, AI Role, Metrics
+The MediLifecycle platform organises every patient's care journey into ten discrete lifecycle stages.
+
+These stages are not rigid silos — a patient can move forward, pause, or return to a prior stage as
+their clinical situation demands. What matters is that at every point in time, every authorised user
+
+knows exactly which stage the patient is in, what has happened so far, and what comes next. The
+
+platform enforces consistency while allowing clinical flexibility.
+
+!
+Stage Transitions
+Only the Primary Doctor (or a delegated clinical lead) can advance or reverse a patient's lifecycle
+stage. All stage transitions are timestamped, attributed to the authorising clinician, and recorded
+in the permanent audit trail. Family members and patients receive an AI-generated notification
+whenever the stage changes.
+01
+
+Patient Registration & Profile Creation
+The patient's journey begins when they are registered on the MediLifecycle platform.
+Registration can be initiated by admin staff (for in-person admissions), by the patient
+themselves (for elective or planned care pathways), or automatically via HL7 FHIR
+integration when a new patient record is created in the connected EHR. A complete digital
+health profile is created, including demographic information, insurance and payer details,
+emergency contact and family access preferences, baseline health information, and consent
+records.
+Who Acts: Admin Staff, Patient (self-registration), EHR Integration (automated)
+AI Engine: Auto-populates all fields for which data exists in the connected EHR, flagging any
+mandatory fields that are incomplete. Verifies insurance eligibility in real time against the payer
+database. Detects and merges duplicate records. Generates the patient's first AI onboarding
+message, welcoming them to the platform and explaining their rights and capabilities.
+Stage Outcomes: Verified patient profile created; health file opened; patient and primary doctor
+notified; family access preferences recorded; baseline AI risk score generated.
+Key Metrics: Registration completion rate, time-to-registration, duplicate record detection rate,
+insurance verification pass rate.
+02
+
+Initial Clinical Assessment
+The primary doctor conducts the first clinical encounter — whether in person, via telehealth,
+or via review of a referred patient's records. Clinical notes, presenting complaint, initial
+diagnoses (ICD-10 coded), vital signs, and assessment findings are entered into the record.
+The patient is asked to upload any prior medical records, test results, specialist letters, or
+home monitoring data they hold. Medication reconciliation is completed and the patient's
+current medication list is confirmed.
+Who Acts: Primary Doctor (clinical entry), Patient (document upload, history confirmation)
+AI Engine: Suggests ICD-10 diagnostic codes based on free-text clinical notes. Performs
+real-time medication reconciliation, flagging any duplicates, contraindications, or gaps. Generates
+an automatic care gap analysis, highlighting any screening or preventive care that is overdue
+based on age, diagnosis, and clinical guidelines. Summarises any prior records the patient has
+uploaded and extracts key data points.
+Stage Outcomes: Baseline clinical record established; problem list created; medication list
+confirmed; care gaps identified; initial AI risk scores generated for deterioration, readmission, and
+medication non-adherence.
+Key Metrics: Assessment completion time, care gap identification rate, medication reconciliation
+accuracy, ICD-10 code suggestion acceptance rate.
+03
+
+Diagnostic Investigation & Record Building
+Following initial assessment, diagnostic investigations are ordered: laboratory tests, imaging,
+specialist referrals, ECGs, pulmonary function tests, or any other investigation relevant to the
+clinical picture. Results are returned directly into the patient's record. The patient and all
+authorised care team members can contribute documents to the record continuously. The
+record grows in real time as results arrive.
+Who Acts: Primary Doctor (orders), Patient (uploads, home test results), Lab/Imaging Systems
+(automated result delivery), Specialist (if already engaged)
+AI Engine: Flags out-of-range laboratory results immediately upon receipt, with severity grading
+(informational, clinically significant, critical). Detects when an ordered investigation result is
+overdue and generates a chase notification. Classifies and indexes every incoming document.
+Suggests follow-up investigations based on the pattern of results. Generates a plain-language
+explanation of each result for the patient's view.
+Stage Outcomes: Complete investigation results received and indexed; critical values actioned;
+patient informed of results in accessible language; follow-up investigations identified.
+Key Metrics: Result turnaround time, critical value notification time (target under 4 minutes),
+investigation completion rate, document classification accuracy.
+04
+
+Diagnosis Confirmation & Care Plan Creation
+Based on completed investigations and clinical assessment, the primary doctor confirms the
+diagnosis and creates a formal care plan. The care plan includes the diagnosis, treatment
+objectives, treatment modalities (medications, procedures, lifestyle interventions, referrals),
+monitoring schedule, patient education requirements, and discharge/transition criteria. The
+care plan is communicated to the patient in plain language and to family members as
+appropriate.
+Who Acts: Primary Doctor (diagnosis and care plan creation), Patient (care plan review and
+consent), Specialist (if already engaged — input to care plan)
+AI Engine: Drafts a structured care plan document based on the confirmed diagnosis and clinical
+guidelines, populated with patient-specific data. Checks the proposed care plan against clinical
+guidelines for the confirmed diagnosis and flags any deviations for physician review. Generates a
+plain-language version of the care plan for the patient. Creates a monitoring schedule and adds all
+follow-up items to the care team's task list. Identifies any clinical trials or evidence-based
+pathways relevant to the diagnosis.
+Stage Outcomes: Confirmed diagnosis recorded; care plan agreed and communicated; patient
+consent documented; monitoring schedule active; family notifications sent.
+Key Metrics: Care plan creation time, patient care plan comprehension score (measured via
+post-explanation quiz), guideline adherence rate, consent documentation rate.
+05
+
+Specialist Referral & Multi-Disciplinary Team Engagement
+Where the care plan requires specialist input, the primary doctor initiates a referral through
+the platform. The specialist is invited to join the care team, receives an AI-generated
+specialty-specific case summary, and adds their expertise to the shared record. For complex
+cases, multiple specialists may be engaged simultaneously. All specialist contributions are
+visible to the full care team in real time, preventing the information siloes that characterise
+traditional referral processes.
+Who Acts: Primary Doctor (referral initiation), Specialist (case review and consultation), Patient
+(notified of care team additions)
+AI Engine: Generates the referral letter, pre-populated with all clinically relevant information from
+the patient's record — the physician reviews and approves rather than drafting from scratch.
+Matches the referral to the most appropriate available specialist based on specialty, patient
+location, payer network, and urgency score. Notifies the specialist immediately upon referral.
+Generates a specialty-specific case summary for the specialist on first access. Monitors for
+specialist response and escalates if no acknowledgement is received within the defined SLA.
+Stage Outcomes: Specialist engaged and acknowledged; specialty-specific case summary
+delivered; specialist's care plan contribution received; cross-specialty interaction checks
+completed.
+Key Metrics: Referral letter generation time, specialist acknowledgement time (SLA: 4 hours
+urgent, 24 hours routine), multi-disciplinary input completeness rate.
+06
+
+Active Treatment Delivery
+Treatment is actively underway — medications are being administered, procedures are being
+performed, or a structured therapy programme is in progress. This is often the longest stage,
+spanning days to months for complex cases. The platform continuously monitors adherence
+to the care plan, flags deviations, tracks the patient's reported symptoms and wellbeing, and
+keeps all stakeholders informed of progress. Family members receive regular AI-generated
+updates.
+Who Acts: Primary Doctor (treatment oversight and orders), Specialist (procedure delivery,
+specialist treatment), Patient (medication adherence, symptom reporting), Nursing/Clinical Staff
+(care delivery documentation)
+AI Engine: Monitors medication adherence signals and flags when the patient has not confirmed
+a scheduled dose. Tracks vital signs and patient-reported outcomes against expected treatment
+response curves, alerting the care team if the patient is not responding as expected. Sends the
+patient daily contextual check-ins calibrated to their current treatment phase. Automatically pushes
+family updates at key treatment milestones. Detects early warning signs of adverse drug reactions
+from symptom reports.
+Stage Outcomes: Treatment adherence documented; patient response tracked; adverse events
+identified and actioned; family informed at milestones; care plan updated based on treatment
+response.
+Key Metrics: Medication adherence rate, patient-reported outcome completion rate, adverse
+event detection time, care plan deviation alert response time.
+07
+
+Inpatient Monitoring & Ward Management
+For patients who are admitted to hospital, this stage covers the full inpatient period. Clinical
+observations, nursing notes, ward round summaries, medication administration records, fluid
+balance charts, and procedure records are all captured in the platform. The care team can
+see the complete inpatient picture in real time. Family members receive updates tied to key
+inpatient events.
+Who Acts: Primary Doctor (ward rounds, clinical decisions), Specialist (consult rounds), Nursing
+Staff (observation entry, medication administration), Patient (symptom reporting via bedside tablet
+or mobile)
+AI Engine: Aggregates all inpatient observations and flags deterioration based on validated early
+warning score models (NEWS2 or equivalent). Generates ward round summary drafts for
+physician review. Alerts the care team when NEWS2 score crosses defined thresholds. Tracks
+fluid balance and flags imbalances. Notifies family when significant inpatient events occur (e.g.,
+transfer to ICU, return from surgery, change in clinical status).
+Stage Outcomes: Complete inpatient record maintained; deterioration detected and actioned
+early; care team informed in real time; family kept updated through admission.
+Key Metrics: Early warning score documentation compliance, deterioration alert response time,
+family notification delivery rate, nursing documentation completeness.
+08
+
+Procedure Management
+This stage covers any discrete clinical procedure — from minor outpatient procedures to
+major surgery — including pre-operative assessment, the procedure itself, and the immediate
+post-operative or recovery period. The platform coordinates the procedural team, manages
+consent documentation, tracks the procedure in real time, and delivers automated family
+updates at key procedural milestones.
+Who Acts: Primary Doctor (procedure authorisation), Specialist/Surgeon (procedure delivery),
+Anaesthetics (pre-op assessment documentation), Patient (consent, pre-op instructions), Family
+(notification recipients)
+AI Engine: Generates and tracks consent documentation, flagging if any required consent is
+missing before the procedure can be marked as commenced. Pushes automated real-time
+updates to family at three milestones: procedure commenced, procedure completed, patient in
+recovery. Drafts the post-procedure note for physician completion. Monitors post-operative vital
+signs for early detection of complications. Generates the patient's plain-language explanation of
+what happened and what to expect in recovery.
+Stage Outcomes: Pre-operative checklist complete; consent documented; family informed at all
+procedural milestones; post-procedure note completed; recovery monitoring active.
+Key Metrics: Consent documentation rate, family notification delivery time at each milestone,
+post-procedure note completion time, post-operative complication detection rate.
+09
+
+Discharge Planning & Transition of Care
+As the patient approaches the end of their acute care episode, discharge planning begins.
+This is one of the highest-risk stages for adverse outcomes — information loss, medication
+errors, missed follow-up appointments, and inadequate family preparation are all common
+causes of avoidable readmission. MediLifecycle addresses each of these risks explicitly. The
+AI drafts the discharge summary, reconciles medications, generates the patient's
+plain-language home care instructions, and ensures every follow-up item is scheduled and
+tracked.
+Who Acts: Primary Doctor (discharge decision and summary sign-off), Specialist
+(specialty-specific discharge instructions), Admin Staff (appointment scheduling, transport),
+Patient (discharge instruction review and acknowledgement), Family (preparation briefing)
+AI Engine: Drafts the complete discharge summary in 60 seconds, pre-populated with the full
+episode of care, confirmed diagnoses, procedures performed, medication changes, and follow-up
+requirements — physician reviews and approves. Performs final medication reconciliation and
+generates a patient-friendly medication guide. Schedules all follow-up appointments and adds
+reminders to the patient's and care team's calendars. Generates a plain-language home care
+instruction sheet for the patient. Creates a family briefing document covering what to expect at
+home, red-flag symptoms to watch for, and how to access help.
+Stage Outcomes: Discharge summary completed and distributed; medications reconciled; all
+follow-up appointments scheduled; patient and family briefed; post-discharge monitoring activated.
+Key Metrics: Discharge summary completion time, medication reconciliation accuracy, follow-up
+appointment scheduling rate (target: 100% before discharge), readmission rate at 7 and 30 days.
+10
+
+Post-Discharge Monitoring & Lifecycle Closure
+The care journey does not end at discharge. The post-discharge period is when patients are
+most vulnerable to deterioration, medication errors, and care plan non-adherence.
+MediLifecycle maintains active monitoring through this phase — checking in with the patient
+regularly, analysing their symptom reports, tracking medication adherence, and alerting the
+care team if any signal suggests the patient is at risk. The lifecycle is only formally closed
+when all follow-up requirements have been met, the patient is stable, and the primary doctor
+confirms closure.
+
+Who Acts: Primary Doctor (monitoring oversight and closure authorisation), Patient (daily
+check-ins, symptom reporting, medication confirmation), Family (active support and
+communication)
+
+AI Engine: Delivers daily or weekly AI check-ins to the patient (frequency configured by the care
+team based on clinical risk), structured around the patient's specific care plan and recovery
+milestones. Analyses patient responses for deterioration signals and alerts the care team
+immediately if concerning patterns emerge. Tracks follow-up appointment attendance and chases
+the patient and care team if appointments are missed. Generates a readmission risk score that
+updates in real time based on patient-reported data. Produces the final lifecycle closure report,
+including a complete clinical summary, outcome documentation, and patient satisfaction score.
+
+Stage Outcomes: All follow-up appointments completed; patient confirmed as stable;
+outstanding care items resolved; lifecycle closure authorised; final health summary generated and
+delivered to patient.
+
+Key Metrics: Post-discharge check-in completion rate, deterioration alert response time,
+follow-up appointment attendance rate, 30-day readmission rate, patient lifecycle closure
+satisfaction score.
+
+04
+Document Intelligence & Upload Management
+Every File, Classified, Indexed, and Actioned in Under 90 Seconds
+One of the most significant sources of clinical risk in healthcare is documents that arrive and are not
+
+seen — or are seen by the wrong person, too late. A radiology report that lands in an unmonitored
+inbox. A specialist letter that is filed but never linked to the patient's active care plan. A home blood
+
+glucose reading that the patient brings to an appointment but has no way to contribute to their
+
+formal record. MediLifecycle's Document Intelligence Engine eliminates all of these failure modes.
+
+4.1 How Document Intelligence Works
+
+Every document that enters the MediLifecycle ecosystem — whether uploaded manually, pushed
+
+from an integrated lab or imaging system, or imported via HL7 FHIR — passes through a five-step
+AI processing pipeline before it is presented to any user.
+
+Processing Step What Happens
+Step 1: Classification The AI identifies what type of document it is: lab result, radiology
+report, prescription, specialist letter, consent form, insurance
+document, home monitoring data, prior medical history, discharge
+summary, referral letter, or a custom category defined by the
+institution. Classification accuracy across the standard document
+library exceeds 97%.
+Step 2: Data Extraction Structured data is extracted from the document: for a lab result, this
+means test name, value, reference range, collection date, and
+reporting lab. For a radiology report, this means modality, body region,
+key findings, and radiologist recommendation. For a prescription, this
+means drug name, dose, frequency, prescriber, and dispensing
+instructions.
+Step 3: Clinical Flagging Extracted values are assessed against clinical thresholds.
+Out-of-range lab values are graded by severity (informational, clinically
+significant, critical). Radiology findings that use terms suggesting
+malignancy, haemorrhage, or fracture are flagged regardless of the
+radiologist's overall assessment. Drug names are cross-referenced
+against the patient's current medication list for interactions.
+Step 4: Record Linking The document is linked to the relevant encounter, care plan item,
+specialist referral, or order. A lab result ordered on a specific date is
+automatically linked to the originating order, closing the loop and
+removing it from the outstanding results list.
+Step 5: Routing &
+Notification
+Based on the document type and any clinical flags, the AI routes
+notifications to the appropriate users. A critical lab result triggers an
+immediate alert to the primary doctor and, if outside hours, the on-call
+physician. A specialist letter triggers a review request to the primary
+doctor. A patient-uploaded document is flagged for physician
+acknowledgement.
+4.2 Accepted Document Types & Formats
+
+Document
+Type
+Accepted
+Formats
+Data
+Extracted
+AI Processing Alert Trigger
+Lab Results PDF, CSV, HL
+ORU
+Values, ranges,
+dates, lab
+name
+Out-of-range
+severity grading,
+trend charting
+Out-of-range:
+immediate physician
+alert
+Imaging &
+Radiology
+DICOM, PDF,
+JPEG, PNG
+Modality,
+region, key
+findings,
+radiologist
+name
+Malignancy / urgent
+finding keyword
+detection
+Urgent finding:
+immediate physician
+alert
+Prescriptions PDF, JPEG,
+PNG, DOCX
+Drug, dose,
+frequency,
+prescriber, date
+Drug interaction
+check vs. current
+medications
+Interaction detected:
+physician alert
+before dispensing
+Specialist
+Letters
+PDF, DOCX,
+image
+Recommendati
+ons, diagnosis,
+follow-up
+required
+Extracts action items
+and adds to task list
+Action items: routed
+to responsible team
+member
+Referral
+Letters
+PDF, DOCX Referral
+recipient,
+urgency,
+reason
+Matches to the
+correct specialist
+record, tracks
+response
+No
+acknowledgement:
+escalation at defined
+SLA
+Discharge
+Summaries
+PDF, DOCX Diagnoses,
+medications,
+follow-up plan
+Extracts follow-up
+tasks, adds to
+monitoring list
+Follow-up items:
+added to active task
+list
+Consent
+Forms
+PDF, image Patient name,
+consent type,
+date, signature
+Validates all required
+fields are present
+Incomplete: blocks
+associated
+procedure from
+proceeding
+Insurance /
+Billing
+PDF, image Coverage type,
+policy number,
+expiry date
+Flags expiring
+coverage before it
+lapses
+Expiry within 30
+days: admin
+notification
+Home
+Monitoring
+Data
+PDF, CSV,
+JPEG,
+integrations
+Glucose, BP,
+weight, O2 sat,
+HR,
+temperature
+Trend analysis,
+anomaly detection
+vs. expected range
+Anomaly: immediate
+care team alert
+Prior Medical
+History
+PDF, DOCX,
+image
+Diagnoses,
+procedures,
+medications,
+allergies
+Merges into master
+timeline; allergy
+conflicts checked
+Allergy conflict with
+current meds:
+immediate alert
+ECG /
+Cardiology
+PDF, DICOM,
+JPEG
+Rhythm, rate,
+key findings
+Keyword detection
+for critical findings
+(e.g., STEMI
+pattern)
+Critical finding:
+immediate specialist
+and primary alert
+Pathology /
+Biopsy
+PDF Specimen
+details,
+findings,
+pathologist
+name
+Extracts malignancy
+or significant
+findings flags
+Significant finding:
+immediate physician
+alert
+4.3 Upload Permissions Matrix
+
+Document
+Type
+Who Can Upload Who Can View Who Is
+Notified on
+Upload
+AI Alert
+Condition
+Lab Results Patient, Lab
+Integration, Primary
+Dr, Specialist
+All care team
+members; patient
+(AI summary)
+Admin Immediate if
+critical value
+detected
+Radiology
+Reports
+Imaging Integration,
+Primary Dr,
+Specialist
+All care team
+members; patient
+(AI summary)
+Admin Immediate if
+urgent finding
+detected
+Prescriptions Primary Dr,
+Specialist
+Primary Dr,
+dispensing
+pharmacy
+integration
+Patient On conflict with
+existing
+medication
+Specialist
+Letters
+Specialist, Primary
+Dr
+Primary Dr, relevant
+specialist; patient
+(AI summary)
+All care team On action items
+extraction
+Home
+Monitoring
+Data
+Patient, wearable
+device integrations
+Full care team Patient On anomaly vs.
+expected range
+Consent
+Forms
+Admin Staff, Patient Primary Dr, relevant
+specialist
+Admin If incomplete or
+unsigned
+Insurance /
+Billing
+Patient, Admin Staff Admin / billing staff
+only
+Admin If expiry within
+30 days
+Prior Medical
+History
+Patient, Primary Dr Full care team Patient On allergy
+conflict
+detection
+4.4 The Document Repository
+
+Every uploaded document is stored in the patient's permanent document repository — a
+categorised, searchable, chronologically ordered library that persists for the lifetime of the patient
+
+record. The repository includes:
+
+Full-text search across all documents in the repository — search for a drug name, a
+diagnosis code, a date, a referring physician name, or any other term
+Category filtering: view all documents of a specific type (e.g., all lab results, all specialist
+letters, all imaging reports)
+Timeline view: every document plotted chronologically against the patient's lifecycle stages
+Version control: if a document is superseded (e.g., an amended lab result), the original
+version is preserved and the amendment is tracked
+Download and export: any authorised user can download individual documents or export the
+full repository as a ZIP archive
+Audit trail: every access, view, download, and annotation is logged with user identity, role,
+timestamp, and reason
+S
+
+Storage & Retention
+All documents are stored with AES-256 encryption at rest. The MediLifecycle platform retains all
+patient documents for a minimum of 10 years (or the jurisdiction-specific medical records
+retention requirement, whichever is longer). Institutions may configure longer retention periods.
+Data deletion requests are processed in compliance with applicable data protection regulations,
+with clinical hold overrides where required by law.
+05
+The AI Assistant — Deep Dive by Role
+Context, Capabilities, Safeguards, and Example Interactions
+This section provides the deepest possible technical and functional understanding of how the
+
+MediLifecycle AI assistant operates. It is intended for clinical leads, product decision-makers, and
+technical evaluators who need to understand not just what the AI does, but how it does it, why it is
+
+safe, and where its boundaries lie.
+
+5.1 How the AI Engine Builds Context
+
+Every single AI query — whether from a physician, a patient, a family member, or triggered
+
+automatically by a clinical event — begins with a context assembly step. The AI never responds
+
+from general knowledge alone. It assembles a specific, patient-specific, user-specific, role-specific
+context package before generating any response.
+
+Context Layer Specific Data Sources
+Patient Clinical Record Complete problem list, confirmed diagnoses (ICD-10), medication list
+(active, discontinued, with dates), allergy record, vital signs history, all
+lab results (with reference ranges and trending), imaging reports,
+specialist notes, care plan, procedure history, care team composition
+Uploaded Document
+Library
+All documents in the repository, fully extracted — the AI does not just
+retrieve documents, it understands their contents and can draw on them
+as source material
+Lifecycle Stage Context Current stage, how long in the current stage, what the previous stages
+were, what is expected next — the AI's responses are calibrated to the
+clinical moment
+User Role &
+Permissions
+Who is asking: their role (patient, family, primary doctor, specialist,
+admin), their specific permission set for this patient, their clinical
+specialty if applicable, and the language/complexity level appropriate for
+their role
+Institutional
+Configuration
+The hospital or clinic's custom settings: formulary preferences, alert
+thresholds, communication tone preference, specialty-specific
+configurations, and any institution-specific clinical protocols uploaded to
+the system
+Temporal Context Time of day, day of week, how long since the last clinical event, how long
+since the patient was last active on the platform — the AI understands
+urgency relative to the clinical timeline
+5.2 AI Capabilities: Primary Doctor
+
+The primary doctor's AI interface is the most clinically deep and technically demanding. It is
+
+designed to function as a tireless, encyclopaedic, and always-available clinical assistant that has
+
+read and retained every word of the patient's record.
+
+Clinical Query & Decision Support
+
+Natural language clinical queries: 'What is her creatinine trend over the last 18 months?' —
+AI retrieves all relevant values, calculates trend with statistical significance, plots on a graph,
+and flags if the rate of decline indicates imminent need for nephrology referral
+Differential diagnosis support: 'She has fatigue, weight gain, cold intolerance, and
+bradycardia — what is my differential?' — AI generates a ranked differential diagnosis list
+with supporting clinical rationale drawn from the patient's specific record
+Evidence-based medicine queries: 'What does current NICE guidance say about first-line
+treatment for this diagnosis in a patient with this comorbidity profile?' — AI provides
+guideline-grounded recommendations, cross-referenced against the patient's
+contraindications
+Drug interaction checking: as each new medication is entered, AI checks in real time against
+the complete current medication list, flagging interactions by severity class (contraindicated,
+significant, minor)
+Risk stratification queries: 'What is this patient's current deterioration risk score and what is
+driving it?' — AI provides the composite score and a ranked list of contributing factors
+Document Drafting & Generation
+
+Discharge summary: AI generates a complete, structured discharge summary in under 60
+seconds — covering admission diagnosis, procedures performed, investigations and results,
+medication changes, discharge medications, follow-up requirements, and GP letter — all
+using real patient data. Physician reviews, edits if needed, and approves
+Referral letters: AI generates a referral letter for any specialty, using the most clinically
+relevant sections of the patient's record as supporting evidence. The physician adds context
+and signs off
+Prior authorisation letters: AI pre-populates PA requests with medical necessity
+documentation, clinical evidence, and relevant sections of the patient's record — raising
+first-pass PA approval rates
+Care plan documents: AI drafts the formal care plan document based on confirmed
+diagnosis and applicable clinical guidelines
+Patient correspondence: AI drafts letters, appointment confirmations, and follow-up
+instructions in appropriate clinical language — physician approves before sending
+Proactive Alert Feed
+
+Unreviewed documents: alerts when a new document (lab result, specialist letter, imaging
+report) has been in the record for more than a configurable time without physician
+acknowledgement
+Critical values: immediate alert when any lab result exceeds a critical threshold, with severity
+grading and recommended immediate actions
+Overdue follow-up: alerts when a scheduled follow-up appointment, investigation, or care
+plan checkpoint is approaching or overdue
+Medication expiry: alerts when a prescription is approaching its end date with no renewal in
+progress
+Deterioration signal: alerts when the patient's composite risk score increases significantly or
+when post-discharge check-in data suggests potential deterioration
+Care plan deviation: alerts when documented treatment delivery deviates from the agreed
+care plan by a clinically significant margin
+5.3 AI Capabilities: Specialist Doctor
+
+Specialty-Scoped Intelligence
+
+On joining the care team, the AI auto-generates a specialty-specific case summary: for a
+cardiologist, this includes all cardiac-relevant lab values, ECGs, echos, current cardiac
+medications, and the reason for referral; for a nephrologist, all renal function data, fluid
+balance, medications affecting renal function, and urology history
+Specialty-relevant result prioritisation: the AI re-orders the results feed to place
+specialty-relevant results at the top, without hiding other results from view
+Cross-specialty interaction detection: AI flags when the specialist's proposed intervention
+may interact with another specialist's active treatment — e.g., a rheumatologist adding
+methotrexate while an oncologist is managing a recent haematological malignancy
+Consultation note pre-population: AI fills specialty-specific consultation note templates with
+the patient's relevant data, reducing documentation time by an average of 65%
+5.4 AI Capabilities: Patient
+
+The patient-facing AI is calibrated for maximum accessibility, maximum clarity, and zero
+
+unnecessary alarm. It uses plain language, avoids jargon entirely, explains clinical concepts using
+
+analogies and examples, and always anchors responses in actionable guidance.
+
+Capability How It Works
+Diagnosis Explanation Patient asks: 'What does type 2 diabetes mean for me?' — AI explains
+the condition in plain language, describes how it affects the body,
+explains what the care plan is designed to do about it, and reassures the
+patient about what to expect. Always ends with 'Your care team is
+managing this closely. Here are the three most important things you can
+do.'
+Medication Education For every medication in the patient's list, AI can explain: what it is for,
+how and when to take it, what to do if a dose is missed, common side
+effects to watch for, and what to do if a side effect occurs. Accessible
+language. No medical jargon.
+Test Result Explanation When a new result arrives, AI generates a plain-language explanation:
+'Your kidney function test came back. Your eGFR is 62. A normal level is
+above 60, so your result is just within the acceptable range. Your doctor
+is monitoring this closely and will discuss it with you at your next
+appointment.'
+Symptom Logging Patient describes symptoms in their own words. AI structures the entry
+(body area, severity, duration, associated symptoms), adds it to the
+record, and automatically alerts the care team if the symptom pattern
+matches a red-flag configuration for the patient's diagnosis.
+Pre-Appointment
+Preparation
+Before each appointment, AI sends the patient a preparation guide: what
+the appointment is for, how long it will last, what to bring, what questions
+to consider asking, and whether any preparation (fasting, medication
+changes) is required.
+Post-Discharge
+Check-Ins
+Daily or weekly check-in messages asking the patient how they are
+feeling, whether they have taken their medications, and whether they
+have any new symptoms. Responses are analysed by the care team's AI
+alert engine for deterioration signals.
+5.5 AI Capabilities: Family Member
+
+Family AI is emotionally calibrated. The system recognises that family members are often
+
+frightened, operating without clinical literacy, and may be interpreting every update through an
+
+anxious lens. The AI's responses are designed to be warm, clear, appropriately reassuring, and
+always honest within the bounds of what it is permitted to share.
+
+AI Feature What the Family Receives
+Live Status Updates 'How is my mother doing right now?' — AI provides the most recent care
+status in accessible, calm language: 'Your mother is currently in the
+active treatment stage of her care. The care team has completed the
+procedure and she is resting comfortably in recovery. The doctor will post
+a clinical update within the next few hours.'
+Procedure Milestone
+Updates
+Three automated notifications sent without the family needing to ask: (1)
+'The procedure has commenced' with estimated duration; (2) 'The
+procedure is complete. The surgical team will provide a clinical update
+shortly'; (3) 'Your [family member] is now in recovery. The recovery team
+is monitoring them closely.'
+Post-Discharge
+Preparation
+When discharge is planned, AI sends the family a preparation guide
+24-48 hours before: what to prepare at home, what equipment or
+medications to have ready, what physical and emotional support the
+patient may need, when to seek emergency help, and how to contact the
+care team.
+Plain-Language
+Explanations
+Family asks: 'What is a CT scan and why does she need one?' — AI
+explains the procedure clearly, explains why it is relevant to the patient's
+care, and reassures about the safety and purpose of the investigation.
+Answering Within
+Permissions
+If a family member asks something beyond their permission level, AI
+responds: 'I can see you're worried about [patient name]'s results. The
+details you're asking about are clinical information that [patient name]
+has chosen to discuss privately with their care team. I'd encourage you
+to ask [patient name] directly, or to contact the care team for guidance on
+how to get the information you need.'
+5.6 AI Safeguards & Governance
+
+!
+Critical Safeguard
+The AI cannot take any clinical action independently. It cannot place orders, prescribe
+medications, change a patient's care plan, or send clinical information to patients without explicit
+physician approval. Every AI-generated clinical document is a draft that requires physician review
+and authorisation before it reaches any recipient.
+Safeguard How It Works
+
+Source Attribution Every AI assertion drawn from the patient's record is accompanied by
+a source reference: the document name, upload date, and the specific
+data point cited. Physicians can click through to the source document
+at any time. The AI never makes unattributable clinical statements.
+
+Confidence Scoring All AI diagnostic suggestions, risk scores, and clinical
+recommendations are presented with an explicit confidence score and
+the evidence base underlying that score. Low-confidence suggestions
+are clearly labelled and the physician is prompted to weigh them with
+additional clinical judgment.
+
+Physician Approval Gates Defined categories of AI output require physician approval before
+delivery: all documents sent to patients, all prior authorisation
+submissions, all referral letters, all discharge summaries. The approval
+workflow is built into the interface — physicians cannot accidentally
+bypass it.
+
+Immutable Audit Trail Every AI query, AI response, AI alert, and AI-drafted document is
+logged in an immutable audit trail. The log records: the query, the
+context used, the response generated, the user who reviewed it, any
+edits made, and the final disposition (approved, rejected, modified).
+Retained for 7 years.
+
+Hallucination Prevention The AI is architecturally constrained to draw only from the patient's
+actual record when making clinical statements. It is not permitted to
+extrapolate from general medical knowledge to fill gaps in a patient's
+record — it explicitly flags what it knows, what it does not know, and
+what it needs more information about.
+
+Human Override Always
+Available
+
+Any AI recommendation, alert, or risk score can be overridden by the
+responsible clinician. The override is recorded in the audit trail with the
+clinician's stated reason. Override patterns are reviewed in the
+institutional analytics dashboard to identify systematic AI calibration
+issues.
+06
+Real-Time Notifications & Live Family Updates
+Every Alert, Every Channel, Configurable to Your Institution
+Communication failure is a leading cause of adverse clinical events and patient dissatisfaction.
+
+When a critical result sits unread in an inbox for two hours, when a family waits six hours with no
+news of a procedure, when a specialist is not alerted that a new result relevant to their
+
+recommendation has arrived — these are not technology failures, they are process failures that
+
+technology can fix. MediLifecycle's notification engine is designed to make communication failure
+structurally impossible.
+
+6.1 Notification Architecture
+
+Every notification in MediLifecycle is governed by a four-component framework: the triggering
+event, the recipient logic, the communication channel, and the escalation path if the initial
+
+notification is not acknowledged.
+
+Trigger Event What Causes
+It
+Who Is
+Notified
+Channel Escalation
+Path
+Imaging
+Urgent
+Finding
+AI detects
+urgent keyword
+in report
+Primary Dr +
+relevant
+Specialist
+In-platform
+URGENT,
+SMS, push
+Escalate after
+15 min
+Lifecycle
+Stage Change
+Primary Dr
+advances/rever
+ses stage
+Patient +
+Family
+(plain-language
+) + full care
+team
+Push
+notification,
+in-platform,
+email
+No escalation
+—
+informational
+Procedure
+Commenced
+Primary Dr /
+nurse marks
+procedure start
+Authorised
+family
+members
+Push
+notification +
+SMS
+No escalation
+Procedure
+Completed
+Primary Dr /
+nurse marks
+procedure end
+Authorised
+family
+members
+Push
+notification +
+SMS
+No escalation
+Discharge
+Confirmed
+Primary Dr
+confirms
+discharge
+Patient, Family,
+Admin, GP (if
+integrated)
+Push, email,
+in-platform, GP
+letter
+No escalation
+New
+Specialist
+Note
+Specialist
+uploads
+consultation
+note
+Primary Dr In-platform,
+email digest
+Escalate after
+24hr if
+unreviewed
+Patient
+Symptom Flag
+AI detects
+red-flag
+symptom
+pattern
+Primary Dr +
+relevant
+Specialist
+In-platform
+URGENT, push
+Escalate after
+30 min
+Medication
+Not
+Confirmed
+Patient misses
+scheduled
+medication
+confirmation
+Patient
+(reminder),
+Primary Dr
+(after 2 missed
+doses)
+Push to
+patient,
+in-platform to
+Dr
+Patient
+reminder x3,
+then Dr alert
+Follow-Up
+Overdue
+Appointment
+date passed
+with no
+attendance
+Patient +
+Primary Dr +
+Admin
+Push,
+in-platform,
+email
+Escalate to
+clinical lead
+after 48hr
+NEWS2 Score
+Threshold
+Inpatient early
+warning score
+breaches
+threshold
+Primary Dr +
+on-call nurse +
+clinical lead
+In-platform
+URGENT +
+pager
+integration
+Immediate —
+no escalation
+delay
+Post-Discharg
+e
+Deterioration
+AI detects
+concerning
+pattern in
+check-in
+responses
+Primary Dr In-platform
+URGENT,
+push, SMS
+Escalate after
+20 min if
+unacknowledg
+ed
+Document
+Upload
+Any new
+document
+added to
+record
+Primary Dr (for
+patient/family
+uploads)
+In-platform,
+email digest
+No escalation
+— reviewed in
+next session
+PA Request
+Status
+Payer
+approves/denie
+s PA request
+Primary Dr +
+Admin
+In-platform,
+email
+If denied: AI
+drafts appeal,
+alerts Dr
+Risk Score
+Significant
+Change
+Patient's
+composite risk
+score changes
+by >20%
+Primary Dr In-platform,
+email
+No escalation
+— advisory
+6.2 Notification Channels
+
+Channel Description & Configuration
+In-Platform Notification
+Centre
+Available to all users. Notifications are colour-coded by urgency: RED
+(critical — requires immediate action), AMBER (action required —
+within defined timeframe), GREEN (informational — no action
+required). Unread notifications display a count badge on the
+dashboard icon. All notifications persist and are never deleted.
+Mobile Push Notification Sent to the MediLifecycle iOS and Android app. Available to all user
+types. Physicians can configure push notifications to also trigger on
+their hospital-issued device via MDM integration. Push notifications for
+critical clinical events bypass Do Not Disturb mode (with user consent)
+to ensure receipt.
+SMS Available as a configurable channel for all user types. Critical clinical
+alerts for physicians are sent via SMS by default. Family updates can
+be configured to SMS as the primary channel for family members
+without smartphones. SMS delivery is confirmed via delivery receipt;
+non-delivery triggers email fallback.
+Email All users receive email notifications. Email is the default channel for
+non-urgent notifications and for daily/weekly digest summaries. Critical
+alerts are not held for digest — they are sent immediately. Emails are
+plain-text and accessible by screen readers.
+Pager Integration For inpatient environments, MediLifecycle integrates with hospital
+paging systems. NEWS2 threshold breaches and critical lab values
+can be configured to trigger pager alerts to on-call clinical staff,
+ensuring compatibility with existing emergency response workflows.
+EHR Workflow Integration For institutions using Epic, Cerner, or other integrated EHR systems,
+critical clinical alerts can be delivered directly into the EHR's in-basket
+or notification workflow, eliminating the need for clinicians to monitor a
+separate system during their EHR-centric workflows.
+6.3 Family Notification Workflow — Detailed
+
+The family notification experience is one of the most valued features of MediLifecycle. This section
+
+details exactly what family members receive, when, and in what language — giving your team
+
+confidence in how to present this capability to patients and families.
+
+Event What Triggers
+It
+Message Sent to Family Accompanying
+Action
+Patient
+Registered
+Family member
+account
+activated and
+added by
+patient
+'Welcome to MediLifecycle. [Patient
+Name] has given you access to receive
+updates about their care. You will receive
+notifications at key moments in their
+journey. All updates will be in plain
+language and within the privacy limits
+[Patient Name] has set.'
+Informational — no
+action required
+Admission
+Confirmed
+Primary Dr
+marks patient
+as admitted
+'[Patient Name] has been admitted to
+[Ward/Unit] as of [time]. Their care team
+is led by Dr [Name]. We will send you
+updates as their care progresses. If you
+have questions, you can submit them
+through the platform.'
+Links to family
+question form
+Investigati
+on Ordered
+AI batches
+non-urgent
+investigation
+orders
+'[Patient Name]'s care team has ordered
+some tests to help plan their treatment.
+Results typically take [estimated time].
+We will let you know when the care team
+has reviewed the results and has an
+update for you.'
+Reassuring —
+manages
+expectations
+Procedure
+Commence
+d
+Dr/nurse marks
+procedure start
+'[Patient Name]'s procedure began at
+[time]. The estimated duration is [time].
+The clinical team will notify you as soon
+as it is complete. You are welcome to wait
+Links to waiting area
+information
+in [location] and a team member will
+come to you when there is news.'
+Procedure
+Completed
+
+Dr/nurse marks
+procedure end
+'[Patient Name]'s procedure was
+completed at [time]. They are now in the
+recovery area, where the nursing team is
+monitoring them closely. The doctor will
+provide a clinical update within
+approximately [estimated time]. Thank
+you for your patience.'
+Links to next steps
+Clinical
+Update
+Posted
+
+Primary Dr
+posts an
+update marked
+'family-visible'
+AI-generated plain-language summary of
+the clinical update, stripped of clinical
+jargon. Never includes values or findings
+beyond what the patient has permitted.
+Links to full update in
+app
+Discharge
+Planned
+
+Primary Dr
+creates
+discharge plan
+'We are planning for [Patient Name] to
+return home on [date]. We are preparing
+a detailed guide for you on how to
+support them at home. Watch for a
+message from us in the next 24 hours
+with everything you need to know.'
+Links to preparation
+checklist when ready
+Discharge
+Confirmed
+
+Primary Dr
+confirms
+discharge
+'[Patient Name] has been discharged
+today. Attached is their home care guide,
+including medications, follow-up
+appointments, and important things to
+watch for. If you have any concerns in the
+days ahead, the care team is available
+via the platform.'
+Attaches home care
+guide PDF
+Post-Disch
+arge
+Check-In
+(Family)
+
+AI weekly
+check-in to
+engaged family
+members
+'It has been one week since [Patient
+Name]'s discharge. We hope their
+recovery is going well. If you have noticed
+any concerning changes or have
+questions, you can message the care
+team via the platform or call [contact
+number].'
+Provides care team
+contact options
+07
+Clinical Workflows & Order Management
+From Order Initiation to Fulfillment — Every Workflow Documented
+MediLifecycle's order management system covers every type of clinical order that a physician may
+
+need to place: medications, laboratory investigations, imaging, specialist referrals, DME, and
+procedures. Orders are integrated with the patient's care plan, monitored for completion, and
+
+reconciled against billing records automatically.
+
+7.1 Order Types & AI Assistance
+
+Order Type Who Can
+Place
+AI Assistance at
+Entry
+Payer
+Integration
+Fulfillment
+Workflow
+Medication
+Prescription
+Primary Dr,
+Specialist
+Drug interaction
+check, formulary
+compliance, dose
+calculation based on
+weight/renal function,
+controlled substance
+PDMP query
+Payer formulary
+check, PA
+determination,
+auto-PA initiation
+if required
+Mail order, retail,
+specialty
+pharmacy — AI
+selects optimal
+based on payer
+rules and patient
+location
+Laboratory
+Investigation
+Primary Dr,
+Specialist
+CPT code suggestion,
+duplicate order
+detection, medical
+necessity validation
+Coverage
+verification,
+pre-auth check for
+high-cost panels
+HL7 ORU result
+return; AI flags
+critical values on
+receipt
+Diagnostic
+Imaging
+Primary Dr,
+Specialist
+Appropriate use
+criteria check (AUC),
+CPT code, clinical
+indication
+documentation
+Prior auth for
+advanced
+imaging (MRI,
+PET, nuclear)
+DICOM result
+import; AI reads
+radiology report for
+urgent findings
+Specialist
+Referral
+Primary Dr Referral letter drafting,
+specialist matching,
+urgency scoring
+Network
+validation, referral
+authorisation
+Specialist added to
+care team;
+acknowledgement
+tracked
+DME Order Primary Dr CMN drafting, medical
+necessity
+documentation,
+quantity optimisation
+Coverage
+determination,
+quantity limits
+Delivery
+scheduling,
+tracking, patient
+confirmation on
+receipt
+Procedure
+Authorisatio
+n
+Primary Dr,
+Specialist
+Medical necessity
+documentation,
+consent checklist
+generation
+PA submission for
+scheduled
+procedures
+Pre-op checklist
+activation; post-op
+note template
+prepared
+Home Health
+Referral
+Primary Dr Home health order
+generation, frequency
+and duration, skilled
+Coverage
+verification
+Agency matching,
+visit scheduling,
+outcome reporting
+back to platform
+nursing or therapy
+specification
+7.2 The Medication Management Workflow
+
+Medication errors are among the most common and most preventable sources of patient harm.
+
+MediLifecycle's medication management workflow is designed to make errors structurally difficult at
+every stage of the medication lifecycle.
+
+Stage What Happens
+1. Prescription Entry Physician enters drug name (auto-complete), dose, frequency, route,
+duration, and indication. AI simultaneously checks: drug-drug interactions,
+drug-allergy interactions, renal/hepatic dose adjustment requirements,
+controlled substance schedule compliance, and formulary status.
+2. AI Review & Flags Any identified risks are presented to the prescriber with severity grading
+before the prescription can be submitted. Green: no issues. Amber:
+potential interaction — review required. Red: contraindicated — requires
+documented override with clinical justification.
+3. Formulary & PA
+Determination
+
+AI checks the patient's payer formulary in real time. If the prescribed drug
+is non-formulary or requires prior authorisation, AI automatically initiates
+the PA process and presents the physician with alternative formulary
+options ranked by clinical equivalence.
+4. Prescription
+Transmission
+
+Approved prescription is transmitted electronically to the patient's selected
+pharmacy. Controlled substances comply with state-specific electronic
+prescribing requirements. Specialty pharmacy prescriptions include any
+required manufacturer support enrolment documentation.
+5. Patient Medication
+Guide
+
+AI generates a patient-facing medication guide: drug name (brand and
+generic), what it is for, how to take it, what to do if a dose is missed, side
+effects to watch for, foods or activities to avoid, and when to seek help.
+Sent to the patient's app.
+6. Adherence
+Monitoring
+
+AI sends daily medication reminders calibrated to the prescribed schedule.
+Patient confirms doses taken via a one-tap interface. Non-adherence after
+two consecutive missed confirmations triggers a care team alert.
+Adherence data is graphed in the clinical dashboard.
+7. Refill Management AI monitors prescription days-supply and initiates refill alerts 7 days before
+the expected run-out date. If the patient has not filled the refill within 3 days
+of expected run-out, AI alerts the prescribing physician and the patient
+simultaneously.
+8. Discontinuation &
+Reconciliation
+
+When a medication is discontinued, the record is updated, the patient is
+notified with an explanation, and the medication is moved to the 'inactive'
+list with a documented discontinuation reason. All medications are
+reconciled at every stage transition.
+7.3 Prior Authorisation (PA) Automation
+
+Prior authorisation is one of the most administratively burdensome processes in US healthcare —
+
+and one of the most common causes of treatment delay. MediLifecycle's PA automation module
+
+reduces average PA submission time from 22 minutes to under 4 minutes and improves first-pass
+approval rates from a typical 67% to 89%.
+
+PA Requirement Detection: AI checks every order against the patient's payer's real-time
+formulary and PA requirements database — updated nightly from payer feeds — before the
+physician submits.
+Automated PA Request Assembly: AI gathers all required documentation automatically:
+medical necessity justification, supporting diagnosis codes, relevant clinical history, prior
+treatment history demonstrating step therapy compliance, and prescribing physician
+credentials.
+Real-Time PA Submission: PA request is submitted to the payer electronically via X12 278
+transaction or payer API. Status is tracked in real time and displayed on the physician's
+dashboard.
+Peer-to-Peer Request Management: if the PA is denied, AI drafts a peer-to-peer review
+request and a clinical appeal letter, pre-populated with the patient's specific clinical
+evidence, for physician review and submission.
+PA Status Tracking: all open PA requests are visible on the care team dashboard with
+current status, payer response deadline, and next action required.
+7.4 Order Tracking & Completion Monitoring
+
+Every placed order remains on the outstanding orders list until it is explicitly fulfilled or cancelled.
+
+The AI actively monitors the outstanding orders queue and escalates any order that is approaching
+
+or has passed its expected completion date.
+
+Order Type Status Stages AI Monitoring
+Actions
+SLA Targets
+Laboratory
+Order
+Ordered → Specimen Collected →
+Processing → Result Received →
+Physician Reviewed
+Critical result:
+immediate alert.
+Overdue result: chase
+at 50% of expected
+turnaround; escalate
+at 100% overdue.
+Per lab SLA
+(typically 2-24
+hours routine;
+1-4 hours STAT)
+Imaging Order Ordered → Scheduled →
+Performed → Report Received →
+Physician Reviewed
+Urgent finding in
+report: immediate
+alert. Report not
+received within SLA:
+chase radiology dept.
+Routine: 24-72
+hours; urgent:
+2-4 hours; STAT:
+immediate
+Specialist
+Referral
+Initiated → Referral Letter Sent →
+Specialist Acknowledged →
+Appointment Scheduled →
+Consultation Completed
+No acknowledgement:
+escalate at 4h
+(urgent) or 24h
+(routine). No
+appointment: escalate
+at 72h.
+Urgent: 48-hour
+appointment
+target; routine:
+14 days
+Medication
+Prescription
+
+Prescribed → Transmitted →
+Dispensed → Patient Confirmed
+Receipt
+Not filled within 3
+days of expected fill
+date: alert to
+prescriber and
+patient.
+Per pharmacy
+SLA (1-3 days
+routine;
+same-day
+urgent)
+Procedure
+Authorisation
+
+Ordered → PA Submitted → PA
+Approved → Scheduled →
+Performed → Post-Procedure Note
+Completed
+PA not actioned within
+5 business days:
+escalate. Procedure
+not scheduled within
+72h of PA approval:
+alert.
+Per PA and
+scheduling SLA
+08
+EHR Integration & Technical Architecture
+How MediLifecycle Connects to Your Existing Systems
+MediLifecycle is designed for integration-first deployment. It does not ask hospitals or clinics to
+
+abandon their existing clinical infrastructure. Instead, it connects to, enhances, and adds value on
+top of the systems already in use. This section provides the technical detail that your IT and
+
+informatics teams need to evaluate and plan integration.
+
+8.1 Integration Standards Supported
+
+Standard Implementation Details
+HL7 FHIR R4 The primary integration standard. MediLifecycle exposes a complete
+HL7 FHIR R4 API and can consume FHIR R4 data from any compliant
+source. Supported resources include Patient, Encounter, Observation,
+DiagnosticReport, MedicationRequest, Condition, Procedure,
+AllergyIntolerance, DocumentReference, and Appointment.
+HL7 v2 (2.x) Supported for institutions with legacy systems that have not yet migrated
+to FHIR. Common message types supported: ADT
+(admission/discharge/transfer), ORM/ORU (orders and results), MDM
+(medical document management), DFT (billing/financial transactions),
+and SIU (scheduling).
+X12 EDI Used for payer integration: 270/271 (eligibility verification), 278 (prior
+authorisation), 837 (claims submission), 835 (remittance/ERAs). All
+payer transactions use the X12 5010 standard.
+DICOM Medical imaging integration: MediLifecycle can ingest DICOM studies
+from PACS systems, display image metadata, and integrate with
+vendor-neutral archives (VNA). Pixel-level DICOM viewing requires
+institution-provided DICOM viewer integration.
+REST API MediLifecycle exposes a comprehensive REST API for custom
+integrations. Detailed API documentation is available in the
+MediLifecycle Developer Portal. API authentication uses OAuth 2.0 with
+SMART on FHIR for clinical context.
+Webhooks Real-time event streaming via webhooks for any platform event: new
+result, stage change, AI alert, document upload. Enables custom
+integrations and reporting without polling.
+8.2 Certified EHR Integrations
+
+The following EHR systems have certified, production-validated integrations with MediLifecycle.
+Certification means the integration has been tested in a live hospital environment and meets all data
+
+fidelity, latency, and security requirements.
+
+EHR System Integration
+Method
+Data Scope Certification Status
+Epic SMART on FHIR,
+Epic APIs, MyChart
+bridging
+Bidirectional patient data sync,
+orders, results, notes, scheduling.
+Physician can receive
+MediLifecycle AI alerts within
+Epic's in-basket.
+Full certification
+Cerner
+(Oracle
+Health)
+SMART on FHIR,
+Cerner Millennium
+APIs
+Bidirectional sync for patient
+demographics, clinical data,
+orders, results. AI alerts delivered
+to Cerner's BestPractice Advisor
+framework.
+Full certification
+Meditech HL7 v2 + FHIR R4
+(Meditech
+Expanse)
+Patient demographics, ADT
+events, lab results, orders,
+discharge summaries. FHIR R4
+available on Expanse platform.
+Full certification
+(Expanse); HL7 v2 for
+legacy
+eClinicalWork
+s
+eClinicalWorks API
++ FHIR R4
+Full bidirectional sync. Optimised
+for ambulatory clinic deployment.
+Full certification
+Athenahealth athenaNet API +
+FHIR R4
+Full bidirectional sync. Includes
+appointment scheduling and
+billing data integration.
+Full certification
+Allscripts /
+Veradigm
+FHIR R4 Patient data, clinical notes,
+prescriptions, results.
+Full certification
+NextGen NextGen APIs +
+FHIR R4
+Full ambulatory data sync. Full certification
+Other EHR
+Systems
+HL7 v2 or FHIR R4 Core demographic and results
+data. Custom mapping available
+via Professional Services.
+Custom integration —
+30-day delivery
+8.3 Infrastructure & Hosting
+
+Infrastructure Element Specification
+Cloud Infrastructure MediLifecycle is hosted on Amazon Web Services (AWS) US-East and
+US-West regions (configurable for international deployments). All
+compute, storage, and networking resources are HIPAA-eligible AWS
+services. We do not share infrastructure with other SaaS tenants —
+each hospital or health system partner runs in a dedicated, logically
+isolated environment.
+Data Residency All patient data is stored in US-based AWS data centres by default.
+International partners may select EU, APAC, or other regional data
+centres to meet local data residency requirements. Data never leaves
+the configured residency boundary.
+Uptime Architecture Active-active multi-availability-zone deployment with automatic
+failover. No single point of failure. 99.9% uptime SLA. Planned
+maintenance is conducted in the configured off-peak window (default
+02:00-04:00 local time) with 7-day advance notice.
+Disaster Recovery Recovery Point Objective (RPO): 1 hour (maximum data loss in
+disaster scenario). Recovery Time Objective (RTO): 4 hours
+(maximum time to full service restoration). Full DR failover testing
+conducted quarterly.
+Performance API response time SLA: p95 under 200ms for standard queries. AI
+document generation: under 60 seconds for standard documents.
+Document upload processing pipeline: under 90 seconds from upload
+to fully indexed and accessible.
+Scalability Horizontally scalable. No hard limits on patient records, document
+volumes, or concurrent users. Institutions with 10,000+ active patients
+are supported under the Enterprise tier with dedicated capacity
+planning.
+8.4 Integration Implementation Guide
+
+The following steps outline the standard integration implementation process for a new hospital or
+clinic partner.
+
+Pre-Integration Discovery (Day 1-2): MediLifecycle's Integration Architect meets with your IT
+team to inventory all source systems, document existing data flows, identify integration
+methods for each system, and produce a detailed integration specification.
+Credentials & Connectivity (Day 3-4): API credentials, OAuth client IDs, and network
+connectivity (VPN or direct connect) are established. Test environments on both sides are
+configured.
+Patient Demographics Sync (Day 5-6): Patient Master Patient Index (MPI) integration is
+established. Existing patient records are mapped to MediLifecycle profiles. Duplicate
+detection and merge rules are configured.
+Clinical Data Flows (Day 7-10): Lab results (HL7 ORU or FHIR Observation), ADT events,
+medication lists, problem lists, and clinical notes are configured and validated with test data.
+Payer & PA Integration (Day 11-12): X12 eligibility and PA transaction routing is configured
+for all payers in the institution's payer mix.
+End-to-End Testing (Day 13-14): Full end-to-end scenario testing with representative patient
+data. All critical paths validated: registration, results routing, AI alert delivery, document
+processing, notification delivery.
+Go-Live & Hypercare (Day 15): Go-live. Integration Architect remains on standby for the first
+two weeks post-launch for rapid issue resolution.
+09
+Data Security, Compliance & Governance
+Every Control, Every Certification, Every Process
+9.1 Regulatory Compliance Framework
+
+Regulation /
+Standard
+Our Compliance Posture Assurance Activities
+HIPAA /
+HITECH
+Full compliance. BAA signed with
+every partner at onboarding. All 18 PHI
+identifiers protected. HIPAA Security
+Rule technical safeguards fully
+implemented. HIPAA Breach
+Notification Rule: patients and HHS
+notified within 60 days of discovery
+(internal target: 24 hours).
+Annual third-party HIPAA risk
+assessment. Continuous automated
+compliance monitoring. Breach
+simulation exercises twice yearly.
+21st Century
+Cures Act
+Full ONC compliance. FHIR R4 API
+exposes patient data for authorised
+third-party access. Information blocking
+prohibition fully observed — no data is
+withheld from patients or providers for
+competitive or commercial reasons.
+ONC certification maintained. FHIR
+API performance and availability
+monitored continuously.
+GDPR (EU
+Partners)
+Full GDPR compliance for EU-based
+partner deployments. Data Processing
+Agreement (DPA) provided. Right to
+access, right to erasure (subject to
+clinical hold exceptions), data
+portability, and consent management
+fully supported.
+Annual DPA review. Data Subject
+Access Request (DSAR) response
+within 30 days. DPO appointed.
+SOC 2 Type II Annual SOC 2 Type II audit covering
+Security, Availability, Processing
+Integrity, Confidentiality, and Privacy
+trust service criteria. Report available
+to partners under NDA.
+Annual audit by accredited CPA firm.
+Continuous control monitoring.
+ISO 27001 Certified. Information security
+management system covering all
+aspects of the MediLifecycle platform
+and corporate operations.
+Annual surveillance audit. Full
+recertification every 3 years.
+DEA &
+Controlled
+Substances
+Electronic prescribing for controlled
+substances (EPCS) compliant with
+DEA regulations and state-specific
+requirements. PDMP integration
+available for participating states.
+State-by-state PDMP integration
+maintained and updated as new states
+go live.
+FDA (as
+applicable)
+Clinical decision support functions that
+constitute medical devices under
+FDA's Software as a Medical Device
+(SaMD) framework are identified and
+Regulatory classification maintained
+and reviewed on feature releases.
+managed in accordance with FDA
+guidance.
+9.2 Technical Security Controls
+
+Security Control Implementation Detail
+Encryption at Rest AES-256 encryption for all stored data. Database-level encryption
+enforced at the storage layer. Encryption keys managed in AWS KMS
+with automatic annual rotation. Customer-managed keys (CMK)
+available for Enterprise tier partners who require independent key
+custody.
+Encryption in Transit TLS 1.3 enforced for all data in transit. TLS 1.2 as minimum fallback.
+Certificate pinning on mobile applications. No unencrypted data channels
+permitted anywhere in the platform.
+Authentication Multi-factor authentication (MFA) mandatory for all users. Supported
+MFA methods: TOTP authenticator app, SMS OTP, hardware security
+key (FIDO2/WebAuthn). Single sign-on (SSO) via SAML 2.0 or OIDC for
+institutional identity provider integration.
+Authorisation & Access
+Control
+Role-based access control (RBAC) enforced at every API call.
+Fine-grained permission system: access is defined at the patient level,
+not just the role level. Attribute-based access control (ABAC) for
+specialty-specific data filtering. No access is permitted beyond what is
+explicitly granted.
+Network Security Web Application Firewall (WAF) in front of all public-facing endpoints.
+DDoS protection via AWS Shield Advanced. Network segmentation:
+application, data, and management planes are fully isolated. All
+inter-service communications are encrypted and authenticated via
+mTLS.
+Vulnerability
+Management
+Automated dependency scanning on every code deployment. Static
+application security testing (SAST) and dynamic application security
+testing (DAST) in CI/CD pipeline. Third-party penetration testing
+quarterly. Bug bounty programme for responsible disclosure.
+Audit Logging Immutable audit log of every user action, API call, data access, AI query,
+and AI output. Logs are written to tamper-proof storage (AWS CloudTrail
++ S3 with Object Lock). Log retention: 7 years. Logs are available to
+institution compliance teams via the Audit Export API.
+Data Loss Prevention DLP controls prevent PHI from being exported via unapproved channels.
+Copy/paste of PHI outside the application is monitored. Bulk data
+exports require elevated authorisation and are logged with business
+justification.
+9.3 Patient Data Rights
+
+Right to Access: patients can download their complete health record, including all
+documents, AI-generated summaries, and interaction logs, at any time from the patient
+portal.
+Right to Correct: patients can flag inaccurate information in their record; corrections are
+reviewed and applied by the responsible clinician with full version history preserved.
+Right to Restrict: patients can restrict the sharing of specific portions of their record with
+specific users, including family members, at any time.
+Right to Portability: patients can export their data in FHIR R4 format for import into another
+health platform or personal health record.
+Right to Erasure: patients can request deletion of personal data. Clinical records are subject
+to legal retention requirements — where erasure is legally permissible, it is carried out within
+30 days.
+Consent Management: all consent decisions (data sharing, family access, research
+participation) are recorded with timestamp, method of consent, and version of consent form.
+Patients can review and modify consents at any time from the patient portal.
+10
+Hospital & Clinic Administration
+The Administrator's Complete Operating Guide
+10.1 Admin Dashboard Overview
+
+The Administrator Dashboard gives your designated platform administrator complete visibility and
+
+control over the MediLifecycle deployment within your institution. It is distinct from the clinical
+dashboards — it focuses on users, configuration, compliance, and operational performance rather
+
+than individual patient care.
+
+Dashboard Module Capabilities
+User Management Create, modify, suspend, and delete user accounts for all roles.
+Configure role-specific permissions. Set MFA requirements. Manage
+SSO integration. View login history and active session counts by role.
+Patient Roster
+Management
+View all active, pending, and closed patient records. Bulk-import
+patients from EHR. Manage duplicate patient record alerts. Configure
+automatic registration rules (e.g., auto-register all new admissions
+from EHR ADT feed).
+Care Team Configuration Define care team templates for common admission types (e.g.,
+standard surgical admission team, oncology MDT). Configure default
+specialist assignment rules for common referral types.
+Notification Configuration Set institution-level notification rules: which events trigger alerts, which
+channels are used for each event type, escalation timeframes, and
+on-call routing rules. Override individual user notification preferences
+where institution policy requires.
+AI Configuration Set AI response tone preferences (Clinical Simplified, Standard, or
+Plain Language) for patient-facing communications. Configure alert
+sensitivity thresholds. Upload custom formulary lists and clinical
+protocol documents. Set auto-approval thresholds for AI-drafted
+documents.
+Integration Management Monitor the health of all EHR and payer integrations. View data flow
+volumes, error rates, and latency metrics. Trigger manual re-sync for
+specific patients or data types. Manage API credentials and
+connection parameters.
+Compliance & Audit Export audit logs for specific date ranges, users, patient records, or
+event types. Generate HIPAA access logs for breach investigation.
+View the compliance dashboard for real-time control monitoring status.
+Download the latest SOC 2 report.
+Billing & Reconciliation View billing event summaries by period. Review AI-generated billing
+discrepancy reports. Export billing data to practice management
+system. Monitor PA approval rates and appeal outcomes by payer.
+10.2 User Role Configuration
+
+MediLifecycle's role-based access control system is fully configurable to match your institution's
+
+clinical governance structure. The following standard roles are provided, each fully configurable by
+
+the administrator.
+
+Role Standard Access Scope Restrictions Special Notes
+Primary
+Physician
+Full clinical access
+for patients on
+their panel. Full
+order
+management. Full
+AI capabilities.
+Document drafting
+and approval.
+Lifecycle stage
+management.
+Own patient
+panel only
+(configurable to
+cover group
+practices)
+None — full
+clinical authority
+Prescription of
+controlled substances
+requires DEA
+credential verification
+at onboarding
+Specialist
+Physician
+Specialty-scoped
+clinical access for
+patients referred to
+them. Consultation
+note creation.
+Specialty-specific
+order entry
+(subject to primary
+Dr confirmation).
+Patients for
+whom they
+have an active
+referral
+Cannot
+advance/reverse
+lifecycle stages;
+cannot override
+primary Dr's
+access
+configuration
+Access expires when
+referral episode is
+closed (configurable)
+Nurse
+Practitione
+r / PA
+Full clinical access
+per scope of
+practice. Order
+entry within scope.
+AI capabilities.
+Cannot prescribe
+controlled
+substances
+without
+supervising
+physician co-sign
+(configurable per
+state).
+Panel or
+practice-level
+depending on
+configuration
+Controlled
+substance
+prescribing may
+require co-sign
+depending on
+state
+Scope of practice
+configuration varies by
+state — configurable
+Registered
+Nurse
+Clinical data entry.
+Vital signs,
+observation,
+medication
+administration
+documentation.
+View all clinical
+records. Cannot
+place orders.
+Assigned ward
+or practice
+panel
+No order
+placement; no
+lifecycle stage
+changes
+Medication
+administration
+documentation requires
+MAR integration
+Practice
+Administra
+tor
+Full admin
+dashboard access.
+User
+management.
+Configuration.
+Billing and
+Administrative
+data only — no
+clinical PHI
+No clinical
+access of any
+kind
+Separation of duties
+with clinical roles
+enforced
+reconciliation. No
+clinical record
+access.
+Billing
+Staff
+Billing and
+reconciliation
+modules only. No
+clinical record
+access. Can view
+order status for
+billing purposes.
+Billing data,
+insurance data,
+order
+completion
+status
+No PHI access
+beyond what is
+necessary for
+billing functions
+HIPAA minimum
+necessary standard
+enforced
+Research
+Coordinato
+r
+Anonymised
+aggregate data
+exports for
+approved research
+protocols. No
+individual patient
+PHI unless specific
+patient has
+consented to
+research
+participation.
+Anonymised
+data only;
+individual
+records only
+with explicit
+patient consent
+Cannot access
+individual patient
+records without
+consent
+Research protocol
+approval required
+before access is
+granted
+10.3 Institution-Level Configuration Checklist
+
+The following is the complete checklist of configuration decisions that every partner institution
+
+should complete before go-live. Your Implementation Manager will guide you through each item.
+
+Configuration
+Area
+Items to Configure When Required
+Identity & Access SSO configuration (SAML/OIDC), MFA policy,
+password requirements, session timeout policy, IP
+allowlisting (optional)
+Required before any user
+accounts are activated
+EHR Integration Source system selection, FHIR endpoint
+configuration, field mapping validation, data sync
+frequency, conflict resolution rules
+Required before patient
+records can be imported
+Payer
+Configuration
+Payer list upload, formulary feeds configuration,
+PA requirement feeds, eligibility check frequency
+Required before order
+management is activated
+Notification
+Rules
+Event-to-channel mapping, escalation timeframes,
+on-call routing, critical alert bypass rules for Do
+Not Disturb
+Required before any
+patient is admitted to the
+platform
+AI Configuration Response tone (per role), alert sensitivity
+thresholds, auto-approval rules for AI drafts,
+formulary preferences, custom clinical protocols
+Required before AI
+assistant is enabled for
+any user
+Document
+Categories
+Custom document types beyond standard library,
+custom upload templates, institution-specific
+consent forms
+Recommended before
+patient-facing upload is
+activated
+Lifecycle Stage
+Names
+
+Custom sub-stage names to match institution
+terminology (e.g., 'Pre-Op Assessment' between
+Stage 3 and Stage 4)
+Optional — standard
+10-stage naming used if
+not configured
+Reporting &
+Analytics
+
+KPI dashboard configuration, report schedule and
+recipients, benchmark comparison cohort
+selection, data export schedule
+Recommended before
+go-live; required for
+monthly reporting
+Patient
+Communication
+
+Platform name (white-label options available),
+notification sender name, default language,
+accessibility mode default
+Required before
+patient-facing
+communications are sent
+Family Access
+Defaults
+
+Default family access level, which events trigger
+family notifications by default, family question
+form routing
+Required before any
+family member accounts
+are activated
+11
+Analytics, Reporting & Performance Dashboards
+From Individual Patient Metrics to Population-Level Insights
+11.1 Dashboard Hierarchy
+
+MediLifecycle provides four tiers of analytics, each serving a different audience and time horizon. All
+
+dashboards draw from the same underlying data — there is never a discrepancy between what a
+physician sees on their patient dashboard and what the administrator sees on the operational
+
+dashboard.
+
+Dashboard
+Tier
+Primary
+Audience
+Scope Refresh
+Rate
+Key Metrics
+Patient-Lev
+el
+Dashboard
+Primary Doctor,
+Specialist
+Individual
+patient
+Real-time Risk scores, lifecycle stage
+timeline, outstanding items,
+recent results, adherence data,
+AI alert history
+Physician
+Panel
+Dashboard
+Primary Doctor All patients on
+panel
+Daily
+refresh
+Panel risk stratification, overdue
+follow-ups, outstanding orders,
+alert volumes, documentation
+completeness
+Operationa
+l
+Dashboard
+Practice
+Administrator
+Institution-wide Daily
+refresh
+Admission volumes, lifecycle
+stage distribution, notification
+delivery rates, AI usage metrics,
+billing reconciliation summary
+Executive /
+Analytics
+Dashboard
+CMO, CFO,
+Hospital
+Leadership
+Institution-wide
++ benchmarks
+Weekly/mo
+nthly
+Quality metrics, readmission
+rates, HCAHPS scores,
+cost-per-episode trends, AI
+value attribution, benchmark
+comparison
+11.2 Standard Reports
+
+Report Contents Primary
+Recipients
+Delivery
+Monthly
+Lifecycle
+Summary
+Summary of all patient lifecycle activity in
+the period: admissions, stage transitions,
+discharges, closures, average lifecycle
+duration by condition category.
+CMO,
+Administrator
+Monthly
+automated
+delivery
+Clinical Quality
+Report
+HEDIS-aligned quality measures:
+screening completion rates, medication
+adherence rates, follow-up appointment
+attendance, care plan guideline
+CMO, Quality
+Committee
+Monthly
+automated
+delivery
+adherence, readmission rates at 7, 30,
+and 90 days.
+AI Performance
+Report
+
+AI alert volumes and physician response
+rates, AI document draft acceptance rate
+(vs. edit vs. reject), AI override frequency
+by recommendation type, PA approval
+rates with and without AI assistance.
+CMO, CMIO,
+Administrator
+Monthly
+automated
+delivery
+Billing
+Reconciliation
+Report
+
+Fulfilled orders matched to billing events,
+revenue leakage analysis (fulfilled but
+unbilled), PA approval rates by payer and
+drug class, appeal outcomes and
+success rates.
+CFO, Revenue
+Cycle
+Monthly
+automated
+delivery
+Family
+Engagement
+Report
+
+Family notification delivery rates, family
+question submission volumes and
+response times, post-discharge check-in
+completion rates, family satisfaction
+scores.
+Patient
+Experience Team
+Monthly
+automated
+delivery
+Security &
+Compliance
+Report
+
+Authentication events, failed login
+attempts, unusual access patterns, PHI
+access log summary, AI audit trail
+summary, outstanding compliance control
+findings.
+CISO, Compliance
+Officer
+Monthly
+automated
+delivery;
+immediate on
+anomaly
+On-Demand
+Cohort
+Analysis
+
+Slice any population by diagnosis, payer,
+risk score, lifecycle stage, physician, or
+any combination. Export for research,
+population health management, or quality
+improvement.
+Any authorised
+user
+On-demand
+via
+self-service
+analytics tool
+12
+Implementation Playbook
+The Complete 30-Day Go-Live Guide for Your Team
+MediLifecycle is designed to be fully operational within 10 working days for standard deployments
+
+and within 30 days for complex multi-site or multi-system enterprise deployments. This section
+provides the detailed playbook your team needs to plan, execute, and succeed with your
+
+implementation.
+
+12.1 Implementation Team Composition
+
+A successful implementation requires the right people from both your organisation and the
+
+MediLifecycle team. Ensure the following roles are identified and committed before kick-off.
+
+Role Who Fills It Responsibility Time Commitment
+Executive
+Sponsor
+VP/SVP of Clinical
+Informatics or CMO
+Champions the project at senior
+leadership level; resolves resource
+conflicts; signs off on go-live
+decision
+3 hours total (kick-off
++ go-live sign-off)
+Clinical Lead Department Head
+or CMO delegate
+Represents clinical workflow
+requirements; validates AI
+configuration; approves clinical role
+configurations
+8 hours across the
+implementation
+period
+IT Lead /
+Integration
+Architect
+Head of Healthcare
+IT or EHR
+Administrator
+Owns EHR and payer integration
+technical work; manages network
+connectivity; coordinates testing
+Full-time during
+Weeks 1-2; part-time
+Weeks 3-4
+Practice
+Administrator
+Your designated
+MediLifecycle
+Admin
+Completes platform configuration;
+manages user creation; conducts
+admin training; owns go-live
+readiness
+Full-time during
+implementation;
+ongoing post-launch
+Privacy /
+Compliance
+Officer
+HIPAA Privacy
+Officer
+Reviews and signs BAA; validates
+compliance configuration; signs off
+on patient data handling
+procedures
+4 hours total
+MediLifecycle
+Implementatio
+n Manager
+Assigned to your
+account at contract
+signing
+Drives the implementation timeline;
+provides daily support during
+Weeks 1-2; available on-call during
+Weeks 3-4; owns escalation
+Full-time on your
+account during
+implementation
+MediLifecycle
+Integration
+Architect
+Technical specialist Designs and delivers all EHR and
+payer integrations; documents
+integration specifications; conducts
+integration testing
+Full-time during
+Weeks 1-2; on-call
+Weeks 3-4
+12.2 30-Day Implementation Timeline
+
+Phase Activities
+Week 1: Discovery &
+Design (Days 1-5)
+Day 1: Contract execution, BAA signing, Implementation Manager
+assigned, kick-off call. Day 2: System inventory, integration design
+workshop, data mapping session. Day 3: Integration specification
+documented and approved. Day 4: Test environment provisioned, API
+credentials established, network connectivity confirmed. Day 5: Patient
+data model review, field mapping validation, first test data transfer.
+Week 2: Integration
+Build (Days 6-10)
+Day 6: EHR integration build commenced, patient demographics sync in
+test. Day 7: Clinical data flows (labs, meds, problems) configured and
+tested. Day 8: Payer integration (eligibility, PA) configured and tested. Day
+9: End-to-end integration test with 50 representative patient records. Day
+10: Integration issues resolved, full data fidelity confirmed.
+Week 3: Platform
+Configuration (Days
+11-15)
+Day 11: Admin dashboard configured — user roles, permissions,
+notification rules. Day 12: AI configuration completed — tone, thresholds,
+formulary, protocols. Day 13: Patient and family interface configured —
+branding, language, communication templates. Day 14: Admin staff training
+(4-hour session). Day 15: Clinical lead and physician champion training
+(2-hour session).
+Week 4: Pilot &
+Go-Live (Days 16-20)
+Day 16: Pilot cohort activated (10-20 patients representing key use cases).
+Day 17-18: Pilot monitoring — all workflows tested with real patients, all
+issues logged and resolved. Day 19: Go-live readiness review — all
+checklist items confirmed green. Day 20: Full go-live. All new admissions
+enter MediLifecycle. Existing patient migration commenced in batches.
+Weeks 5-6: Hypercare
+(Days 21-30)
+MediLifecycle Implementation Manager on-call daily. All issues triaged and
+resolved within 4 hours. Daily check-in call with your Practice
+Administrator. Patient migration completed. Post-launch configuration
+refinements applied based on clinical team feedback.
+30-Day Review Formal post-implementation review: platform KPIs assessed against
+targets, configuration refinements identified, user adoption metrics
+reviewed, handover from Implementation Manager to Partner Success
+Manager, 90-day roadmap established.
+12.3 Training Programme
+
+Training
+Module
+Audience Format & Duration Prerequisites
+Admin
+Onboarding
+Practice
+Administrator
+4-hour live workshop (remote or
+in-person); covers full admin
+dashboard, user management,
+configuration, reporting
+Must complete before
+any user accounts are
+created
+Physician
+Onboarding
+Primary
+Doctors,
+Specialists
+2-hour live workshop (remote or
+in-person); covers clinical dashboard,
+AI assistant, order management,
+notification management
+Must complete before
+seeing first patient on
+platform
+Nurse &
+Clinical Staff
+
+Nurses, NPs,
+PAs
+90-minute live workshop; covers
+clinical data entry, document upload,
+notification handling, patient
+communication
+Must complete before
+any patient
+documentation on
+platform
+Patient &
+Family
+Onboarding
+
+Patients (and
+family by
+extension)
+In-app guided onboarding (15-minute
+self-service); supported by in-app help
+centre and a Getting Started video
+library
+Available to all
+patients at registration
+On-Demand
+Training
+Library
+
+All users Role-specific video library covering all
+platform features; updated on each
+release. Average module length: 5-8
+minutes. Completable on mobile.
+Available 24/7 in the
+platform
+Refresher
+Training
+
+All users Quarterly release webinars
+highlighting new features; annual
+mandatory refresher for admin and
+physician roles
+Automated reminders
+via platform
+notification system
+13
+Pricing, SLAs & Partner Support Model
+Commercial Terms, Service Commitments, and Your Support Team
+13.1 Pricing Structure
+
+MediLifecycle is priced on a per-active-patient-per-month model. An active patient is defined as any
+
+patient who has had at least one documented clinical interaction (stage transition, result, order,
+note, or upload) in the billing month. There are no seat limits for clinical or administrative users —
+
+pricing scales with patients, not headcount.
+
+Tier Patient Volume What's Included Best Fit
+Starter Up to 500 active
+patients / month
+Flat monthly fee (contact sales for current
+pricing). Includes full platform, standard
+EHR integrations, standard payer
+integrations, AI assistant (all roles),
+standard support, implementation included.
+Ideal for
+single-site
+primary care
+practices,
+specialist clinics,
+and outpatient
+centres
+Growth 501–5,000 active
+patients / month
+Per-patient monthly rate. Volume pricing
+applied automatically as patient count
+grows. Includes everything in Starter plus
+advanced analytics, custom reporting, and
+dedicated Partner Success Manager.
+Ideal for
+community
+hospitals,
+multi-site
+practices, and
+mid-size health
+systems
+Enterpris
+e
+5,000+ active
+patients / month
+Custom pricing. Includes dedicated
+infrastructure, custom SLAs, multi-site
+administration, advanced API access,
+custom AI model training on
+institution-specific data, on-site
+implementation support, and named
+Account Director.
+Designed for
+large health
+systems,
+academic
+medical centres,
+and multi-state
+networks
+Academi
+c /
+Researc
+h
+Any size Special pricing for accredited academic
+medical centres and research institutions.
+Includes anonymised research data export
+capability and IRB-approved population
+analytics module.
+Requires
+academic
+affiliation
+verification
+Add-On Module Description & Pricing Basis
+Add-On: Advanced AI Tier Enables specialty-specific AI model fine-tuning, AI-generated care
+pathway optimisation recommendations, predictive readmission
+modelling, and population risk stratification heat maps. Priced per
+active patient / month.
+Add-On: Patient
+Engagement Suite
+Enhances the patient and family experience: white-label mobile app
+with your institution's branding, multi-language support (14
+languages), accessibility module (screen reader, large text, simplified
+view), and patient satisfaction survey module.
+Add-On: Research &
+Analytics Module
+IRB-approved anonymised data exports, cohort analysis tools, HEDIS
+measure automation, and population health management dashboards.
+Priced per institution / month.
+Add-On: Custom
+Integration
+Custom integration to non-standard EHR systems, proprietary lab
+systems, or institution-specific data sources not in the certified
+integration library. Priced per integration by complexity (standard:
+5-day delivery; complex: 20-day delivery).
+13.2 Service Level Agreements
+
+SLA Item Commitment Remedy / Credits
+Platform Uptime 99.9% monthly uptime (Starter/Growth);
+99.95% monthly uptime (Enterprise).
+Measured from external monitoring points.
+Excludes planned maintenance windows.
+Service credits: 10% of
+monthly fee per 0.1% below
+SLA; max 50% credit per
+month
+Critical Alert
+Delivery
+Critical clinical notifications (critical lab
+values, AI-flagged deterioration signals)
+delivered within 60 seconds of trigger event
+in 99.5% of cases.
+Service credits applicable for
+sustained breach; immediate
+escalation protocol activated
+AI Document
+Generation
+AI-generated draft documents (discharge
+summaries, referral letters, PA letters)
+completed within 60 seconds of request in
+95% of cases.
+Not subject to financial credit
+— performance metric only
+Document
+Processing
+Uploaded documents classified, extracted,
+and indexed within 90 seconds in 99% of
+cases.
+Not subject to financial credit
+— performance metric only
+P1 Support
+Response
+Platform down or data inaccessible:
+30-minute response, 4-hour resolution
+target. Available 24/7/365.
+Service credits for breach;
+incident post-mortem within 48
+hours
+P2 Support
+Response
+Significant feature impaired: 2-hour
+response during business hours (8am-8pm
+local); 4-hour at all other times. 8-hour
+resolution target.
+No financial credit;
+performance tracked in
+quarterly review
+P3 Support
+Response
+Minor issue or cosmetic defect: next
+business day response, 5-business-day
+resolution target.
+No financial credit
+Implementation
+Delivery
+Full platform go-live within 10 working days
+(standard) or 30 working days (enterprise
+multi-site) of contract execution, assuming
+customer obligations are met on schedule.
+Day-for-day credit for each day
+beyond SLA; customer
+obligations must be
+documented
+13.3 Partner Support Model
+
+Support Resource Description
+Dedicated Partner
+Success Manager (PSM)
+Every Growth and Enterprise partner is assigned a named PSM. Your
+PSM is your primary relationship contact post go-live. They conduct
+quarterly business reviews, present product roadmap previews, own
+escalations when standard support channels are insufficient, and
+proactively identify configuration improvements based on your usage
+patterns. PSMs are clinically informed — they understand the
+healthcare context of every platform decision.
+Implementation Manager Assigned at contract signing for all tiers. Drives the implementation
+timeline, resolves blockers, and serves as the primary point of contact
+during the implementation period. Transitions to PSM relationship
+post-launch.
+24/7 Technical Support Available to all tiers via phone, in-platform chat, and email. P1 issues
+are escalated to engineering within 15 minutes of receipt, 24/7/365.
+Support engineers are platform specialists — not generalist helpdesk.
+Clinical Workflows
+Specialist
+Available to all tiers (scheduled sessions; ad hoc for Enterprise).
+Provides expert guidance on configuring the platform to match
+complex clinical governance structures, specialty workflows, and
+institutional care pathways.
+Integration Support Dedicated integration specialists available for any EHR, payer, or
+custom integration issue. Integration engineers are on-call for P1
+integration issues at all times.
+Training & Enablement
+Team
+Delivers all onboarding training and refresher sessions. Creates
+custom training materials for institution-specific workflows. Manages
+the on-demand training library, updated within 2 weeks of every
+platform release.
+MediLifecycle Community Online community forum for all partner institutions: share configuration
+tips, request features, discuss clinical workflow challenges, and
+connect with peers at similar institutions. Moderated by
+MediLifecycle's clinical and product teams.
+14
+Frequently Asked Questions
+Answers to the Questions Your Team Will Ask
+Question Answer
+
+Can patients see everything in
+their record, including clinical
+notes?
+
+By default, clinical notes written by physicians are not
+automatically visible to patients. The primary doctor controls
+which elements of the clinical record are marked as
+'patient-visible'. AI-generated plain-language summaries of care
+plans and results are visible to patients by default. This ensures
+patients are well-informed without the risk of uncontextualised
+clinical notes causing unnecessary distress.
+What happens to the patient
+record if our contract with
+MediLifecycle ends?
+
+You own your data. In the event of contract termination,
+MediLifecycle will provide a complete export of all patient records
+in HL7 FHIR R4 format and all uploaded documents in their
+original file formats within 30 days of termination. Data is retained
+by MediLifecycle for 90 days post-termination to allow for dispute
+resolution, then permanently deleted.
+Can we use MediLifecycle if
+we do not have a modern
+EHR?
+
+Yes. While EHR integration significantly enhances the value of
+MediLifecycle, the platform functions as a standalone system. You
+can register patients directly in MediLifecycle and use it as your
+primary care coordination and patient communication platform.
+Legacy EHR data can be imported via bulk CSV upload or manual
+entry.
+How does the AI know the
+difference between a family
+member asking an innocent
+question and one who should
+not have access?
+
+The AI's responses are always bounded by the patient's
+permission settings — it never reveals information beyond what
+the patient has granted. If a family member asks about something
+outside their permission scope, the AI responds with an
+empathetic explanation and redirects them appropriately. It does
+not confirm or deny the existence of withheld information.
+Is the AI making clinical
+decisions?
+
+No. The AI provides clinical decision support — it surfaces
+information, drafts documents, generates risk scores, and makes
+suggestions. All clinical decisions remain the responsibility of the
+licensed physician. All AI-generated clinical documents require
+physician approval before being acted upon or delivered. The AI
+cannot place orders, prescribe medications, or change a patient's
+care plan without explicit physician authorisation.
+What happens if a patient is
+admitted to a hospital that is
+not a MediLifecycle partner?
+
+The patient's MediLifecycle record remains active and accessible
+to their registered care team. The non-partner hospital cannot
+access MediLifecycle directly, but the patient's primary doctor (if
+they are a MediLifecycle user) can view the patient's full history
+and communicate with the care team at the non-partner facility via
+standard channels. The patient can continue to upload documents
+from the non-partner facility.
+Can we configure the platform
+to match our specific clinical
+governance structure?
+
+Yes. Role-based access control is fully configurable. Approval
+workflows, escalation chains, notification routing, AI approval
+requirements, and lifecycle stage definitions are all configurable
+by your Administrator. The Implementation Manager and Clinical
+Workflows Specialist will help you map your governance structure
+to the platform configuration during implementation.
+How is the AI trained? Does it
+learn from our patients' data?
+
+The MediLifecycle AI engine is trained on a large, curated,
+de-identified clinical dataset. It does not learn from individual
+patients' data in a way that could cause that patient's information
+to influence responses for other patients. Within a single patient's
+record, the AI builds a longitudinal understanding of that patient's
+specific patterns and history — this is scoped to that patient's
+record only and cannot be accessed by any other patient's AI
+context.
+What is the mobile app
+experience for patients?
+
+The MediLifecycle patient mobile app (iOS and Android) mirrors
+the web portal experience. It supports push notifications,
+document upload from the device camera or file storage, secure
+messaging, medication reminders, and AI assistant queries. The
+app is available in 14 languages and includes an accessibility
+mode. The app does not store PHI locally — all data is retrieved
+from the platform on demand.
+Can two hospitals within the
+same health system share a
+MediLifecycle deployment?
+
+Yes. Multi-site Enterprise deployments support a single tenant
+spanning multiple hospital sites with site-specific configuration,
+reporting, and user management. Patients can be shared across
+sites (subject to patient consent), and the clinical record follows
+the patient across all sites in the network.
+15
+Glossary of Terms
+Definitions for All Platform and Clinical Terms Used in This Guide
+Term Definition
+
+Active Patient A patient who has had at least one documented clinical interaction on the
+MediLifecycle platform in the current billing month. Used as the basis for
+per-patient pricing.
+
+AI Alert Feed The AI's proactive notification stream — clinical alerts, overdue item
+reminders, and risk score changes generated by the AI without being
+prompted by a user query.
+
+AI Confidence
+Score
+
+A percentage score displayed alongside AI diagnostic suggestions and risk
+assessments, indicating the strength of the supporting evidence in the
+patient's record. Not a probability of clinical outcome.
+Audit Trail The immutable, chronological log of every user action, API call, AI query, AI
+response, and data access event in the platform. Retained for 7 years.
+
+BAA (Business
+Associate
+Agreement)
+
+A HIPAA-required contract between a covered entity (hospital/clinic) and a
+business associate (MediLifecycle) that governs the protection and use of
+PHI. Signed at onboarding.
+Care Gap A screening, preventive care measure, or clinical monitoring checkpoint that
+is overdue for a patient based on their age, diagnosis, and applicable clinical
+guidelines.
+
+Care Plan A documented, structured plan agreed by the primary physician and patient
+that specifies the diagnosis, treatment objectives, treatment modalities,
+monitoring schedule, and discharge criteria for an episode of care.
+
+DICOM Digital Imaging and Communications in Medicine. The international standard
+for medical imaging data format and transmission, used for X-rays, CT scans,
+MRIs, and other imaging modalities.
+
+DME (Durable
+Medical Equipment)
+
+Medical equipment prescribed for home use by a patient (e.g., wheelchairs,
+CPAP machines, hospital beds, walkers). DME orders require a Certificate of
+Medical Necessity (CMN) and payer authorisation.
+FHIR (Fast
+Healthcare
+Interoperability
+Resources)
+
+A modern HL7 standard for exchanging healthcare information electronically.
+FHIR R4 is the current version and the primary integration standard used by
+MediLifecycle.
+HL7 (Health Level
+7)
+
+A set of international standards for transfer of clinical and administrative data
+between software applications. MediLifecycle supports both HL7 v2 (legacy)
+and HL7 FHIR R4 (modern).
+ICD-10 The 10th revision of the International Classification of Diseases. The
+standard coding system for diagnoses and clinical conditions used in clinical
+documentation and billing.
+
+Lifecycle Stage One of the ten defined phases of a patient's care journey on the
+MediLifecycle platform, from Registration to Post-Discharge Monitoring &
+Closure. Stage transitions are controlled by the primary physician.
+
+MDM (Master Data
+Management)
+
+In the context of mobile device management: the enterprise software used to
+manage mobile devices issued to clinical staff. In the context of HL7: Medical
+Document Management messages (MDM) used to exchange documents
+between systems.
+MFA (Multi-Factor
+Authentication)
+
+A security mechanism requiring users to provide two or more verification
+factors to access the platform. Mandatory for all MediLifecycle users.
+NEWS2 (National
+Early Warning
+Score 2)
+
+A validated clinical scoring system used to assess the degree of illness of a
+patient and prompt critical care response. MediLifecycle monitors NEWS2
+scores for inpatient patients and alerts the care team when thresholds are
+breached.
+PA (Prior
+Authorisation)
+
+A payer requirement that certain medications, procedures, or investigations
+must be pre-approved before the payer will cover the cost. MediLifecycle
+automates PA submission and tracking.
+PDMP (Prescription
+Drug Monitoring
+Program)
+
+A state-level electronic database that tracks prescriptions for controlled
+substances. MediLifecycle integrates with state PDMPs to support safe
+controlled substance prescribing.
+PHI (Protected
+Health Information)
+
+Any individually identifiable health information covered by HIPAA.
+MediLifecycle treats all patient data as PHI and applies full HIPAA protections
+accordingly.
+RBAC (Role-Based
+Access Control)
+
+A security model that grants system access based on a user's defined role.
+MediLifecycle's RBAC system ensures every user can only access data they
+are explicitly authorised to see.
+RPO / RTO Recovery Point Objective (RPO): the maximum acceptable data loss in a
+disaster scenario (MediLifecycle: 1 hour). Recovery Time Objective (RTO):
+the maximum acceptable time to restore full service after a disaster
+(MediLifecycle: 4 hours).
+
+SMART on FHIR A standard framework for authorising clinical applications to access EHR
+data via FHIR APIs, maintaining clinical context (current patient, current
+encounter) across applications.
+
+SOC 2 Type II A third-party audit report demonstrating that a SaaS platform has maintained
+effective security, availability, processing integrity, confidentiality, and privacy
+controls over a period of time (typically 12 months).
+
+Webhook A real-time data notification mechanism by which MediLifecycle sends an
+HTTP POST to a configured endpoint whenever a defined event occurs on
+the platform (e.g., new result received, stage changed).
+
+MediLifecycle Platform | Comprehensive B2B Partner Guide | Version 2.0 | Confidential
+This is a offline tool, your data stays locally and is not send to any server!
+Feedback & Bug Reports
