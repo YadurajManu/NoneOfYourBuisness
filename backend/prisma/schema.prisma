@@ -15,6 +15,7 @@ model Organization {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   patients  Patient[]
+  users     User[]
 }
 
 model User {
