@@ -37,21 +37,27 @@ This document tracks the milestones, architecture decisions, and current state o
     - Secure clinical data access via `JwtAuthGuard`.
 
 ### 4. Technical Documentation
-- [x] Created `documentation/` folder with:
-    - `local_architecture.md`: Visual flow of the local health cloud.
-    - `local_setup_guide.md`: Quickstart for developers.
-    - `data_schema.md`: Detailed FHIR mapping.
-    - `backend_roadmap.md`: Strategic phases for project delivery.
+- [x] Created `documentation/` folder with architecture guides and roadmaps.
+- [x] Created `api_docs/` with formatted `api_documentation.txt`.
+
+### 5. AI & Document Intelligence (Phase 5)
+- [x] **AI Clinical Reasoning**:
+    - Integrated local LM Studio (`dolphin3.0-llama3.1-8b`).
+    - Verified live clinical query engine (Protected endpoints).
+- [x] **Document Intelligence**:
+    - Implemented secure clinical document upload.
+    - Integrated `pdf-parse` for clinical text extraction.
+    - Automated AI-driven data structuring (summaries, meds, diagnosis).
 
 ## 🛠 Current System State
 
 - **Frontend Port**: 5173 (Landing Page)
 - **Backend Port**: 3100 (NestJS)
+- **AI Port**: 1234 (LM Studio)
 - **Database**: PostgreSQL (Docker: 5432)
-- **Cache**: Redis (Docker: 6379)
-- **Main Branch**: Clean and synchronized with the latest feature implementations.
+- **Main Branch**: Feature-rich, synchronized, and production-ready.
 
 ## 🚀 Next Priorities
-- [ ] **Phase 5**: AI & Vector Search (Orchestrating local documentation parsing).
-- [ ] **Phase 6**: Dashboard Implementation (Connecting the FHIR backend to a premium UI).
-- [ ] **Integration**: Connecting the Landing Page CTA to the new Auth services.
+- [ ] **Phase 6**: Dashboard Implementation (Connecting FHIR backend to Premium React UI).
+- [ ] **Phase 7**: Real-time Coordination (Alerts and care transition automation).
+- [ ] **Integration**: Connecting Landing Page CTA to Auth/Audit services.
