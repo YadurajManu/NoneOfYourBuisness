@@ -10,28 +10,33 @@ datasource db {
 }
 
 model Organization {
-  id                 String               @id @default(uuid())
+  id                 String          @id @default(uuid())
   name               String
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
   patients           Patient[]
   users              User[]
   notificationEvents NotificationEvent[]
+  clinicalEvents     ClinicalEvent[]
+  clinicalAlerts     ClinicalAlert[]
 }
 
 model User {
-  id                     String               @id @default(uuid())
-  email                  String               @unique
-  passwordHash           String
-  role                   UserRole             @default(DOCTOR)
-  organizationId         String
-  organization           Organization         @relation(fields: [organizationId], references: [id])
-  familyAccesses         PatientFamilyAccess[] @relation("FamilyMemberAccesses")
-  grantedFamilyAccesses  PatientFamilyAccess[] @relation("FamilyAccessGrantedBy")
-  familyNotifications    NotificationEvent[]   @relation("FamilyNotificationRecipient")
-  accessAuditAsActor     FamilyAccessAudit[]   @relation("FamilyAccessAuditActor")
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
+  id                    String               @id @default(uuid())
+  email                 String               @unique
+  passwordHash          String
+  role                  UserRole             @default(DOCTOR)
+  organizationId        String
+  organization          Organization         @relation(fields: [organizationId], references: [id])
+  familyAccesses        PatientFamilyAccess[] @relation("FamilyMemberAccesses")
+  grantedFamilyAccesses PatientFamilyAccess[] @relation("FamilyAccessGrantedBy")
+  familyNotifications   NotificationEvent[]   @relation("FamilyNotificationRecipient")
+  accessAuditAsActor    FamilyAccessAudit[]   @relation("FamilyAccessAuditActor")
+  clinicalEventsAuthored ClinicalEvent[]      @relation("ClinicalEventActor")
+  alertsAcknowledged    ClinicalAlert[]       @relation("AlertAcknowledgedBy")
+  alertsResolved        ClinicalAlert[]       @relation("AlertResolvedBy")
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
 }
 
 model Patient {
@@ -44,6 +49,8 @@ model Patient {
   familyAccesses     PatientFamilyAccess[]
   notificationEvents NotificationEvent[]
   familyAccessAudits FamilyAccessAudit[]
+  clinicalEvents     ClinicalEvent[]
+  clinicalAlerts     ClinicalAlert[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -119,6 +126,53 @@ model FamilyAccessAudit {
   @@index([familyUserId, createdAt])
 }
 
+model ClinicalEvent {
+  id             String               @id @default(uuid())
+  organizationId String
+  patientId      String
+  actorUserId    String
+  type           ClinicalEventType
+  severity       ClinicalEventSeverity @default(INFO)
+  title          String
+  description    String?
+  data           Json?
+  occurredAt     DateTime             @default(now())
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  organization   Organization         @relation(fields: [organizationId], references: [id])
+  patient        Patient              @relation(fields: [patientId], references: [id])
+  actorUser      User                 @relation("ClinicalEventActor", fields: [actorUserId], references: [id])
+  alert          ClinicalAlert?
+
+  @@index([organizationId, patientId, occurredAt])
+  @@index([organizationId, type, severity, occurredAt])
+}
+
+model ClinicalAlert {
+  id                   String        @id @default(uuid())
+  organizationId       String
+  patientId            String
+  clinicalEventId      String        @unique
+  priority             AlertPriority @default(MEDIUM)
+  status               AlertStatus   @default(OPEN)
+  title                String
+  message              String
+  acknowledgedByUserId String?
+  acknowledgedAt       DateTime?
+  resolvedByUserId     String?
+  resolvedAt           DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  organization         Organization  @relation(fields: [organizationId], references: [id])
+  patient              Patient       @relation(fields: [patientId], references: [id])
+  clinicalEvent        ClinicalEvent @relation(fields: [clinicalEventId], references: [id])
+  acknowledgedByUser   User?         @relation("AlertAcknowledgedBy", fields: [acknowledgedByUserId], references: [id])
+  resolvedByUser       User?         @relation("AlertResolvedBy", fields: [resolvedByUserId], references: [id])
+
+  @@index([organizationId, status, priority, createdAt])
+  @@index([patientId, status, createdAt])
+}
+
 enum UserRole {
   ADMIN
   DOCTOR
@@ -160,4 +214,33 @@ enum NotificationType {
   DOCUMENT_UPLOADED
   DOCUMENT_PROCESSED
   DOCUMENT_FAILED
+  CLINICAL_EVENT_RECORDED
+  CLINICAL_ALERT_CREATED
+}
+
+enum ClinicalEventType {
+  LAB
+  VITAL
+  MEDICATION
+  ORDER
+  FOLLOW_UP
+}
+
+enum ClinicalEventSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum AlertPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }

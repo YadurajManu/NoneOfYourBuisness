@@ -55,11 +55,12 @@ Practical interpretation:
 
 2. `DOCTOR` (used for Primary Doctor in current model)
 - Accesses protected patient/document/AI/dashboard APIs via JWT.
-- Can create patients, move lifecycle stage, query AI, and review patient timelines.
+- Can create patients, move lifecycle stage, query AI, review timelines, and record/triage clinical events + alerts.
 
 3. `SPECIALIST`
 - Role exists in schema/JWT payload.
-- No specialist-specific filtered API behavior yet (currently behaves like generic clinical user).
+- Can access the same current clinical surface as doctor (patients, docs, AI, dashboard, clinical alerts).
+- No specialist-specific filtered API behavior yet.
 
 4. `PATIENT`
 - Role exists in schema/JWT payload.
@@ -91,10 +92,15 @@ Practical interpretation:
 - Current: notification event backbone implemented (DB events + family notification APIs), wired to stage/document events.
 - Status: **Partial** (channel delivery adapters still pending).
 
-### E) Clinical order workflows
+### E) Clinical events and order workflows
 - Guide target: ordering, coordination, medication/PA workflows.
-- Current: not yet modeled in schema/modules.
-- Status: **Not implemented**.
+- Current: backend now supports clinical event capture and alert triage APIs:
+  - `POST /api/clinical-events/patient/:patientId`
+  - `GET /api/clinical-events/patient/:patientId`
+  - `GET /api/clinical-events/alerts/open`
+  - `GET /api/clinical-events/alerts/patient/:patientId`
+  - `PATCH /api/clinical-events/alerts/:alertId/status`
+- Status: **Partial** (core event/alert domain exists; full order/medication/PA workflows still pending).
 
 ### F) EHR/FHIR integration adapters
 - Guide target: interoperability adapters and integration flows.
@@ -106,15 +112,16 @@ Practical interpretation:
 - Current: backend now has starter dashboard APIs:
   - `GET /api/dashboard/overview`
   - `GET /api/dashboard/patient/:patientId/timeline`
-- Status: **Early partial implementation**.
+- Includes clinical totals/open alerts and patient clinical timeline items.
+- Status: **Partial**.
 
 ## 6. Immediate Product Gaps to Reach Guide Fidelity
 
 1. Implement role-specific API policies/views (Primary vs Specialist vs Patient vs Family).
 2. Add channel delivery for notifications (websocket/push/email/SMS adapters).
 3. Build notification/alert expansion for broader transition event types.
-4. Add workflow modules for orders, medications, and care coordination.
-5. Expand dashboard domain models and KPIs beyond current aggregates/timeline.
+4. Add workflow modules for orders, medications, and prior-authorization/care coordination.
+5. Expand dashboard KPIs with SLA, turnaround, outcomes, and role-specific drilldowns.
 6. Add integration module layer for EHR/FHIR exchange.
 
 ## 7. Build Sequence (Strict Guide-First)
@@ -122,6 +129,6 @@ Practical interpretation:
 1. Lifecycle orchestration layer (rules per stage, transition hooks).
 2. Notification/event engine expansion for family and care-team updates across all workflows.
 3. Delivery channel adapters (websocket/push/email/SMS) on top of notification events.
-4. Clinical workflow modules (orders, meds, follow-ups, escalation).
-5. Dashboard/reporting expansion mapped to Section 11 KPIs.
+4. Clinical workflow expansion (orders, meds, PA, follow-ups, escalation on top of events/alerts).
+5. Dashboard/reporting expansion mapped to Section 11 KPIs and operational SLA metrics.
 6. EHR integration adapters and deployment hardening.

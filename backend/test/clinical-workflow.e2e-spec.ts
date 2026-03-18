@@ -29,6 +29,14 @@ type NotificationResponse = {
   isRead: boolean;
 };
 
+type ClinicalAlertResponse = {
+  id: string;
+  status: string;
+  clinicalEvent: {
+    id: string;
+  };
+};
+
 describe('Clinical Workflow (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -133,6 +141,35 @@ describe('Clinical Workflow (e2e)', () => {
       })
       .expect(201);
 
+    await request(app.getHttpServer())
+      .post(`/clinical-events/patient/${patientId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        type: 'VITAL',
+        severity: 'CRITICAL',
+        title: 'Acute oxygen desaturation',
+        description: 'SpO2 dropped to 84% on room air',
+        notifyFamily: true,
+      })
+      .expect(201);
+
+    const openAlertsRes = await request(app.getHttpServer())
+      .get('/clinical-events/alerts/open')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const openAlertsBody = openAlertsRes.body as ClinicalAlertResponse[];
+    expect(openAlertsBody.length).toBe(1);
+    expect(openAlertsBody[0].status).toBe('OPEN');
+
+    await request(app.getHttpServer())
+      .patch(`/clinical-events/alerts/${openAlertsBody[0].id}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        status: 'ACKNOWLEDGED',
+      })
+      .expect(200);
+
     const familyLoginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
@@ -175,6 +212,7 @@ describe('Clinical Workflow (e2e)', () => {
     expect(notificationTypes).toContain('ACCESS_GRANTED');
     expect(notificationTypes).toContain('LIFECYCLE_STAGE_CHANGED');
     expect(notificationTypes).toContain('DOCUMENT_UPLOADED');
+    expect(notificationTypes).toContain('CLINICAL_ALERT_CREATED');
 
     await request(app.getHttpServer())
       .patch(`/family-access/notifications/${notificationsBody[0].id}/read`)

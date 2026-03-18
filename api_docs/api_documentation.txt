@@ -154,8 +154,11 @@ Description: Organization-level dashboard aggregates.
 Includes:
 - totals.patients
 - totals.documents
+- totals.clinicalEvents
+- totals.openClinicalAlerts
 - lifecycleBreakdown
 - documentStatusBreakdown
+- alertStatusBreakdown
 - recentPatients
 
 GET /dashboard/patient/:patientId/timeline
@@ -165,6 +168,7 @@ Param:
 Includes:
 - patient summary
 - documents
+- clinicalEvents (with optional linked alert object)
 - synthesized timeline events
 
 -----------------------------------------
@@ -235,18 +239,70 @@ Allowed roles: FAMILY_MEMBER
 Description: Mark one notification as read.
 
 -----------------------------------------
-7) DATA MODELS ADDED FOR PRODUCTION WORKFLOW
+7) CLINICAL EVENTS + ALERTS MODULE (Protected)
+-----------------------------------------
+Allowed roles: ADMIN, DOCTOR, SPECIALIST
+
+POST /clinical-events/patient/:patientId
+Description: Record a clinical event for a patient and optionally raise alert.
+Param:
+- patientId: UUID
+Body:
+{
+  "type": "LAB|VITAL|MEDICATION|ORDER|FOLLOW_UP",
+  "severity": "INFO|WARNING|CRITICAL",
+  "title": "string (1-180)",
+  "description": "optional string (<=1200)",
+  "data": "optional object",
+  "occurredAt": "optional ISO datetime",
+  "raiseAlert": "optional boolean",
+  "alertPriority": "optional LOW|MEDIUM|HIGH|CRITICAL",
+  "alertTitle": "optional string",
+  "alertMessage": "optional string",
+  "notifyFamily": "optional boolean"
+}
+Behavior:
+- Automatically creates a ClinicalAlert when severity is CRITICAL or raiseAlert=true.
+- Emits family notification events:
+  - CLINICAL_ALERT_CREATED (if alert created)
+  - CLINICAL_EVENT_RECORDED (if notifyFamily=true and no alert)
+
+GET /clinical-events/patient/:patientId
+Description: List clinical events for a patient in caller organization.
+
+GET /clinical-events/alerts/open
+Description: List open alerts for caller organization (sorted by priority, recency).
+
+GET /clinical-events/alerts/patient/:patientId
+Description: List all alerts for a patient.
+
+PATCH /clinical-events/alerts/:alertId/status
+Description: Update alert status.
+Body:
+{
+  "status": "OPEN|ACKNOWLEDGED|RESOLVED"
+}
+Behavior:
+- Tracks acknowledging/resolving user and timestamps.
+- Prevents acknowledging an already resolved alert.
+
+-----------------------------------------
+8) DATA MODELS ADDED FOR PRODUCTION WORKFLOW
 -----------------------------------------
 New/updated schema elements:
 - UserRole now includes FAMILY_MEMBER
 - PatientFamilyAccess (consent + access level + expiry)
 - FamilyAccessAudit (audit trail)
 - NotificationEvent (family update event queue)
+- ClinicalEvent (clinical timeline facts)
+- ClinicalAlert (critical/operational clinical alerts)
 - NotificationType, FamilyAccessLevel, FamilyAccessStatus enums
+- ClinicalEventType, ClinicalEventSeverity, AlertPriority, AlertStatus enums
 - DocStatus aligned to: PENDING, PROCESSING, COMPLETED, FAILED
 
 Migration:
 - 20260318070000_family_access_notifications
+- 20260318005247_clinical_events_alerts
 
 -----------------------------------------
 SYSTEM NOTES

@@ -23,6 +23,7 @@ Production-oriented NestJS backend for multi-tenant patient lifecycle management
 - `ai`: query + clinical summaries
 - `family-access`: consent grants/revocation, family patient views
 - `notifications`: family event stream and read state
+- `clinical-events`: event logging, alerting, acknowledgement/resolution workflows
 - `dashboard`: org overview and patient timeline
 
 ## Prerequisites
@@ -72,6 +73,7 @@ npx prisma migrate deploy
 Current migration set includes:
 - `20260317221437_init`
 - `20260318070000_family_access_notifications`
+- `20260318005247_clinical_events_alerts`
 
 ## Run
 Development:
@@ -105,6 +107,7 @@ Major endpoint groups:
 - `/documents/*`
 - `/ai/*`
 - `/family-access/*`
+- `/clinical-events/*`
 - `/dashboard/*`
 
 ## Notes for Production Readiness
@@ -113,4 +116,3 @@ Major endpoint groups:
 - Put upload storage on secure persistent storage for production.
 - Add notification delivery adapters (email/SMS/push/websocket) on top of `NotificationEvent`.
 - Expand integration tests for clinical workflows and incident paths.
-

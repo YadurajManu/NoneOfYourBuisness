@@ -12,6 +12,7 @@ import { DocumentsModule } from './modules/documents/documents.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { FamilyAccessModule } from './modules/family-access/family-access.module';
+import { ClinicalEventsModule } from './modules/clinical-events/clinical-events.module';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 
 @Module({
@@ -26,6 +27,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
     DashboardModule,
     NotificationsModule,
     FamilyAccessModule,
+    ClinicalEventsModule,
   ],
   controllers: [AppController],
   providers: [
