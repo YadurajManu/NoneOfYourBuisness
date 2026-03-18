@@ -80,14 +80,21 @@ Last updated: March 18, 2026
 - e2e covers end-to-end admin -> patient -> family workflow, clinical alert flow, order/task/medication lifecycle, prior-auth updates, referral handoff, and overdue automation.
 - Build/lint gates passing.
 
+10. Realtime + channel delivery backbone
+- Family realtime notification SSE stream endpoint added.
+- Per-family-user channel preferences (in-app/email/sms/push/webhook) implemented.
+- Durable `NotificationDelivery` outbox with retry/backoff and delivery status tracking added.
+- Delivery dispatch operations API for care/admin teams added.
+- Notification processing supports in-app + external webhook fanout pipelines.
+
 ## In Progress / Remaining for Guide-Level Parity
 
 1. Advanced clinical workflow depth
 - Rich prior-auth document exchange, payer polling callbacks, referral packet generation, and cross-team SLA assignment rules.
 
-2. Real-time delivery channels
-- WebSocket/SSE for live dashboard + family feed.
-- SMS/email/push adapters on top of `NotificationEvent`.
+2. Real-time delivery channels expansion
+- Dashboard-side realtime streams (doctor/admin operations surfaces) still pending.
+- Provider-grade adapters (Twilio/SES/FCM, delivery receipts, templates) still pending.
 
 3. Role-specific experiences
 - Separate policy/view contracts for primary doctor vs specialist vs patient vs family.

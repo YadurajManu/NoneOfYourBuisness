@@ -27,6 +27,8 @@ model Organization {
   referralHandoffs   ReferralHandoff[]
   lifecycleTransitions PatientLifecycleTransition[]
   lifecycleHookExecutions LifecycleHookExecution[]
+  notificationPreferences NotificationChannelPreference[]
+  notificationDeliveries NotificationDelivery[]
 }
 
 model User {
@@ -55,6 +57,8 @@ model User {
   referralsAssigned     ReferralHandoff[]     @relation("ReferralAssignedTo")
   lifecycleTransitionsAuthored PatientLifecycleTransition[] @relation("LifecycleTransitionActor")
   lifecycleHookExecutions LifecycleHookExecution[] @relation("LifecycleHookActor")
+  notificationPreferences NotificationChannelPreference[]
+  notificationDeliveries NotificationDelivery[] @relation("NotificationDeliveryRecipient")
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
 }
@@ -131,9 +135,56 @@ model NotificationEvent {
   organization   Organization     @relation(fields: [organizationId], references: [id])
   patient        Patient          @relation(fields: [patientId], references: [id])
   familyUser     User             @relation("FamilyNotificationRecipient", fields: [familyUserId], references: [id])
+  deliveries     NotificationDelivery[]
 
   @@index([familyUserId, isRead, createdAt])
   @@index([patientId, createdAt])
+}
+
+model NotificationChannelPreference {
+  id            String       @id @default(uuid())
+  organizationId String
+  familyUserId   String
+  inAppEnabled   Boolean      @default(true)
+  emailEnabled   Boolean      @default(false)
+  smsEnabled     Boolean      @default(false)
+  pushEnabled    Boolean      @default(false)
+  webhookEnabled Boolean      @default(false)
+  emailAddress   String?
+  phoneNumber    String?
+  pushToken      String?
+  webhookUrl     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  familyUser     User         @relation(fields: [familyUserId], references: [id])
+
+  @@unique([organizationId, familyUserId])
+  @@index([familyUserId])
+}
+
+model NotificationDelivery {
+  id                  String                     @id @default(uuid())
+  notificationEventId String
+  organizationId      String
+  familyUserId        String
+  channel             NotificationChannel
+  status              NotificationDeliveryStatus @default(PENDING)
+  attempts            Int                        @default(0)
+  nextAttemptAt       DateTime?
+  lastAttemptAt       DateTime?
+  deliveredAt         DateTime?
+  failureReason       String?
+  providerResponse    Json?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  notificationEvent   NotificationEvent          @relation(fields: [notificationEventId], references: [id])
+  organization        Organization               @relation(fields: [organizationId], references: [id])
+  familyUser          User                       @relation("NotificationDeliveryRecipient", fields: [familyUserId], references: [id])
+
+  @@index([organizationId, status, nextAttemptAt, createdAt])
+  @@index([familyUserId, status, createdAt])
+  @@index([notificationEventId, channel])
 }
 
 model FamilyAccessAudit {
@@ -606,4 +657,20 @@ enum LifecycleHookStatus {
   APPLIED
   SKIPPED
   FAILED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+  WEBHOOK
+}
+
+enum NotificationDeliveryStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  SKIPPED
 }

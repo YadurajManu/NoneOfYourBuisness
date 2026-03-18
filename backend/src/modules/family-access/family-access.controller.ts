@@ -2,14 +2,17 @@ import {
   Body,
   Controller,
   Get,
+  MessageEvent,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
   Req,
+  Sse,
   UseGuards,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
+import { Observable } from 'rxjs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthenticatedUser } from '../../types/jwt.types';
@@ -17,6 +20,7 @@ import { FamilyAccessService } from './family-access.service';
 import { CreateFamilyMemberDto } from './dto/create-family-member.dto';
 import { GrantFamilyAccessDto } from './dto/grant-family-access.dto';
 import { RevokeFamilyAccessDto } from './dto/revoke-family-access.dto';
+import { UpdateNotificationPreferencesDto } from './dto/update-notification-preferences.dto';
 
 @Controller('family-access')
 @UseGuards(JwtAuthGuard)
@@ -115,6 +119,39 @@ export class FamilyAccessController {
       req.user.orgId,
       req.user.userId,
       notificationId,
+    );
+  }
+
+  @Get('notification-preferences')
+  @Roles(UserRole.FAMILY_MEMBER)
+  getNotificationPreferences(@Req() req: { user: AuthenticatedUser }) {
+    return this.familyAccessService.getMyNotificationPreferences(
+      req.user.orgId,
+      req.user.userId,
+    );
+  }
+
+  @Patch('notification-preferences')
+  @Roles(UserRole.FAMILY_MEMBER)
+  updateNotificationPreferences(
+    @Body() body: UpdateNotificationPreferencesDto,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.familyAccessService.updateMyNotificationPreferences(
+      req.user.orgId,
+      req.user.userId,
+      body,
+    );
+  }
+
+  @Sse('notifications/stream')
+  @Roles(UserRole.FAMILY_MEMBER)
+  streamNotifications(
+    @Req() req: { user: AuthenticatedUser },
+  ): Observable<MessageEvent> {
+    return this.familyAccessService.streamMyNotifications(
+      req.user.orgId,
+      req.user.userId,
     );
   }
 }

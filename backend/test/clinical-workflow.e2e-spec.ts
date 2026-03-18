@@ -73,6 +73,19 @@ type ReferralHandoffResponse = {
   id: string;
 };
 
+type NotificationPreferencesResponse = {
+  inAppEnabled: boolean;
+  emailEnabled: boolean;
+  emailAddress: string | null;
+};
+
+type DeliveryDispatchResponse = {
+  processed: number;
+  sent: number;
+  skipped: number;
+  failed: number;
+};
+
 type LifecycleStatusResponse = {
   currentStage: number;
   transitions: Array<{
@@ -92,6 +105,8 @@ describe('Clinical Workflow (e2e)', () => {
   let prisma: PrismaService;
 
   beforeAll(async () => {
+    process.env.NOTIFY_AUTO_DISPATCH = 'false';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -117,7 +132,7 @@ describe('Clinical Workflow (e2e)', () => {
 
   beforeEach(async () => {
     await prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE "LifecycleHookExecution", "PatientLifecycleTransition", "ReferralHandoff", "PriorAuthorization", "WorkflowAudit", "CareTask", "MedicationPlan", "ClinicalOrder", "ClinicalAlert", "ClinicalEvent", "FamilyAccessAudit", "NotificationEvent", "PatientFamilyAccess", "Document", "Patient", "User", "Organization" RESTART IDENTITY CASCADE',
+      'TRUNCATE TABLE "LifecycleHookExecution", "PatientLifecycleTransition", "ReferralHandoff", "PriorAuthorization", "WorkflowAudit", "CareTask", "MedicationPlan", "ClinicalOrder", "ClinicalAlert", "ClinicalEvent", "FamilyAccessAudit", "NotificationDelivery", "NotificationEvent", "NotificationChannelPreference", "PatientFamilyAccess", "Document", "Patient", "User", "Organization" RESTART IDENTITY CASCADE',
     );
   });
 
@@ -165,6 +180,35 @@ describe('Clinical Workflow (e2e)', () => {
         password: familyPassword,
       })
       .expect(201);
+
+    const earlyFamilyLogin = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: familyEmail,
+        password: familyPassword,
+      })
+      .expect(200);
+
+    const earlyFamilyToken = (earlyFamilyLogin.body as AuthResponse)
+      .access_token;
+
+    const notificationPrefsRes = await request(app.getHttpServer())
+      .get('/family-access/notification-preferences')
+      .set('Authorization', `Bearer ${earlyFamilyToken}`)
+      .expect(200);
+    const notificationPrefsBody =
+      notificationPrefsRes.body as NotificationPreferencesResponse;
+    expect(notificationPrefsBody.inAppEnabled).toBe(true);
+    expect(notificationPrefsBody.emailEnabled).toBe(false);
+
+    await request(app.getHttpServer())
+      .patch('/family-access/notification-preferences')
+      .set('Authorization', `Bearer ${earlyFamilyToken}`)
+      .send({
+        emailEnabled: true,
+        emailAddress: familyEmail,
+      })
+      .expect(200);
 
     await request(app.getHttpServer())
       .post(`/family-access/grant/${patientId}`)
@@ -384,6 +428,26 @@ describe('Clinical Workflow (e2e)', () => {
     expect(dashboardOverviewBody.totals.pendingPriorAuthorizations).toBe(0);
     expect(dashboardOverviewBody.totals.activeReferrals).toBe(1);
     expect(dashboardOverviewBody.totals.overdueReferrals).toBe(1);
+
+    const deliveryDispatchRes = await request(app.getHttpServer())
+      .post('/notifications/delivery/run')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ limit: 200 })
+      .expect(201);
+    const deliveryDispatchBody =
+      deliveryDispatchRes.body as DeliveryDispatchResponse;
+    expect(deliveryDispatchBody.processed).toBeGreaterThan(0);
+    expect(deliveryDispatchBody.processed).toBe(
+      deliveryDispatchBody.sent +
+        deliveryDispatchBody.skipped +
+        deliveryDispatchBody.failed,
+    );
+
+    const recentDeliveriesRes = await request(app.getHttpServer())
+      .get('/notifications/delivery/recent?limit=50')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect((recentDeliveriesRes.body as unknown[]).length).toBeGreaterThan(0);
 
     const familyLoginRes = await request(app.getHttpServer())
       .post('/auth/login')

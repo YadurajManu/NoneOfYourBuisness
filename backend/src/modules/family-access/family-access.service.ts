@@ -3,15 +3,18 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  MessageEvent,
   NotFoundException,
 } from '@nestjs/common';
 import { FamilyAccessAction, NotificationType, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { Observable } from 'rxjs';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateFamilyMemberDto } from './dto/create-family-member.dto';
 import { GrantFamilyAccessDto } from './dto/grant-family-access.dto';
 import { RevokeFamilyAccessDto } from './dto/revoke-family-access.dto';
+import { UpdateNotificationPreferencesDto } from './dto/update-notification-preferences.dto';
 
 @Injectable()
 export class FamilyAccessService {
@@ -295,6 +298,35 @@ export class FamilyAccessService {
     }
 
     return { updated: true };
+  }
+
+  async getMyNotificationPreferences(orgId: string, familyUserId: string) {
+    return this.notificationsService.getFamilyNotificationPreferences(
+      orgId,
+      familyUserId,
+    );
+  }
+
+  async updateMyNotificationPreferences(
+    orgId: string,
+    familyUserId: string,
+    dto: UpdateNotificationPreferencesDto,
+  ) {
+    return this.notificationsService.updateFamilyNotificationPreferences(
+      orgId,
+      familyUserId,
+      dto,
+    );
+  }
+
+  streamMyNotifications(
+    orgId: string,
+    familyUserId: string,
+  ): Observable<MessageEvent> {
+    return this.notificationsService.streamFamilyNotifications(
+      orgId,
+      familyUserId,
+    );
   }
 
   private async ensurePatientInOrg(patientId: string, orgId: string) {

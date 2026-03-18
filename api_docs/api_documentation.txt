@@ -266,6 +266,18 @@ PATCH /family-access/notifications/:notificationId/read
 Allowed roles: FAMILY_MEMBER
 Description: Mark one notification as read.
 
+GET /family-access/notification-preferences
+Allowed roles: FAMILY_MEMBER
+Description: Get per-user notification channel preferences.
+
+PATCH /family-access/notification-preferences
+Allowed roles: FAMILY_MEMBER
+Description: Update per-user notification channels and contact targets.
+
+GET /family-access/notifications/stream
+Allowed roles: FAMILY_MEMBER
+Description: Realtime SSE stream for notification created/read events.
+
 -----------------------------------------
 7) CLINICAL EVENTS + ALERTS MODULE (Protected)
 -----------------------------------------
@@ -453,13 +465,33 @@ Behavior:
 - Writes workflow audit entries for each auto-escalated item.
 
 -----------------------------------------
-9) DATA MODELS ADDED FOR PRODUCTION WORKFLOW
+9) NOTIFICATION OPERATIONS MODULE (Protected)
+-----------------------------------------
+Allowed roles: ADMIN, DOCTOR, SPECIALIST
+
+GET /notifications/delivery/recent?limit=100
+Description: List recent notification delivery attempts for organization.
+
+POST /notifications/delivery/run
+Description: Run delivery dispatch for pending/failed notifications.
+Body:
+{
+  "limit": "optional integer 1..500"
+}
+Behavior:
+- Processes queued channel deliveries with retry/backoff logic.
+- Tracks `SENT`, `FAILED`, and `SKIPPED` outcomes with provider response metadata.
+
+-----------------------------------------
+10) DATA MODELS ADDED FOR PRODUCTION WORKFLOW
 -----------------------------------------
 New/updated schema elements:
 - UserRole now includes FAMILY_MEMBER
 - PatientFamilyAccess (consent + access level + expiry)
 - FamilyAccessAudit (audit trail)
 - NotificationEvent (family update event queue)
+- NotificationChannelPreference (per-family-user channel settings)
+- NotificationDelivery (durable channel delivery outbox/attempt tracking)
 - ClinicalEvent (clinical timeline facts)
 - ClinicalAlert (critical/operational clinical alerts)
 - ClinicalOrder (care workflow order unit)
@@ -475,6 +507,7 @@ New/updated schema elements:
 - ClinicalOrderType, ClinicalOrderStatus, ClinicalOrderPriority enums
 - CareTaskType, CareTaskStatus, MedicationPlanStatus enums
 - PriorAuthorizationStatus, ReferralDestinationType, ReferralHandoffStatus, ReferralPriority enums
+- NotificationChannel, NotificationDeliveryStatus enums
 - LifecycleTransitionType, LifecycleHookStatus enums
 - DocStatus aligned to: PENDING, PROCESSING, COMPLETED, FAILED
 
@@ -487,6 +520,7 @@ Migration:
 - 20260318010635_clinical_workflows_orders_medications
 - 20260318013500_prior_auth_referral_handoffs
 - 20260318020000_lifecycle_orchestration
+- 20260318024500_notification_realtime_delivery
 
 -----------------------------------------
 SYSTEM NOTES

@@ -22,7 +22,7 @@ Production-oriented NestJS backend for multi-tenant patient lifecycle management
 - `documents`: upload + parse + AI metadata extraction
 - `ai`: query + clinical summaries
 - `family-access`: consent grants/revocation, family patient views
-- `notifications`: family event stream and read state
+- `notifications`: family event stream, realtime SSE updates, and multi-channel delivery dispatch
 - `clinical-events`: event logging, alerting, acknowledgement/resolution workflows
 - `clinical-workflows`: clinical orders, care tasks, medication plans, prior auth, referral handoffs, workflow audit + overdue automation
 - `patients/lifecycle`: strict stage orchestration, transition audit, and stage hooks
@@ -47,6 +47,16 @@ LLM_ENDPOINT=http://localhost:1234/v1
 LLM_MODEL=local-model
 STORAGE_PATH=./data/uploads
 ENCRYPTION_KEY=32_character_key_placeholder
+NOTIFY_AUTO_DISPATCH=true
+NOTIFY_MAX_ATTEMPTS=5
+NOTIFY_WEBHOOK_TIMEOUT_MS=5000
+NOTIFY_EMAIL_WEBHOOK_URL=
+NOTIFY_EMAIL_WEBHOOK_TOKEN=
+NOTIFY_SMS_WEBHOOK_URL=
+NOTIFY_SMS_WEBHOOK_TOKEN=
+NOTIFY_PUSH_WEBHOOK_URL=
+NOTIFY_PUSH_WEBHOOK_TOKEN=
+NOTIFY_WEBHOOK_TOKEN=
 ```
 
 ## Local Infrastructure
@@ -82,6 +92,7 @@ Current migration set includes:
 - `20260318010635_clinical_workflows_orders_medications`
 - `20260318013500_prior_auth_referral_handoffs`
 - `20260318020000_lifecycle_orchestration`
+- `20260318024500_notification_realtime_delivery`
 
 ## Run
 Development:
@@ -115,6 +126,7 @@ Major endpoint groups:
 - `/documents/*`
 - `/ai/*`
 - `/family-access/*`
+- `/notifications/*`
 - `/clinical-events/*`
 - `/clinical-workflows/*`
 - `/dashboard/*`
@@ -123,5 +135,5 @@ Major endpoint groups:
 - Keep migrations versioned and applied in deploy pipeline.
 - Use strong `JWT_SECRET` and environment-specific secrets management.
 - Put upload storage on secure persistent storage for production.
-- Add notification delivery adapters (email/SMS/push/websocket) on top of `NotificationEvent`.
+- Keep notification channel adapters configured and monitored (`NOTIFY_*` envs).
 - Expand integration tests for clinical workflows and incident paths.

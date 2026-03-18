@@ -94,8 +94,11 @@ Practical interpretation:
 
 ### D) Real-time family updates/notifications
 - Guide target: live multi-channel updates and family communication.
-- Current: notification event backbone implemented (DB events + family notification APIs), wired to stage/document events.
-- Status: **Partial** (channel delivery adapters still pending).
+- Current:
+  - notification event backbone implemented (DB events + family notification APIs), wired to stage/document/workflow events
+  - realtime SSE stream added for family notification updates
+  - channel preference model + delivery outbox + dispatch endpoint implemented
+- Status: **Partial** (provider-native adapters, template management, and operations-grade delivery receipts still pending).
 
 ### E) Clinical events and order workflows
 - Guide target: ordering, coordination, medication/PA workflows.
@@ -136,7 +139,7 @@ Practical interpretation:
 ## 6. Immediate Product Gaps to Reach Guide Fidelity
 
 1. Implement role-specific API policies/views (Primary vs Specialist vs Patient vs Family).
-2. Add channel delivery for notifications (websocket/push/email/SMS adapters).
+2. Harden channel delivery stack (provider-native adapters, templates, receipts, alerting).
 3. Build notification/alert expansion for broader transition event types.
 4. Extend workflow depth: payer callbacks, referral packet orchestration, and care-team SLA enforcement.
 5. Expand dashboard KPIs with SLA, turnaround, outcomes, and role-specific drilldowns.
