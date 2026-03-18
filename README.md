@@ -1,1 +1,1 @@
-https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExb2E1bXZ2ZXdnNzJvMmc2eHZhYnl5MmpxMDU4aXgyeDRwcDlvZ3k0MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MTGteOhsWQLRiUIbS9/giphy.gif
+![Dude Please Stop GIF](https://github.com/user-attachments/assets/d2650d5d-ed00-4002-941b-bbb87e27ea16)
