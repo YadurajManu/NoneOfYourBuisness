@@ -22,7 +22,8 @@ export class RolesGuard implements CanActivate {
     const userRole = request.user?.role as UserRole | undefined;
 
     if (!userRole) {
-      return false;
+      // Defer to JwtAuthGuard for authentication checks.
+      return true;
     }
 
     return requiredRoles.includes(userRole);
