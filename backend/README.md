@@ -1,11 +1,11 @@
 # Aarogya360 Backend (MediLifecycle)
 
-Production-oriented NestJS backend for multi-tenant patient lifecycle management, family consent access, and AI-assisted document workflows.
+Production-oriented NestJS backend for multi-tenant patient lifecycle management, role-based portal APIs, family consent access, demo lead intake, and AI-assisted document workflows.
 
 ## Stack
 - NestJS (TypeScript)
 - PostgreSQL (Prisma ORM)
-- Redis (local container available)
+- Redis (optional local container available)
 - JWT auth + role-based guards
 - Multer upload pipeline + async document processing
 
@@ -17,22 +17,24 @@ Production-oriented NestJS backend for multi-tenant patient lifecycle management
 - `FAMILY_MEMBER`
 
 ## Key Modules
-- `auth`: register/login, JWT issuance
-- `patients`: lifecycle and patient record CRUD
-- `documents`: upload + parse + AI metadata extraction
-- `ai`: query + clinical summaries
-- `family-access`: consent grants/revocation, family patient views
-- `notifications`: family event stream, realtime SSE updates, and multi-channel delivery dispatch
-- `clinical-events`: event logging, alerting, acknowledgement/resolution workflows
-- `clinical-workflows`: clinical orders, care tasks, medication plans, prior auth, referral handoffs, workflow audit + overdue automation
-- `patients/lifecycle`: strict stage orchestration, transition audit, and stage hooks
-- `dashboard`: org overview and patient timeline
+- `auth`: register/login/refresh/logout/me session flow
+- `patients`: patient lifecycle and stage transitions
+- `documents`: upload + processing + metadata extraction
+- `ai`: query + summary endpoints
+- `family-access`: consent grants, notifications, SSE stream, structured questions
+- `notifications`: delivery queue operations
+- `clinical-events`: event and alert workflows
+- `clinical-workflows`: orders/tasks/medications/prior-auth/referrals/automation
+- `dashboard`: overview, patient timeline, role-aware caseload
+- `leads`: public lead intake + admin lead operations
+- `admin`: org user management + audit feed
+- `patient-portal`: patient self-service APIs
 
 ## Prerequisites
 - Node.js 20+
 - npm 10+
-- PostgreSQL running at `localhost:5432`
-- Redis running at `localhost:6379` (if used by future jobs)
+- PostgreSQL at `localhost:5432`
+- Redis at `localhost:6379` (if enabled)
 
 ## Environment
 Create `backend/.env`:
@@ -41,8 +43,16 @@ Create `backend/.env`:
 DATABASE_URL=postgresql://postgres:password@localhost:5432/medlifecycle
 REDIS_HOST=localhost
 REDIS_PORT=6379
-PORT=3005
+PORT=3100
 JWT_SECRET=replace_with_strong_secret
+ACCESS_TOKEN_EXPIRES_IN=15m
+REFRESH_TOKEN_EXPIRES_IN_DAYS=14
+COOKIE_DOMAIN=
+COOKIE_SAME_SITE=lax
+CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+PUBLIC_RATE_LIMIT_WINDOW_MS=60000
+PUBLIC_RATE_LIMIT_MAX=30
+ENABLE_PUBLIC_LEADS=true
 LLM_ENDPOINT=http://localhost:1234/v1
 LLM_MODEL=local-model
 STORAGE_PATH=./data/uploads
@@ -60,14 +70,14 @@ NOTIFY_WEBHOOK_TOKEN=
 ```
 
 ## Local Infrastructure
-Start containers (Postgres + Redis):
 
 ```bash
 cd /Users/sujeetkumarsingh/Desktop/MedLifeCycle/backend
 docker compose up -d
 ```
 
-## Install + Generate Client
+## Install + Prisma Client
+
 ```bash
 cd /Users/sujeetkumarsingh/Desktop/MedLifeCycle/backend
 npm install
@@ -75,38 +85,24 @@ npx prisma generate
 ```
 
 ## Migrations
-Apply migrations (required before running server):
 
 ```bash
 cd /Users/sujeetkumarsingh/Desktop/MedLifeCycle/backend
 npx prisma migrate deploy
 ```
 
-Current migration set includes:
-- `20260317221437_init`
-- `20260318000000_notification_type_bootstrap`
-- `20260318005247_clinical_events_alerts`
-- `20260318006000_notification_type_shadow_cleanup`
-- `20260318070000_family_access_notifications`
-- `20260318080000_notification_type_clinical_values`
-- `20260318010635_clinical_workflows_orders_medications`
-- `20260318013500_prior_auth_referral_handoffs`
-- `20260318020000_lifecycle_orchestration`
-- `20260318024500_notification_realtime_delivery`
-
-## Run
-Development:
+## Run Backend Locally
 
 ```bash
 cd /Users/sujeetkumarsingh/Desktop/MedLifeCycle/backend
 npm run start:dev
 ```
 
-Base URL:
-- `http://localhost:3005/api` (or your `PORT`)
+Local base URL:
+- `http://localhost:3100/api` (from current `.env`)
+- If `PORT` is not set, app fallback is `3005`.
 
-## Quality Gates
-Run all backend checks:
+## Quality Checks
 
 ```bash
 cd /Users/sujeetkumarsingh/Desktop/MedLifeCycle/backend
@@ -116,24 +112,11 @@ npm test -- --runInBand
 npm run test:e2e
 ```
 
-## Production API Surface
-Reference:
+## API Documentation
 - `/Users/sujeetkumarsingh/Desktop/MedLifeCycle/api_docs/api_documentation.txt`
 
-Major endpoint groups:
-- `/auth/*`
-- `/patients/*`
-- `/documents/*`
-- `/ai/*`
-- `/family-access/*`
-- `/notifications/*`
-- `/clinical-events/*`
-- `/clinical-workflows/*`
-- `/dashboard/*`
-
-## Notes for Production Readiness
-- Keep migrations versioned and applied in deploy pipeline.
-- Use strong `JWT_SECRET` and environment-specific secrets management.
-- Put upload storage on secure persistent storage for production.
-- Keep notification channel adapters configured and monitored (`NOTIFY_*` envs).
-- Expand integration tests for clinical workflows and incident paths.
+## Production Notes
+- Keep migrations in deployment pipeline.
+- Use strong secrets manager for `JWT_SECRET` and webhook tokens.
+- Configure CORS and cookie domain/same-site before hosted use.
+- Move upload storage to persistent secure storage in production.

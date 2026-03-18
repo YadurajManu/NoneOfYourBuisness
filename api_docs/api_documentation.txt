@@ -1,36 +1,47 @@
 =========================================
        Aarogya360 / MediLifecycle API
 =========================================
-Version: Backend current state (March 18, 2026)
-Base URL: http://localhost:<PORT>/api  (default fallback PORT=3005)
-Format: JSON
-Auth: Bearer Token (JWT)
+Version: March 18, 2026
+Base URL: http://localhost:<PORT>/api
+Local current .env port: 3100
+Framework fallback port (if PORT missing): 3005
+Format: JSON (unless noted)
+
+Authentication model:
+- Access token: Bearer JWT
+- Refresh token: HttpOnly cookie (`ml_refresh_token`, path `/api/auth`)
+- Session pattern: short-lived access + rotating refresh session
 
 -----------------------------------------
-GLOBAL SECURITY + ROLE MODEL
+GLOBAL SECURITY / ACCESS
 -----------------------------------------
-Authenticated roles currently supported:
+Role model:
 - ADMIN
 - DOCTOR
 - SPECIALIST
 - PATIENT
 - FAMILY_MEMBER
 
-Role guard:
-- Endpoints are protected by JWT and role checks where applicable.
-- Organization (tenant) isolation is enforced in service layer.
+Global controls:
+- Validation pipe (whitelist + transform)
+- Role guard + JWT guard on protected endpoints
+- CORS allowlist via `CORS_ALLOWED_ORIGINS` + credentials=true
+- Helmet enabled
+- Request body limits (JSON + URL encoded)
+- Rate limiting on `/api/public/*`
 
------------------------------------------
-1) AUTHENTICATION MODULE
------------------------------------------
+=========================================
+1) AUTH MODULE
+=========================================
 
 POST /auth/register
-Description: Register a new organization + first ADMIN user.
+Description:
+- Create new organization and first ADMIN user.
 Body:
 {
-  "orgName": "string (2-120)",
+  "orgName": "string (2..120)",
   "email": "valid email",
-  "password": "string (8-128)"
+  "password": "string (8..128)"
 }
 Response:
 {
@@ -39,16 +50,21 @@ Response:
     "id": "uuid",
     "email": "string",
     "role": "ADMIN",
-    "organization": "string"
+    "organization": "string",
+    "orgId": "uuid",
+    "patientProfileId": null
   }
 }
+Cookie side-effect:
+- Sets `ml_refresh_token` cookie.
 
 POST /auth/login
-Description: Login existing user.
+Description:
+- Authenticate user and issue session tokens.
 Body:
 {
   "email": "valid email",
-  "password": "string (8-128)"
+  "password": "string (8..128)"
 }
 Response:
 {
@@ -57,476 +73,627 @@ Response:
     "id": "uuid",
     "email": "string",
     "role": "ADMIN|DOCTOR|SPECIALIST|PATIENT|FAMILY_MEMBER",
-    "organization": "string"
+    "organization": "string",
+    "orgId": "uuid",
+    "patientProfileId": "uuid|null"
   }
 }
+Cookie side-effect:
+- Sets `ml_refresh_token` cookie.
 
------------------------------------------
-2) PATIENT LIFECYCLE MODULE (Protected)
------------------------------------------
-Allowed roles: ADMIN, DOCTOR, SPECIALIST
-
-GET /patients
-Description: List patients in caller organization.
-
-GET /patients/:id
-Description: Get patient details + linked documents.
-Param:
-- id: UUID
-
-POST /patients
-Description: Create patient from FHIR-like payload.
-Body (minimum):
+POST /auth/refresh
+Description:
+- Rotate refresh session and issue new access token.
+Auth input:
+- Requires valid `ml_refresh_token` cookie.
+Response:
 {
-  "resourceType": "Patient",
-  "...": "other FHIR-like fields"
+  "access_token": "jwt",
+  "user": {
+    "id": "uuid",
+    "email": "string",
+    "role": "...",
+    "organization": "string",
+    "orgId": "uuid",
+    "patientProfileId": "uuid|null"
+  }
 }
-Validation:
-- resourceType must be "Patient"
+Cookie side-effect:
+- Rotates and resets `ml_refresh_token` cookie.
 
-PATCH /patients/:id/stage
-Description: Update lifecycle stage (1..10).
-Param:
-- id: UUID
+POST /auth/logout
+Description:
+- Revoke current refresh session and clear refresh cookie.
+Response:
+{ "success": true }
+
+GET /auth/me
+Description:
+- Return current authenticated user context.
+Auth:
+- Bearer token required.
+
+=========================================
+2) PUBLIC LEADS MODULE
+=========================================
+
+POST /public/leads
+Description:
+- Public demo request intake from landing/contact.
 Body:
 {
-  "stage": 1-10,
+  "name": "string (2..120)",
+  "org": "string (2..160)",
+  "role": "optional string",
+  "email": "valid email",
+  "phone": "optional string",
+  "message": "optional string",
+  "source": "optional string"
+}
+Response:
+{
+  "id": "uuid",
+  "status": "NEW",
+  "createdAt": "datetime"
+}
+Feature flag:
+- Disabled when `ENABLE_PUBLIC_LEADS=false`.
+
+=========================================
+3) ADMIN MODULE (ROLE: ADMIN)
+=========================================
+
+GET /admin/users
+Description:
+- List users in caller's organization.
+
+POST /admin/users
+Description:
+- Create user in caller's organization.
+Body:
+{
+  "email": "valid email",
+  "password": "string (8..128)",
+  "role": "ADMIN|DOCTOR|SPECIALIST|PATIENT|FAMILY_MEMBER",
+  "patientProfileId": "optional uuid",
+  "patientName": "optional string <= 120"
+}
+Behavior:
+- If role=PATIENT and `patientProfileId` missing, backend creates patient profile and links user.
+
+PATCH /admin/users/:userId/role
+Body:
+{ "role": "ADMIN|DOCTOR|SPECIALIST|PATIENT|FAMILY_MEMBER" }
+
+PATCH /admin/users/:userId/suspend
+Body:
+{ "suspended": true|false }
+
+GET /admin/audit-events
+Description:
+- Starter compliance feed.
+Response includes:
+- familyAccessAudits
+- workflowAudits
+- lifecycleTransitions
+
+-----------------------------------------
+ADMIN LEADS (ROLE: ADMIN)
+-----------------------------------------
+
+GET /admin/leads
+Description:
+- List demo leads ordered by newest first.
+
+GET /admin/leads/:id
+Description:
+- Get single demo lead details.
+
+PATCH /admin/leads/:id/status
+Body:
+{ "status": "NEW|CONTACTED|QUALIFIED|CLOSED_WON|CLOSED_LOST|SPAM" }
+
+-----------------------------------------
+USER DIRECTORY (ROLE: ADMIN|DOCTOR|SPECIALIST)
+-----------------------------------------
+
+GET /users/doctors
+Description:
+- List active (not suspended) doctors in caller organization.
+
+GET /users/specialists
+Description:
+- List active (not suspended) specialists in caller organization.
+
+=========================================
+4) PATIENT LIFECYCLE MODULE
+=========================================
+Allowed roles:
+- ADMIN
+- DOCTOR
+- SPECIALIST
+
+GET /patients
+Description:
+- List patients in caller organization.
+
+GET /patients/:id
+Description:
+- Patient detail in caller organization.
+
+POST /patients
+Description:
+- Create patient (FHIR-like payload).
+Body minimum:
+{
+  "resourceType": "Patient"
+}
+
+PATCH /patients/:id/stage
+Description:
+- Move lifecycle stage.
+Body:
+{
+  "stage": "integer 1..10",
   "reason": "optional string",
   "metadata": "optional object",
   "skipAutomations": "optional boolean"
 }
-Side effect:
-- Emits family notification event (LIFECYCLE_STAGE_CHANGED) for active family access recipients.
-- Enforces strict adjacent transitions (example: `2 -> 3` allowed, `2 -> 5` blocked).
-- Runs stage prerequisite checks and returns blockers when transition is not allowed.
-- Writes immutable transition audit row.
-- Runs idempotent lifecycle hooks (automation actions) unless `skipAutomations=true`.
+Behavior:
+- Enforces transition constraints and blocker checks.
+- Writes transition audit and lifecycle hook execution entries.
+
+PATCH /patients/:id/profile
+Description:
+- Update patient profile fields inside FHIR resource payload.
+- Admin-only operation.
+Body (all optional):
+{
+  "firstName": "string <= 80",
+  "lastName": "string <= 80",
+  "gender": "male|female|other|unknown",
+  "birthDate": "YYYY-MM-DD",
+  "email": "string <= 120",
+  "phone": "string <= 30",
+  "addressLine1": "string <= 120",
+  "city": "string <= 80",
+  "state": "string <= 80",
+  "postalCode": "string <= 20",
+  "country": "string <= 80",
+  "medicalRecordNumber": "string <= 80"
+}
+
+PATCH /patients/:id/care-team
+Description:
+- Assign or clear primary doctor / preferred specialist.
+- Optionally bootstrap doctor task and specialist referral at assignment time.
+- Admin-only operation.
+Body:
+{
+  "primaryDoctorUserId": "uuid|null",
+  "preferredSpecialistUserId": "uuid|null",
+  "createInitialTask": "optional boolean",
+  "createReferral": "optional boolean",
+  "referralPriority": "LOW|MEDIUM|HIGH|URGENT",
+  "referralReason": "optional string <= 300"
+}
+Response includes:
+- updated patient
+- resolved assignment summary
+- bootstrap object with created entity ids (task/order/referral when requested)
 
 GET /patients/:id/lifecycle/status
-Description: Return current stage and allowed next transitions with blockers.
+Description:
+- Current stage + transition blocker/status summary.
 
 GET /patients/:id/lifecycle/transitions
-Description: Return lifecycle transition history for patient.
+Description:
+- Lifecycle transition history.
 
------------------------------------------
-3) AI MODULE (Protected)
------------------------------------------
-Allowed roles: ADMIN, DOCTOR, SPECIALIST
-
-POST /ai/query
-Description: General AI query endpoint.
-Body:
-{
-  "prompt": "string (2-8000)"
-}
-Response:
-{
-  "role": "assistant",
-  "content": "string"
-}
-
-GET /ai/summarize/:patientId
-Description: Generate patient summary from patient record.
-Param:
-- patientId: UUID
-
------------------------------------------
-4) DOCUMENTS MODULE (Protected)
------------------------------------------
-Allowed roles: ADMIN, DOCTOR, SPECIALIST
+=========================================
+5) DOCUMENTS MODULE
+=========================================
+Allowed roles:
+- ADMIN
+- DOCTOR
+- SPECIALIST
 
 POST /documents/upload/:patientId
-Description: Upload patient document and trigger async extraction/classification.
-Param:
-- patientId: UUID
-Content-Type: multipart/form-data
+Content-Type:
+- multipart/form-data
 Field:
-- file: binary
-Behavior:
-- Upload stored locally
-- Document row created with PROCESSING status
-- Async processing runs extraction + AI structuring
-- Emits family notification events:
-  - DOCUMENT_UPLOADED
-  - DOCUMENT_PROCESSED (on success)
-  - DOCUMENT_FAILED (on failure)
-- Organization-safe checks: patient must belong to caller org
+- file
+Description:
+- Upload patient document and trigger processing pipeline.
 
 GET /documents/patient/:patientId
-Description: List documents for patient in caller organization.
-Param:
-- patientId: UUID
+Description:
+- List documents for patient in caller organization.
 
------------------------------------------
-5) DASHBOARD MODULE (Protected)
------------------------------------------
-Allowed roles: ADMIN, DOCTOR, SPECIALIST
+=========================================
+6) AI MODULE
+=========================================
+Allowed roles:
+- ADMIN
+- DOCTOR
+- SPECIALIST
+
+POST /ai/query
+Body:
+{ "prompt": "string (2..8000)" }
+
+GET /ai/summarize/:patientId
+Description:
+- Generate AI summary for patient context.
+
+=========================================
+7) DASHBOARD MODULE
+=========================================
+Allowed roles:
+- ADMIN
+- DOCTOR
+- SPECIALIST
 
 GET /dashboard/overview
-Description: Organization-level dashboard aggregates.
-Includes:
-- totals.patients
-- totals.documents
-- totals.clinicalEvents
-- totals.openClinicalAlerts
-- totals.pendingClinicalOrders
-- totals.escalatedClinicalOrders
-- totals.overdueCareTasks
-- totals.pendingPriorAuthorizations
-- totals.activeReferrals
-- totals.overdueReferrals
-- lifecycleBreakdown
-- documentStatusBreakdown
-- alertStatusBreakdown
-- orderStatusBreakdown
-- careTaskStatusBreakdown
-- priorAuthorizationStatusBreakdown
-- referralStatusBreakdown
-- recentPatients
+Description:
+- Organization-level aggregates.
+Current totals include metrics for:
+- patients, documents
+- clinical events and alerts
+- clinical orders and overdue tasks
+- prior authorizations
+- referrals
 
 GET /dashboard/patient/:patientId/timeline
-Description: Patient-specific timeline view.
-Param:
-- patientId: UUID
-Includes:
-- patient summary
-- documents
-- clinicalEvents (with optional linked alert object)
-- clinicalOrders
-- medicationPlans
-- careTasks
-- priorAuthorizations
-- referralHandoffs
-- synthesized timeline events
+Description:
+- Timeline payload for patient.
+Includes events from documents, clinical events, workflows.
 
------------------------------------------
-6) FAMILY ACCESS + CONSENT MODULE (Protected)
------------------------------------------
+GET /dashboard/my-caseload
+Description:
+- Role-aware caseload.
+Behavior:
+- ADMIN/DOCTOR: top recently updated org patients.
+- SPECIALIST: scoped by specialist-related referral/order assignments.
+
+=========================================
+8) FAMILY ACCESS / CONSENT MODULE
+=========================================
 
 POST /family-access/family-member
-Allowed roles: ADMIN, DOCTOR
-Description: Create FAMILY_MEMBER account in caller organization.
-Body:
-{
-  "email": "valid email",
-  "password": "string (8-128)"
-}
+Roles:
+- ADMIN, DOCTOR
+Description:
+- Create FAMILY_MEMBER account.
 
 POST /family-access/grant/:patientId
-Allowed roles: ADMIN, DOCTOR
-Description: Grant family access to patient (consent model).
-Param:
-- patientId: UUID
+Roles:
+- ADMIN, DOCTOR
+Description:
+- Grant family access to patient.
 Body:
 {
-  "familyUserId": "uuid (optional if familyEmail given)",
-  "familyEmail": "email (optional if familyUserId given)",
+  "familyUserId": "optional uuid",
+  "familyEmail": "optional email",
   "accessLevel": "VIEW_ONLY|FULL_UPDATES|EMERGENCY_CONTACT",
   "consentNote": "optional string",
   "expiresAt": "optional ISO datetime"
 }
-Behavior:
-- Upserts patient-family access
-- Writes family access audit record
-- Emits ACCESS_GRANTED notification event
+
+POST /family-access/invite/:patientId
+Roles:
+- ADMIN, DOCTOR
+Description:
+- Create family access invite that requires patient approval.
+Body:
+{
+  "familyUserId": "optional uuid",
+  "familyEmail": "optional email",
+  "accessLevel": "VIEW_ONLY|FULL_UPDATES|EMERGENCY_CONTACT",
+  "consentNote": "optional string",
+  "expiresAt": "optional ISO datetime"
+}
 
 PATCH /family-access/revoke/:accessId
-Allowed roles: ADMIN, DOCTOR
-Description: Revoke a family access grant.
-Param:
-- accessId: UUID
-Body:
-{
-  "note": "optional string"
-}
-Behavior:
-- Marks grant as REVOKED
-- Writes family access audit record
+Roles:
+- ADMIN, DOCTOR
+Description:
+- Revoke family access grant.
 
 GET /family-access/patient/:patientId/grants
-Allowed roles: ADMIN, DOCTOR
-Description: List family grants for patient.
+Roles:
+- ADMIN, DOCTOR
+Description:
+- List grants for patient.
+
+GET /family-access/patient/:patientId/invites
+Roles:
+- ADMIN, DOCTOR
+Description:
+- List invite requests and their consent status for patient.
+
+GET /family-access/patient/:patientId/audit
+Roles:
+- ADMIN, DOCTOR
+Description:
+- List family access audit records for patient.
+
+GET /family-access/patient/my/invites
+Role:
+- PATIENT
+Description:
+- List pending invite requests for linked patient profile.
+
+PATCH /family-access/patient/my/invites/:inviteId/respond
+Role:
+- PATIENT
+Body:
+{
+  "decision": "APPROVE|REJECT",
+  "note": "optional string"
+}
+
+GET /family-access/patient/my/audit
+Role:
+- PATIENT
+Description:
+- List family access audit records for linked patient profile.
 
 GET /family-access/my-patients
-Allowed roles: FAMILY_MEMBER
-Description: List active patient accesses for logged-in family user.
+Role:
+- FAMILY_MEMBER
+Description:
+- List authorized patient grants for logged-in family member.
 
 GET /family-access/patient/:patientId
-Allowed roles: FAMILY_MEMBER
-Description: Family-safe patient view for authorized patient only.
-Behavior:
-- Enforces active access (and expiry check)
-- Writes family access audit record (VIEWED_PATIENT)
+Role:
+- FAMILY_MEMBER
+Description:
+- Family-safe patient view (requires active access).
 
 GET /family-access/notifications
-Allowed roles: FAMILY_MEMBER
-Description: List notification events for logged-in family user.
+Role:
+- FAMILY_MEMBER
+Description:
+- List family notifications.
 
 PATCH /family-access/notifications/:notificationId/read
-Allowed roles: FAMILY_MEMBER
-Description: Mark one notification as read.
+Role:
+- FAMILY_MEMBER
+Description:
+- Mark notification read.
 
 GET /family-access/notification-preferences
-Allowed roles: FAMILY_MEMBER
-Description: Get per-user notification channel preferences.
+Role:
+- FAMILY_MEMBER
+Description:
+- Get notification channel preferences.
 
 PATCH /family-access/notification-preferences
-Allowed roles: FAMILY_MEMBER
-Description: Update per-user notification channels and contact targets.
+Role:
+- FAMILY_MEMBER
+Description:
+- Update notification channel preferences.
 
 GET /family-access/notifications/stream
-Allowed roles: FAMILY_MEMBER
-Description: Realtime SSE stream for notification created/read events.
+Role:
+- FAMILY_MEMBER
+Type:
+- SSE stream
+Description:
+- Realtime notification stream.
 
 -----------------------------------------
-7) CLINICAL EVENTS + ALERTS MODULE (Protected)
+FAMILY QUESTIONS
 -----------------------------------------
-Allowed roles: ADMIN, DOCTOR, SPECIALIST
+
+POST /family-access/questions/:patientId
+Role:
+- FAMILY_MEMBER
+Body:
+{
+  "question": "string",
+  "context": "optional string"
+}
+
+GET /family-access/questions/my
+Role:
+- FAMILY_MEMBER
+Description:
+- List own submitted questions.
+
+GET /family-access/questions/patient/:patientId
+Roles:
+- ADMIN, DOCTOR, SPECIALIST
+Description:
+- List questions for patient.
+
+PATCH /family-access/questions/:questionId/answer
+Roles:
+- ADMIN, DOCTOR, SPECIALIST
+Body:
+{ "answer": "string" }
+
+=========================================
+9) PATIENT PORTAL MODULE (ROLE: PATIENT)
+=========================================
+
+GET /patient/me
+Description:
+- Return linked patient profile and auth user context.
+
+GET /patient/timeline
+Description:
+- Timeline for linked patient profile.
+
+GET /patient/documents
+Description:
+- Document list for linked patient.
+
+POST /patient/documents/upload
+Content-Type:
+- multipart/form-data
+Field:
+- file
+Description:
+- Upload document for linked patient.
+
+GET /patient/family-access
+Description:
+- List grants for linked patient profile.
+
+POST /patient/family-access/grant
+Body:
+{
+  "familyUserId": "optional uuid",
+  "familyEmail": "optional email",
+  "accessLevel": "VIEW_ONLY|FULL_UPDATES|EMERGENCY_CONTACT",
+  "consentNote": "optional string",
+  "expiresAt": "optional ISO datetime"
+}
+
+PATCH /patient/family-access/:accessId/revoke
+Body:
+{ "note": "optional string" }
+
+GET /patient/family-access/invites
+Description:
+- List pending family invites awaiting patient consent.
+
+PATCH /patient/family-access/invites/:inviteId/respond
+Body:
+{
+  "decision": "APPROVE|REJECT",
+  "note": "optional string"
+}
+
+GET /patient/family-access/audit
+Description:
+- List family access audit trail for linked patient profile.
+
+=========================================
+10) CLINICAL EVENTS MODULE
+=========================================
+Allowed roles:
+- ADMIN
+- DOCTOR
+- SPECIALIST
 
 POST /clinical-events/patient/:patientId
-Description: Record a clinical event for a patient and optionally raise alert.
-Param:
-- patientId: UUID
-Body:
-{
-  "type": "LAB|VITAL|MEDICATION|ORDER|FOLLOW_UP",
-  "severity": "INFO|WARNING|CRITICAL",
-  "title": "string (1-180)",
-  "description": "optional string (<=1200)",
-  "data": "optional object",
-  "occurredAt": "optional ISO datetime",
-  "raiseAlert": "optional boolean",
-  "alertPriority": "optional LOW|MEDIUM|HIGH|CRITICAL",
-  "alertTitle": "optional string",
-  "alertMessage": "optional string",
-  "notifyFamily": "optional boolean"
-}
-Behavior:
-- Automatically creates a ClinicalAlert when severity is CRITICAL or raiseAlert=true.
-- Emits family notification events:
-  - CLINICAL_ALERT_CREATED (if alert created)
-  - CLINICAL_EVENT_RECORDED (if notifyFamily=true and no alert)
+Description:
+- Create clinical event (optionally with alert).
 
 GET /clinical-events/patient/:patientId
-Description: List clinical events for a patient in caller organization.
+Description:
+- List clinical events for patient.
 
 GET /clinical-events/alerts/open
-Description: List open alerts for caller organization (sorted by priority, recency).
+Description:
+- Open alerts for caller organization.
 
 GET /clinical-events/alerts/patient/:patientId
-Description: List all alerts for a patient.
+Description:
+- Alerts for patient.
 
 PATCH /clinical-events/alerts/:alertId/status
-Description: Update alert status.
 Body:
-{
-  "status": "OPEN|ACKNOWLEDGED|RESOLVED"
-}
-Behavior:
-- Tracks acknowledging/resolving user and timestamps.
-- Prevents acknowledging an already resolved alert.
+{ "status": "OPEN|ACKNOWLEDGED|RESOLVED" }
 
------------------------------------------
-8) CLINICAL WORKFLOWS MODULE (Protected)
------------------------------------------
-Allowed roles: ADMIN, DOCTOR, SPECIALIST
+=========================================
+11) CLINICAL WORKFLOWS MODULE
+=========================================
+Allowed roles:
+- ADMIN
+- DOCTOR
+- SPECIALIST
 
-POST /clinical-workflows/patient/:patientId/orders
-Description: Create clinical order.
-Body:
-{
-  "type": "LAB_TEST|IMAGING|PROCEDURE|MEDICATION|CONSULTATION|FOLLOW_UP",
-  "priority": "optional LOW|MEDIUM|HIGH|STAT",
-  "title": "string",
-  "description": "optional string",
-  "dueAt": "optional ISO datetime",
-  "assignedToUserId": "optional uuid",
-  "metadata": "optional object",
-  "notifyFamily": "optional boolean"
-}
+Orders:
+- POST /clinical-workflows/patient/:patientId/orders
+- GET /clinical-workflows/patient/:patientId/orders
+- PATCH /clinical-workflows/orders/:orderId/status
 
-GET /clinical-workflows/patient/:patientId/orders
-Description: List patient clinical orders with linked tasks and medication plans.
+Tasks:
+- POST /clinical-workflows/orders/:orderId/tasks
+- GET /clinical-workflows/patient/:patientId/tasks
+- PATCH /clinical-workflows/tasks/:taskId/status
 
-PATCH /clinical-workflows/orders/:orderId/status
-Description: Update order status.
-Body:
-{
-  "status": "DRAFT|ACTIVE|IN_PROGRESS|ESCALATED|COMPLETED|CANCELLED",
-  "assignedToUserId": "optional uuid",
-  "note": "optional string",
-  "notifyFamily": "optional boolean"
-}
-Behavior:
-- Tracks escalated/completed timestamps.
-- Prevents mutation of terminal orders.
-- Emits family notifications for escalated/completed transitions.
+Medication plans:
+- POST /clinical-workflows/patient/:patientId/medications
+- GET /clinical-workflows/patient/:patientId/medications
+- PATCH /clinical-workflows/medications/:planId
 
-POST /clinical-workflows/orders/:orderId/tasks
-Description: Create care task under an order.
+Prior auth:
+- POST /clinical-workflows/patient/:patientId/prior-auths
+- GET /clinical-workflows/patient/:patientId/prior-auths
+- PATCH /clinical-workflows/prior-auths/:priorAuthId/status
 
-PATCH /clinical-workflows/tasks/:taskId/status
-Description: Update care task status.
-Body:
-{
-  "status": "OPEN|IN_PROGRESS|BLOCKED|ESCALATED|COMPLETED|CANCELLED",
-  "note": "optional string",
-  "notifyFamily": "optional boolean"
-}
+Referrals:
+- POST /clinical-workflows/patient/:patientId/referrals
+- GET /clinical-workflows/patient/:patientId/referrals
+- PATCH /clinical-workflows/referrals/:referralId/status
 
-GET /clinical-workflows/patient/:patientId/tasks
-Description: List patient care tasks.
+Summary / automation:
+- GET /clinical-workflows/patient/:patientId/summary
+- POST /clinical-workflows/automation/overdue/run
 
-POST /clinical-workflows/patient/:patientId/medications
-Description: Create medication plan for patient (optionally linked to order).
-
-PATCH /clinical-workflows/medications/:planId
-Description: Update medication plan details or status.
-
-GET /clinical-workflows/patient/:patientId/medications
-Description: List patient medication plans.
-
-GET /clinical-workflows/patient/:patientId/summary
-Description: Workflow KPI summary for patient.
-Includes:
-- pendingOrders
-- escalatedOrders
-- openTasks
-- overdueTasks
-- activeMedications
-- pendingPriorAuthorizations
-- activeReferrals
-- overdueReferrals
-
-POST /clinical-workflows/patient/:patientId/prior-auths
-Description: Create prior authorization request (optionally linked to clinical order).
-Body:
-{
-  "clinicalOrderId": "optional uuid",
-  "payerName": "string",
-  "policyNumber": "optional string",
-  "serviceCodes": "optional string[]",
-  "requestPayload": "optional object",
-  "status": "optional DRAFT|SUBMITTED|IN_REVIEW|APPROVED|DENIED|APPEALED|EXPIRED",
-  "externalReference": "optional string",
-  "notifyFamily": "optional boolean"
-}
-
-GET /clinical-workflows/patient/:patientId/prior-auths
-Description: List patient prior authorization requests.
-
-PATCH /clinical-workflows/prior-auths/:priorAuthId/status
-Description: Update prior authorization status and decision metadata.
-Body:
-{
-  "status": "DRAFT|SUBMITTED|IN_REVIEW|APPROVED|DENIED|APPEALED|EXPIRED",
-  "externalReference": "optional string",
-  "expiresAt": "optional ISO datetime",
-  "decisionNote": "optional string",
-  "notifyFamily": "optional boolean"
-}
-Behavior:
-- Tracks submitted/decided timestamps and reviewer for decision statuses.
-- Emits family notifications on SUBMITTED and decision outcomes.
-
-POST /clinical-workflows/patient/:patientId/referrals
-Description: Create referral handoff (internal/external/facility/home-care).
-Body:
-{
-  "clinicalOrderId": "optional uuid",
-  "assignedToUserId": "optional uuid",
-  "destinationType": "INTERNAL_PROVIDER|EXTERNAL_PROVIDER|FACILITY|HOME_CARE",
-  "destinationName": "string",
-  "reason": "optional string",
-  "priority": "optional LOW|MEDIUM|HIGH|URGENT",
-  "status": "optional CREATED|ACCEPTED|IN_PROGRESS|ESCALATED|COMPLETED|DECLINED|CANCELLED",
-  "dueAt": "optional ISO datetime",
-  "metadata": "optional object",
-  "notifyFamily": "optional boolean"
-}
-
-GET /clinical-workflows/patient/:patientId/referrals
-Description: List patient referral handoffs.
-
-PATCH /clinical-workflows/referrals/:referralId/status
-Description: Update referral handoff status.
-Body:
-{
-  "status": "CREATED|ACCEPTED|IN_PROGRESS|ESCALATED|COMPLETED|DECLINED|CANCELLED",
-  "note": "optional string",
-  "notifyFamily": "optional boolean"
-}
-
-POST /clinical-workflows/automation/overdue/run
-Description: Run overdue workflow automation for organization.
-Behavior:
-- Escalates overdue care tasks to `ESCALATED` and emits `CARE_TASK_OVERDUE`.
-- Escalates overdue referrals to `ESCALATED` and emits `REFERRAL_OVERDUE`.
-- Writes workflow audit entries for each auto-escalated item.
-
------------------------------------------
-9) NOTIFICATION OPERATIONS MODULE (Protected)
------------------------------------------
-Allowed roles: ADMIN, DOCTOR, SPECIALIST
+=========================================
+12) NOTIFICATION OPERATIONS MODULE
+=========================================
+Allowed roles:
+- ADMIN
+- DOCTOR
+- SPECIALIST
 
 GET /notifications/delivery/recent?limit=100
-Description: List recent notification delivery attempts for organization.
+Description:
+- Recent channel delivery attempts.
 
 POST /notifications/delivery/run
-Description: Run delivery dispatch for pending/failed notifications.
 Body:
-{
-  "limit": "optional integer 1..500"
-}
-Behavior:
-- Processes queued channel deliveries with retry/backoff logic.
-- Tracks `SENT`, `FAILED`, and `SKIPPED` outcomes with provider response metadata.
+{ "limit": "optional integer 1..500" }
+Description:
+- Dispatch queued notification deliveries.
 
------------------------------------------
-10) DATA MODELS ADDED FOR PRODUCTION WORKFLOW
------------------------------------------
-New/updated schema elements:
-- UserRole now includes FAMILY_MEMBER
-- PatientFamilyAccess (consent + access level + expiry)
-- FamilyAccessAudit (audit trail)
-- NotificationEvent (family update event queue)
-- NotificationChannelPreference (per-family-user channel settings)
-- NotificationDelivery (durable channel delivery outbox/attempt tracking)
-- ClinicalEvent (clinical timeline facts)
-- ClinicalAlert (critical/operational clinical alerts)
-- ClinicalOrder (care workflow order unit)
-- CareTask (operational workflow tasks)
-- MedicationPlan (structured medication plan)
-- PriorAuthorization (payer approval lifecycle per patient/order)
-- ReferralHandoff (cross-team/provider handoff unit)
-- PatientLifecycleTransition (immutable patient stage transition audit trail)
-- LifecycleHookExecution (idempotent lifecycle automation execution log)
-- WorkflowAudit (immutable workflow action trail)
-- NotificationType, FamilyAccessLevel, FamilyAccessStatus enums
-- ClinicalEventType, ClinicalEventSeverity, AlertPriority, AlertStatus enums
-- ClinicalOrderType, ClinicalOrderStatus, ClinicalOrderPriority enums
-- CareTaskType, CareTaskStatus, MedicationPlanStatus enums
-- PriorAuthorizationStatus, ReferralDestinationType, ReferralHandoffStatus, ReferralPriority enums
-- NotificationChannel, NotificationDeliveryStatus enums
-- LifecycleTransitionType, LifecycleHookStatus enums
-- DocStatus aligned to: PENDING, PROCESSING, COMPLETED, FAILED
+=========================================
+13) CORE SCHEMA ENTITIES (CURRENT)
+=========================================
+Primary models in current backend:
+- Organization
+- User
+- Patient
+- Document
+- PatientFamilyAccess
+- FamilyAccessInvite
+- FamilyAccessAudit
+- NotificationEvent
+- NotificationChannelPreference
+- NotificationDelivery
+- ClinicalEvent
+- ClinicalAlert
+- ClinicalOrder
+- CareTask
+- MedicationPlan
+- PriorAuthorization
+- ReferralHandoff
+- PatientLifecycleTransition
+- LifecycleHookExecution
+- WorkflowAudit
+- RefreshSession
+- DemoLead
+- FamilyQuestion
 
-Migration:
-- 20260318000000_notification_type_bootstrap
-- 20260318005247_clinical_events_alerts
-- 20260318006000_notification_type_shadow_cleanup
-- 20260318070000_family_access_notifications
-- 20260318080000_notification_type_clinical_values
-- 20260318010635_clinical_workflows_orders_medications
-- 20260318013500_prior_auth_referral_handoffs
-- 20260318020000_lifecycle_orchestration
-- 20260318024500_notification_realtime_delivery
+Important enums:
+- UserRole
+- DemoLeadStatus
+- FamilyQuestionStatus
+- FamilyAccessStatus/Level/Action
+- NotificationType/Channel/DeliveryStatus
+- Clinical* and workflow enums
+- LifecycleTransitionType/LifecycleHookStatus
 
------------------------------------------
-SYSTEM NOTES
------------------------------------------
-- PostgreSQL: localhost:5432
-- Redis: localhost:6379
-- JWT auth + role guard enabled
-- Multi-tenant isolation enforced by organization checks
+Latest migration in repo:
+- `20260318150000_family_access_invites`
+
+=========================================
+END
 =========================================

@@ -1,188 +1,154 @@
-# MedLifeCycle / Aarogya360 Progress Tracker
+# MedLifeCycle / Aarogya360 Project Tracker
 
-Last updated: March 18, 2026  
-Audit scope for this update: backend codebase review across `backend/src`, `backend/prisma`, `backend/test`, and backend config files.
+Last updated: March 18, 2026 (local)
+Status owner: engineering implementation snapshot
 
-## 1. Backend Implementation Status (Code-Verified)
+## 1) Delivery Snapshot
 
-### 1.1 Application Foundation
-- [x] NestJS backend scaffolded and modularized.
-- [x] Global configuration loaded via `ConfigModule.forRoot({ isGlobal: true })`.
-- [x] Global API prefix configured: `/api`.
-- [x] Global validation pipe enabled (`whitelist: true`, `transform: true`).
-- [x] Runtime port resolved from `PORT` env, fallback to `3005`.
+### Overall
+- Backend platform: **implemented and running**
+- Frontend portal shell + role routing: **implemented and running**
+- Landing to backend integration (`/contact` -> demo lead): **implemented and running**
+- Full role-by-role connected portal UX: **implemented (production-style baseline)**
+- Detailed doctor/specialist patient profile workspace: **implemented and routed**
+- Admin patient onboarding workspace: **implemented and routed**
 
-### 1.2 Infrastructure and Local Services
-- [x] Docker Compose setup present for:
-  - PostgreSQL (`ankane/pgvector:latest`) on `5432`
-  - Redis (`redis:alpine`) on `6379`
-- [x] Backend environment variables currently expected:
-  - `DATABASE_URL`, `REDIS_HOST`, `REDIS_PORT`, `PORT`, `JWT_SECRET`
-  - `LLM_ENDPOINT`, `LLM_MODEL`
-  - `STORAGE_PATH`, `ENCRYPTION_KEY`
+### Milestone view
+- Milestone A (auth, portal shell, role routing, live leads): **done**
+- Milestone B (admin overview/leads/users, doctor ops screens): **done**
+- Milestone C (specialist/family operational screens): **done**
+- Milestone D (patient dashboard + consent controls): **done**
+- Production hardening phase (workflow depth + integrations + observability): **in progress**
 
-### 1.3 Database Layer (Prisma)
-- [x] Prisma schema implemented with core entities:
-  - `Organization`
-  - `User`
-  - `Patient`
-  - `Document`
-- [x] Family/consent and notification models added:
-  - `PatientFamilyAccess`
-  - `FamilyAccessAudit`
-  - `NotificationEvent`
-- [x] Multi-tenant linkage implemented through `organizationId` on users and patients.
-- [x] Initial migration exists: `20260317221437_init`.
-- [x] Incremental migration added: `20260318070000_family_access_notifications`.
-- [x] Prisma schema validation passes.
-- [x] Prisma client generation passes.
+## 2) What Is Implemented (Code Truth)
 
-### 1.4 Implemented Backend Modules
-
-#### A) Database Module
-- [x] `PrismaService` extends `PrismaClient` and connects on module init.
-- [x] Database module is global and exported.
-
-#### B) Users Module
-- [x] `findByEmail` with organization include.
-- [x] `create` user method implemented.
-- [x] `createWithOrganization` implemented for org + admin bootstrap.
-
-#### C) Auth Module
-- [x] JWT configured with 1-day expiry.
-- [x] Passport JWT strategy implemented.
-- [x] `POST /auth/register` implemented (org + admin creation).
-- [x] `POST /auth/login` implemented.
-- [x] Password hashing/verification with `bcrypt`.
-- [x] Auth guard (`JwtAuthGuard`) wired and reused across protected modules.
-
-#### D) Patients Module
-- [x] `GET /patients` returns org-scoped patient list.
-- [x] `GET /patients/:id` returns org-scoped patient detail + documents.
-- [x] `POST /patients` creates FHIR-like patient JSON payload.
-- [x] `PATCH /patients/:id/stage` updates lifecycle stage.
-- [x] Lifecycle stage tracking field present (`lifecycleStage`).
-
-#### E) AI Module
-- [x] `POST /ai/query` implemented (prompt -> LLM chat completion).
-- [x] `GET /ai/summarize/:patientId` implemented (patient summary for family language).
-- [x] Configurable LLM endpoint/model (`LLM_ENDPOINT`, `LLM_MODEL`).
-- [x] Structured typing added for chat request/response payloads.
-
-#### F) Documents Module
-- [x] `POST /documents/upload/:patientId` implemented using multer disk storage.
-- [x] `GET /documents/patient/:patientId` implemented.
-- [x] Async "fire-and-forget" processing flow implemented after upload.
-- [x] PDF text extraction path implemented via `pdf-parse`.
-- [x] AI-based metadata extraction pipeline implemented conceptually.
-
-#### G) Dashboard Module (Phase 6 Backend Starter)
-- [x] `GET /dashboard/overview` implemented (org-scoped patient/document aggregates).
-- [x] `GET /dashboard/patient/:patientId/timeline` implemented (patient timeline + document events).
-- [x] Dashboard endpoints protected by JWT and org context.
-
-#### H) Family Access Module (Guide Alignment)
-- [x] `POST /family-access/family-member` implemented (create family member account under org).
-- [x] `POST /family-access/grant/:patientId` implemented (consent grant with access level).
-- [x] `PATCH /family-access/revoke/:accessId` implemented (revoke family access).
-- [x] `GET /family-access/patient/:patientId/grants` implemented (doctor/admin grant visibility).
-- [x] `GET /family-access/my-patients` implemented (family member authorized patient list).
-- [x] `GET /family-access/patient/:patientId` implemented (family-scoped patient view).
-- [x] `GET /family-access/notifications` + `PATCH /family-access/notifications/:notificationId/read` implemented.
-- [x] Family access audit log creation implemented for grant/revoke/patient-view actions.
-
-#### I) Notifications Module (Event Backbone)
-- [x] Notification emission service added for active family access recipients.
-- [x] Lifecycle stage change events now emit notifications.
-- [x] Document upload/processed/failed events now emit notifications.
-
-#### J) Role-Based Access Control Hardening
-- [x] `Roles` decorator + `RolesGuard` implemented.
-- [x] Global role guard registered using `APP_GUARD`.
-- [x] `patients`, `ai`, `documents`, and `dashboard` controllers restricted to clinical/admin roles.
-- [x] Family member routes restricted to `FAMILY_MEMBER` where applicable.
-
-### 1.5 API Surface Implemented (Current)
-- [x] Auth:
+### Backend
+- Auth/session model:
   - `POST /api/auth/register`
   - `POST /api/auth/login`
-- [x] Patients (JWT protected):
-  - `GET /api/patients`
-  - `GET /api/patients/:id`
-  - `POST /api/patients`
-  - `PATCH /api/patients/:id/stage`
-- [x] AI (JWT protected):
-  - `POST /api/ai/query`
-  - `GET /api/ai/summarize/:patientId`
-- [x] Documents (JWT protected):
-  - `POST /api/documents/upload/:patientId`
-  - `GET /api/documents/patient/:patientId`
-- [x] Dashboard (JWT protected):
-  - `GET /api/dashboard/overview`
-  - `GET /api/dashboard/patient/:patientId/timeline`
-- [x] Family Access (JWT protected + role restricted):
-  - `POST /api/family-access/family-member`
-  - `POST /api/family-access/grant/:patientId`
-  - `PATCH /api/family-access/revoke/:accessId`
-  - `GET /api/family-access/patient/:patientId/grants`
-  - `GET /api/family-access/my-patients`
-  - `GET /api/family-access/patient/:patientId`
-  - `GET /api/family-access/notifications`
-  - `PATCH /api/family-access/notifications/:notificationId/read`
+  - `POST /api/auth/refresh`
+  - `POST /api/auth/logout`
+  - `GET /api/auth/me`
+- Session storage and rotation:
+  - `RefreshSession` model with hashed token, expiry, revoke/replace chain
+  - refresh cookie name: `ml_refresh_token` (HttpOnly)
+- Security middleware:
+  - CORS allowlist (`CORS_ALLOWED_ORIGINS`) + credentials
+  - `helmet`
+  - request size limits
+  - rate limiting on `/api/public/*`
+- Public + admin operations:
+  - `POST /api/public/leads`
+  - `GET /api/admin/leads`
+  - `GET /api/admin/leads/:id`
+  - `PATCH /api/admin/leads/:id/status`
+  - admin users list/create/role update/suspend + audit feed
+- Admin patient operations:
+  - `GET /api/users/doctors`
+  - `PATCH /api/patients/:id/profile`
+  - `PATCH /api/patients/:id/care-team`
+  - optional onboarding bootstrap (doctor intake task + specialist consult/referral)
+- Clinical platform modules:
+  - patient lifecycle (10-stage transitions + blocker checks + transition audit)
+  - documents upload/processing
+  - AI query + summary
+  - family consent access + notifications + SSE stream
+  - family invitation workflow with patient approval/rejection endpoints
+  - clinical events + alerts
+  - clinical workflows (orders/tasks/medications/prior-auth/referrals/overdue automation)
+  - dashboard (overview, patient timeline, my-caseload)
+  - patient portal endpoints (`/api/patient/*`)
+  - family questions flow (`/api/family-access/questions/*`)
 
-## 2. Test and Build Health (Current Reality)
+### Frontend (single app)
+- Public landing pages preserved
+- Portal auth + role guards working
+- Implemented route groups:
+  - `/portal/login`
+  - `/portal/admin`, `/portal/admin/patients`, `/portal/admin/leads`, `/portal/admin/users`
+  - `/portal/doctor`, `/portal/doctor/caseload`, `/portal/doctor/patient/:patientId`
+  - `/portal/specialist`, `/portal/specialist/caseload`, `/portal/specialist/patient/:patientId`
+  - `/portal/patient`, `/portal/patient/family-access`
+  - `/portal/family`, `/portal/family/questions`
+- Admin patient workspace includes:
+  - intake form (FHIR profile create + optional stage set)
+  - patient registry search/filter
+  - profile editing
+  - doctor/specialist assignment
+  - lifecycle stage updates
+  - optional bootstrap actions (doctor task + specialist referral)
+  - family invitation request form + invite queue + access grants + audit view
+- Doctor/specialist patient detail screens now include:
+  - profile snapshot, timeline, documents, events, orders/tasks, meds, prior auth, referrals
+  - role actions for lifecycle, order/referral status updates, event logging, and (doctor) order/referral creation
+- Patient family access screen includes:
+  - pending invite consent inbox (approve/reject)
+  - access level + expiry visibility
+  - audit trail visibility
+- API client with:
+  - `VITE_API_BASE_URL` support
+  - `credentials: include`
+  - in-memory access token + refresh retry on 401
+- Contact form is connected to real lead intake endpoint
 
-### 2.1 Passing Checks
-- [x] `npm run build` passes.
-- [x] `npm run lint` passes.
-- [x] `npm test` passes (all current unit tests green).
-- [x] `npm run test:e2e` passes (current smoke e2e test green).
-- [x] `npx prisma validate` passes.
-- [x] `npx prisma generate` passes.
+## 3) User Type Coverage (Guide Alignment)
 
-### 2.2 Resolved in This Sprint
-- [x] Document pipeline compile blockers fixed:
-  - `Document` create payload now matches Prisma schema fields.
-  - PDF extraction updated to `pdf-parse` v2 class API (`PDFParse`).
-  - File-type detection aligned to persisted document data (`type` + extension check).
-- [x] Unit test dependency wiring fixed with proper provider mocks.
-- [x] e2e smoke test made DB-independent for local/CI stability by overriding `PrismaService` in test context.
-- [x] DTO-based request validation added for:
-  - auth login/register payloads
-  - AI query payload
-  - patient stage updates
-  - patient creation minimum FHIR shape (`resourceType`)
-- [x] Organization-safe access control enforced for document upload/list endpoints:
-  - patient ownership verified against authenticated user organization
-  - UUID validation added for patient/document route params
-- [x] Patient safety fixes:
-  - `findOne` now returns 404 for non-org/non-existent patient
-  - lifecycle stage update now validates org ownership before update
+Startup guide perspectives tracked:
+1. Patient
+2. Family Member
+3. Primary Doctor
+4. Specialist Doctor
+5. Administrator
+6. AI assistant surface (service-driven)
 
-## 3. Notable Consistency Gaps Found
+Current implementation state:
+- Login roles implemented in auth model: **5** (`ADMIN`, `DOCTOR`, `SPECIALIST`, `PATIENT`, `FAMILY_MEMBER`)
+- AI implemented as backend service surface (non-login role): **1**
+- Total guide perspectives accounted for in implementation model: **6/6**
 
-- [x] Prisma migration/state mismatch for `DocStatus` is now resolved by new incremental migration.
-- [ ] Backend README is still default NestJS template; project-specific backend runbook is not yet documented there.
-- [ ] Some documentation references older/default ports and setup values that do not fully match current backend code defaults.
+## 4) Database / Migration Status
 
-## 4. What Is Functionally Done vs What Is In Progress
+Latest migration in repo:
+- `20260318150000_family_access_invites`
 
-### Done
-- [x] Core backend architecture and modules are in place.
-- [x] Auth, patient lifecycle, AI query/summarization, and document upload flows are implemented at endpoint/service level.
-- [x] Local infra scaffolding (Postgres + Redis) and Prisma layer are established.
-- [x] Family member consent/access workflow now has backend implementation.
-- [x] Event-based family notification backbone exists and is wired to key workflow changes.
+Key new entities already in schema:
+- `RefreshSession`
+- `DemoLead`
+- `FamilyQuestion`
+- `FamilyAccessInvite`
+- `User` extensions: `isSuspended`, `suspendedAt`, `patientProfileId`
 
-### In Progress / Not Yet Stable
-- [ ] Document intelligence flow is operational but still needs production-hardening (input validation, size limits, async job queueing, and stronger error mapping).
-- [ ] API DTO validation is still minimal and should be expanded before external integrations.
-- [ ] Backend documentation and operational runbook need refresh.
+## 5) Validation Status
 
-## 5. Recommended Immediate Next Steps (Backend)
+### Backend (latest completed run)
+- `npm run build` ✅
+- `npm run lint` ✅
+- `npm test -- --runInBand` ✅
+- `npm run test:e2e` ✅
 
-1. Refresh `backend/README.md` and setup docs to reflect actual env vars, ports, role model, and API surface.
-2. Add strong integration tests for full family workflow (`create family user -> grant -> list my patients -> patient view -> notifications`).
-3. Add clinical event entities (orders, meds, follow-ups) and feed them into dashboard/notification pipelines.
-4. Add consent expiry/revocation automation jobs and notification delivery channels (websocket/email/SMS adapters).
-5. Implement role-specific AI policy layers (different prompts/context windows per Patient/Family/Doctor/Specialist).
+### Frontend (latest completed run)
+- `npm run build` ✅
+- `npm test` ⚠️ blocked in this machine by local native dependency (`canvas` / `pixman` dylib), not by TS compile errors in app code.
+
+## 6) Known Gaps (Important)
+
+1. Core portal screens are now styled and connected, but some role workflows still need deeper domain actions (for example richer specialist/doctor task-level CRUD and bulk operations).
+2. Cross-system integrations (EHR/FHIR adapters, payer callback pipelines, provider-native email/SMS/push adapters) are not complete.
+3. Advanced observability and incident operations (metrics dashboards, alerting policies, SLOs) need hardening.
+
+## 7) Immediate Next Build Order
+
+1. Complete role-specific workflow UIs (doctor/specialist/patient/family) from summary cards to full task-driven CRUD flows.
+2. Add richer admin operations (user profile detail, role constraints, audit filtering/export).
+3. Implement integration adapters (EHR/FHIR + payer exchange + notification providers).
+4. Add stronger production observability + background job operations.
+
+## 8) Local Connectivity Notes
+
+- Backend local port from current `.env`: `3100`
+- Frontend local port: `8080`
+- Vite proxy target should be backend base (currently defaults to `http://localhost:3100`)
+- If auth/portal requests fail locally, verify:
+  - backend is running
+  - frontend proxy target matches backend port
+  - browser cookies are not blocked

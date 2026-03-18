@@ -16,6 +16,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedUser } from '../../types/jwt.types';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientStageDto } from './dto/update-patient-stage.dto';
+import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
+import { AssignPatientCareTeamDto } from './dto/assign-patient-care-team.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('patients')
@@ -82,6 +84,36 @@ export class PatientsController {
         metadata: body.metadata,
         skipAutomations: body.skipAutomations,
       },
+    );
+  }
+
+  @Patch(':id/profile')
+  @Roles(UserRole.ADMIN)
+  updateProfile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdatePatientProfileDto,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.patientsService.updateProfile(
+      id,
+      req.user.orgId,
+      req.user.userId,
+      body,
+    );
+  }
+
+  @Patch(':id/care-team')
+  @Roles(UserRole.ADMIN)
+  assignCareTeam(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: AssignPatientCareTeamDto,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.patientsService.assignCareTeam(
+      id,
+      req.user.orgId,
+      req.user.userId,
+      body,
     );
   }
 }

@@ -7,5 +7,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
   imports: [NotificationsModule],
   controllers: [FamilyAccessController],
   providers: [FamilyAccessService],
+  exports: [FamilyAccessService],
 })
 export class FamilyAccessModule {}

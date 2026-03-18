@@ -34,6 +34,8 @@ export interface UserWithOrganization {
   email: string;
   role: string;
   organizationId: string;
+  patientProfileId?: string | null;
+  isSuspended?: boolean;
   organization: { name: string };
 }
 

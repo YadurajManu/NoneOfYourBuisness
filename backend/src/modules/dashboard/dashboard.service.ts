@@ -5,12 +5,82 @@ import {
   ClinicalOrderStatus,
   PriorAuthorizationStatus,
   ReferralHandoffStatus,
+  UserRole,
 } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
+
+  async getMyCaseload(orgId: string, userId: string, role: UserRole) {
+    if (role === UserRole.SPECIALIST) {
+      const [referrals, assignedOrders] = await Promise.all([
+        this.prisma.referralHandoff.findMany({
+          where: {
+            organizationId: orgId,
+            assignedToUserId: userId,
+            status: {
+              in: [
+                ReferralHandoffStatus.CREATED,
+                ReferralHandoffStatus.ACCEPTED,
+                ReferralHandoffStatus.IN_PROGRESS,
+                ReferralHandoffStatus.ESCALATED,
+              ],
+            },
+          },
+          select: { patientId: true },
+        }),
+        this.prisma.clinicalOrder.findMany({
+          where: {
+            organizationId: orgId,
+            assignedToUserId: userId,
+            status: {
+              in: [
+                ClinicalOrderStatus.ACTIVE,
+                ClinicalOrderStatus.IN_PROGRESS,
+                ClinicalOrderStatus.ESCALATED,
+              ],
+            },
+          },
+          select: { patientId: true },
+        }),
+      ]);
+
+      const patientIds = Array.from(
+        new Set([
+          ...referrals.map((row) => row.patientId),
+          ...assignedOrders.map((row) => row.patientId),
+        ]),
+      );
+
+      return this.prisma.patient.findMany({
+        where: {
+          organizationId: orgId,
+          id: { in: patientIds },
+        },
+        select: {
+          id: true,
+          lifecycleStage: true,
+          updatedAt: true,
+          fhirResource: true,
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+    }
+
+    return this.prisma.patient.findMany({
+      where: { organizationId: orgId },
+      select: {
+        id: true,
+        lifecycleStage: true,
+        updatedAt: true,
+        fhirResource: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 50,
+    });
+  }
 
   async getOverview(orgId: string) {
     const [

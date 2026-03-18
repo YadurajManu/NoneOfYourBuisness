@@ -24,6 +24,7 @@ import { CreatePriorAuthorizationDto } from './dto/create-prior-authorization.dt
 import { UpdatePriorAuthorizationStatusDto } from './dto/update-prior-authorization-status.dto';
 import { CreateReferralHandoffDto } from './dto/create-referral-handoff.dto';
 import { UpdateReferralHandoffStatusDto } from './dto/update-referral-handoff-status.dto';
+import { ClaimReferralHandoffDto } from './dto/claim-referral-handoff.dto';
 
 @Controller('clinical-workflows')
 @UseGuards(JwtAuthGuard)
@@ -225,6 +226,11 @@ export class ClinicalWorkflowsController {
     );
   }
 
+  @Get('referrals/pool')
+  listReferralPool(@Req() req: { user: AuthenticatedUser }) {
+    return this.clinicalWorkflowsService.listClaimableReferrals(req.user.orgId);
+  }
+
   @Patch('referrals/:referralId/status')
   updateReferralStatus(
     @Param('referralId', ParseUUIDPipe) referralId: string,
@@ -232,6 +238,21 @@ export class ClinicalWorkflowsController {
     @Req() req: { user: AuthenticatedUser },
   ) {
     return this.clinicalWorkflowsService.updateReferralStatus(
+      req.user.orgId,
+      req.user.userId,
+      referralId,
+      body,
+    );
+  }
+
+  @Patch('referrals/:referralId/claim')
+  @Roles(UserRole.SPECIALIST)
+  claimReferral(
+    @Param('referralId', ParseUUIDPipe) referralId: string,
+    @Body() body: ClaimReferralHandoffDto,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.clinicalWorkflowsService.claimReferralFromPool(
       req.user.orgId,
       req.user.userId,
       referralId,

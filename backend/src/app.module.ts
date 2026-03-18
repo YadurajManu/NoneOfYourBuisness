@@ -14,6 +14,9 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { FamilyAccessModule } from './modules/family-access/family-access.module';
 import { ClinicalEventsModule } from './modules/clinical-events/clinical-events.module';
 import { ClinicalWorkflowsModule } from './modules/clinical-workflows/clinical-workflows.module';
+import { LeadsModule } from './modules/leads/leads.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { PatientPortalModule } from './modules/patient-portal/patient-portal.module';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 
 @Module({
@@ -30,6 +33,9 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
     FamilyAccessModule,
     ClinicalEventsModule,
     ClinicalWorkflowsModule,
+    LeadsModule,
+    AdminModule,
+    PatientPortalModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,6 +11,7 @@ import {
   NotificationType,
   PriorAuthorizationStatus,
   ReferralHandoffStatus,
+  UserRole,
   WorkflowAuditAction,
   WorkflowEntityType,
 } from '@prisma/client';
@@ -25,6 +27,7 @@ import { CreatePriorAuthorizationDto } from './dto/create-prior-authorization.dt
 import { UpdatePriorAuthorizationStatusDto } from './dto/update-prior-authorization-status.dto';
 import { CreateReferralHandoffDto } from './dto/create-referral-handoff.dto';
 import { UpdateReferralHandoffStatusDto } from './dto/update-referral-handoff-status.dto';
+import { ClaimReferralHandoffDto } from './dto/claim-referral-handoff.dto';
 
 @Injectable()
 export class ClinicalWorkflowsService {
@@ -830,6 +833,10 @@ export class ClinicalWorkflowsService {
       );
     }
 
+    if (dto.assignedToUserId) {
+      await this.ensureActiveSpecialistInOrganization(dto.assignedToUserId, orgId);
+    }
+
     const dueAt = this.parseOptionalDate(dto.dueAt, 'dueAt');
     const status = dto.status ?? ReferralHandoffStatus.CREATED;
     const now = new Date();
@@ -902,6 +909,35 @@ export class ClinicalWorkflowsService {
         clinicalOrder: true,
       },
       orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  async listClaimableReferrals(orgId: string) {
+    return this.prisma.referralHandoff.findMany({
+      where: {
+        organizationId: orgId,
+        assignedToUserId: null,
+        status: {
+          in: [
+            ReferralHandoffStatus.CREATED,
+            ReferralHandoffStatus.ACCEPTED,
+            ReferralHandoffStatus.IN_PROGRESS,
+            ReferralHandoffStatus.ESCALATED,
+          ],
+        },
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            lifecycleStage: true,
+            updatedAt: true,
+            fhirResource: true,
+          },
+        },
+      },
+      orderBy: [{ priority: 'desc' }, { dueAt: 'asc' }, { createdAt: 'desc' }],
+      take: 100,
     });
   }
 
@@ -979,6 +1015,102 @@ export class ClinicalWorkflowsService {
     }
 
     return updatedReferral;
+  }
+
+  async claimReferralFromPool(
+    orgId: string,
+    actorUserId: string,
+    referralId: string,
+    dto: ClaimReferralHandoffDto,
+  ) {
+    const actor = await this.ensureActiveSpecialistInOrganization(
+      actorUserId,
+      orgId,
+    );
+
+    const referral = await this.prisma.referralHandoff.findFirst({
+      where: {
+        id: referralId,
+        organizationId: orgId,
+      },
+    });
+
+    if (!referral) {
+      throw new NotFoundException('Referral not found');
+    }
+
+    const isTerminal =
+      referral.status === ReferralHandoffStatus.COMPLETED ||
+      referral.status === ReferralHandoffStatus.DECLINED ||
+      referral.status === ReferralHandoffStatus.CANCELLED;
+
+    if (isTerminal) {
+      throw new BadRequestException('Cannot claim a terminal referral handoff');
+    }
+
+    if (referral.assignedToUserId && referral.assignedToUserId !== actor.id) {
+      throw new BadRequestException('Referral is already assigned to another specialist');
+    }
+
+    const now = new Date();
+    const nextStatus =
+      referral.status === ReferralHandoffStatus.CREATED
+        ? ReferralHandoffStatus.ACCEPTED
+        : referral.status;
+
+    const updated = await this.prisma.referralHandoff.update({
+      where: { id: referral.id },
+      data: {
+        assignedToUserId: actor.id,
+        status: nextStatus,
+        acceptedAt:
+          nextStatus === ReferralHandoffStatus.ACCEPTED ||
+          nextStatus === ReferralHandoffStatus.IN_PROGRESS
+            ? (referral.acceptedAt ?? now)
+            : referral.acceptedAt,
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            lifecycleStage: true,
+            updatedAt: true,
+            fhirResource: true,
+          },
+        },
+      },
+    });
+
+    await this.logAudit({
+      organizationId: orgId,
+      patientId: referral.patientId,
+      actorUserId,
+      action: WorkflowAuditAction.REFERRAL_STATUS_UPDATED,
+      entityType: WorkflowEntityType.REFERRAL,
+      entityId: referral.id,
+      note: dto.note ?? 'Claimed from specialist pool',
+      metadata: {
+        previousStatus: referral.status,
+        nextStatus,
+        previousAssignedToUserId: referral.assignedToUserId,
+        assignedToUserId: actor.id,
+      },
+    });
+
+    await this.notificationsService.emitToPatientFamily(
+      orgId,
+      referral.patientId,
+      NotificationType.REFERRAL_STATUS_UPDATED,
+      {
+        referralId: referral.id,
+        destinationType: referral.destinationType,
+        destinationName: referral.destinationName,
+        status: nextStatus,
+        claimedBy: actor.email,
+      },
+    );
+
+    return updated;
   }
 
   async runOverdueAutomation(orgId: string, actorUserId: string) {
@@ -1128,6 +1260,29 @@ export class ClinicalWorkflowsService {
     if (!order) {
       throw new NotFoundException('Clinical order not found');
     }
+  }
+
+  private async ensureActiveSpecialistInOrganization(userId: string, orgId: string) {
+    const specialist = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        organizationId: orgId,
+        role: UserRole.SPECIALIST,
+        isSuspended: false,
+      },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
+
+    if (!specialist) {
+      throw new ForbiddenException(
+        'Assigned specialist is not active in this organization',
+      );
+    }
+
+    return specialist;
   }
 
   private parseOptionalDate(value: string | undefined, fieldName: string) {

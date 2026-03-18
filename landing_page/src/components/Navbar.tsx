@@ -71,12 +71,20 @@ export default function Navbar() {
           </div>
 
           <div className="hidden lg:block">
-            <Link
-              to="/contact"
-              className="btn-shimmer inline-flex items-center px-5 py-2 rounded-full text-sm font-body font-semibold text-primary-foreground transition-all"
-            >
-              Request Demo
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/portal/login"
+                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-body font-semibold border border-foreground/20 hover:border-primary/40 transition-colors"
+              >
+                Portal Login
+              </Link>
+              <Link
+                to="/contact"
+                className="btn-shimmer inline-flex items-center px-5 py-2 rounded-full text-sm font-body font-semibold text-primary-foreground transition-all"
+              >
+                Request Demo
+              </Link>
+            </div>
           </div>
 
           <button
@@ -134,6 +142,12 @@ export default function Navbar() {
                     </Link>
                   </motion.div>
                 ))}
+                <Link
+                  to="/portal/login"
+                  className="mt-2 text-center px-6 py-2.5 rounded-full text-sm font-body font-semibold border border-foreground/20 text-foreground"
+                >
+                  Portal Login
+                </Link>
                 <Link
                   to="/contact"
                   className="btn-shimmer mt-4 text-center px-6 py-3 rounded-full text-sm font-body font-semibold text-primary-foreground"

@@ -30,4 +30,13 @@ export class DashboardController {
   ) {
     return this.dashboardService.getPatientTimeline(req.user.orgId, patientId);
   }
+
+  @Get('my-caseload')
+  getMyCaseload(@Req() req: { user: AuthenticatedUser }) {
+    return this.dashboardService.getMyCaseload(
+      req.user.orgId,
+      req.user.userId,
+      req.user.role as UserRole,
+    );
+  }
 }

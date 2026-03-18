@@ -6,7 +6,12 @@ import {
   MessageEvent,
   NotFoundException,
 } from '@nestjs/common';
-import { FamilyAccessAction, NotificationType, UserRole } from '@prisma/client';
+import {
+  FamilyAccessAction,
+  FamilyAccessLevel,
+  NotificationType,
+  UserRole,
+} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Observable } from 'rxjs';
 import { PrismaService } from '../database/prisma.service';
@@ -15,6 +20,13 @@ import { CreateFamilyMemberDto } from './dto/create-family-member.dto';
 import { GrantFamilyAccessDto } from './dto/grant-family-access.dto';
 import { RevokeFamilyAccessDto } from './dto/revoke-family-access.dto';
 import { UpdateNotificationPreferencesDto } from './dto/update-notification-preferences.dto';
+import { CreateFamilyQuestionDto } from './dto/create-family-question.dto';
+import { AnswerFamilyQuestionDto } from './dto/answer-family-question.dto';
+import { CreateFamilyAccessInviteDto } from './dto/create-family-access-invite.dto';
+import {
+  FamilyInviteDecision,
+  RespondFamilyAccessInviteDto,
+} from './dto/respond-family-access-invite.dto';
 
 @Injectable()
 export class FamilyAccessService {
@@ -128,6 +140,57 @@ export class FamilyAccessService {
     return access;
   }
 
+  async createAccessInvite(
+    orgId: string,
+    actorUserId: string,
+    patientId: string,
+    dto: CreateFamilyAccessInviteDto,
+  ) {
+    const patient = await this.ensurePatientInOrg(patientId, orgId);
+    const familyUser = await this.resolveFamilyUser(orgId, dto);
+    const expiresAt = dto.expiresAt ? new Date(dto.expiresAt) : null;
+
+    if (expiresAt && Number.isNaN(expiresAt.getTime())) {
+      throw new BadRequestException('Invalid expiresAt date');
+    }
+
+    await this.prisma.familyAccessInvite.updateMany({
+      where: {
+        organizationId: orgId,
+        patientId: patient.id,
+        familyUserId: familyUser.id,
+        status: 'PENDING',
+      },
+      data: {
+        status: 'CANCELLED',
+        respondedByUserId: actorUserId,
+        respondedAt: new Date(),
+        responseNote: 'Superseded by newer invitation',
+      },
+    });
+
+    return this.prisma.familyAccessInvite.create({
+      data: {
+        organizationId: orgId,
+        patientId: patient.id,
+        familyUserId: familyUser.id,
+        invitedByUserId: actorUserId,
+        accessLevel: dto.accessLevel,
+        consentNote: dto.consentNote,
+        expiresAt,
+        status: 'PENDING',
+      },
+      include: {
+        familyUser: {
+          select: { id: true, email: true, role: true },
+        },
+        invitedByUser: {
+          select: { id: true, email: true, role: true },
+        },
+      },
+    });
+  }
+
   async revokeAccess(
     orgId: string,
     actorUserId: string,
@@ -192,6 +255,187 @@ export class FamilyAccessService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async listPatientAccessInvites(orgId: string, patientId: string) {
+    await this.ensurePatientInOrg(patientId, orgId);
+
+    return this.prisma.familyAccessInvite.findMany({
+      where: { organizationId: orgId, patientId },
+      include: {
+        familyUser: {
+          select: { id: true, email: true, role: true },
+        },
+        invitedByUser: {
+          select: { id: true, email: true, role: true },
+        },
+        respondedByUser: {
+          select: { id: true, email: true, role: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async listPendingInvitesForPatient(orgId: string, patientUserId: string) {
+    const patientProfileId = await this.resolvePatientProfileIdForUser(
+      orgId,
+      patientUserId,
+    );
+
+    return this.prisma.familyAccessInvite.findMany({
+      where: {
+        organizationId: orgId,
+        patientId: patientProfileId,
+        status: 'PENDING',
+      },
+      include: {
+        familyUser: {
+          select: { id: true, email: true, role: true },
+        },
+        invitedByUser: {
+          select: { id: true, email: true, role: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async respondToInvite(
+    orgId: string,
+    patientUserId: string,
+    inviteId: string,
+    dto: RespondFamilyAccessInviteDto,
+  ) {
+    const patientProfileId = await this.resolvePatientProfileIdForUser(
+      orgId,
+      patientUserId,
+    );
+
+    const invite = await this.prisma.familyAccessInvite.findFirst({
+      where: {
+        id: inviteId,
+        organizationId: orgId,
+        patientId: patientProfileId,
+      },
+      include: {
+        familyUser: {
+          select: { id: true, email: true, role: true },
+        },
+      },
+    });
+
+    if (!invite) {
+      throw new NotFoundException('Invite not found');
+    }
+
+    if (invite.status !== 'PENDING') {
+      throw new BadRequestException('Invite is not pending');
+    }
+
+    if (dto.decision === FamilyInviteDecision.REJECT) {
+      return this.prisma.familyAccessInvite.update({
+        where: { id: invite.id },
+        data: {
+          status: 'REJECTED',
+          respondedByUserId: patientUserId,
+          respondedAt: new Date(),
+          responseNote: dto.note?.trim() || null,
+        },
+      });
+    }
+
+    const approved = await this.prisma.$transaction(async (tx) => {
+      const access = await tx.patientFamilyAccess.upsert({
+        where: {
+          patientId_familyUserId: {
+            patientId: invite.patientId,
+            familyUserId: invite.familyUserId,
+          },
+        },
+        create: {
+          patientId: invite.patientId,
+          familyUserId: invite.familyUserId,
+          grantedByUserId: patientUserId,
+          accessLevel: invite.accessLevel,
+          consentNote: invite.consentNote,
+          expiresAt: invite.expiresAt,
+          status: 'ACTIVE',
+        },
+        update: {
+          grantedByUserId: patientUserId,
+          accessLevel: invite.accessLevel,
+          consentNote: invite.consentNote,
+          expiresAt: invite.expiresAt,
+          status: 'ACTIVE',
+          revokedAt: null,
+          grantedAt: new Date(),
+        },
+      });
+
+      await tx.familyAccessAudit.create({
+        data: {
+          accessId: access.id,
+          actorUserId: patientUserId,
+          patientId: invite.patientId,
+          familyUserId: invite.familyUserId,
+          action: FamilyAccessAction.GRANTED,
+          note: dto.note || invite.consentNote || 'Patient approved invite',
+          metadata: {
+            fromInviteId: invite.id,
+            accessLevel: access.accessLevel,
+            expiresAt: access.expiresAt,
+          },
+        },
+      });
+
+      const inviteRow = await tx.familyAccessInvite.update({
+        where: { id: invite.id },
+        data: {
+          status: 'APPROVED',
+          respondedByUserId: patientUserId,
+          respondedAt: new Date(),
+          responseNote: dto.note?.trim() || null,
+        },
+      });
+
+      return { access, invite: inviteRow };
+    });
+
+    await this.notificationsService.emitToPatientFamily(
+      orgId,
+      invite.patientId,
+      NotificationType.ACCESS_GRANTED,
+      {
+        patientId: invite.patientId,
+        accessId: approved.access.id,
+        accessLevel: approved.access.accessLevel,
+      },
+    );
+
+    return approved;
+  }
+
+  async listPatientAccessAudit(orgId: string, patientId: string) {
+    await this.ensurePatientInOrg(patientId, orgId);
+    return this.prisma.familyAccessAudit.findMany({
+      where: { patientId },
+      include: {
+        actor: {
+          select: { id: true, email: true, role: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 150,
+    });
+  }
+
+  async listPatientAuditForPatientUser(orgId: string, patientUserId: string) {
+    const patientProfileId = await this.resolvePatientProfileIdForUser(
+      orgId,
+      patientUserId,
+    );
+    return this.listPatientAccessAudit(orgId, patientProfileId);
   }
 
   async listMyPatients(orgId: string, familyUserId: string) {
@@ -329,6 +573,108 @@ export class FamilyAccessService {
     );
   }
 
+  async submitFamilyQuestion(
+    orgId: string,
+    familyUserId: string,
+    patientId: string,
+    dto: CreateFamilyQuestionDto,
+  ) {
+    const access = await this.prisma.patientFamilyAccess.findFirst({
+      where: {
+        patientId,
+        familyUserId,
+        status: 'ACTIVE',
+        patient: { organizationId: orgId },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      select: { id: true },
+    });
+
+    if (!access) {
+      throw new ForbiddenException('No active access to submit question');
+    }
+
+    return this.prisma.familyQuestion.create({
+      data: {
+        organizationId: orgId,
+        patientId,
+        askedByUserId: familyUserId,
+        question: dto.question.trim(),
+        context: dto.context?.trim() || null,
+      },
+    });
+  }
+
+  listMyQuestions(orgId: string, familyUserId: string) {
+    return this.prisma.familyQuestion.findMany({
+      where: {
+        organizationId: orgId,
+        askedByUserId: familyUserId,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            lifecycleStage: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+  }
+
+  async listPatientQuestions(orgId: string, patientId: string) {
+    await this.ensurePatientInOrg(patientId, orgId);
+    return this.prisma.familyQuestion.findMany({
+      where: {
+        organizationId: orgId,
+        patientId,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        askedByUser: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+        answeredByUser: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
+
+  async answerFamilyQuestion(
+    orgId: string,
+    actorUserId: string,
+    questionId: string,
+    dto: AnswerFamilyQuestionDto,
+  ) {
+    const question = await this.prisma.familyQuestion.findFirst({
+      where: { id: questionId, organizationId: orgId },
+      select: { id: true },
+    });
+
+    if (!question) {
+      throw new NotFoundException('Family question not found');
+    }
+
+    return this.prisma.familyQuestion.update({
+      where: { id: questionId },
+      data: {
+        answer: dto.answer.trim(),
+        answeredByUserId: actorUserId,
+        answeredAt: new Date(),
+        status: 'ANSWERED',
+      },
+    });
+  }
+
   private async ensurePatientInOrg(patientId: string, orgId: string) {
     const patient = await this.prisma.patient.findFirst({
       where: { id: patientId, organizationId: orgId },
@@ -342,7 +688,10 @@ export class FamilyAccessService {
     return patient;
   }
 
-  private async resolveFamilyUser(orgId: string, dto: GrantFamilyAccessDto) {
+  private async resolveFamilyUser(
+    orgId: string,
+    dto: { familyUserId?: string; familyEmail?: string },
+  ) {
     let user = null;
 
     if (dto.familyUserId) {
@@ -370,5 +719,27 @@ export class FamilyAccessService {
     }
 
     return user;
+  }
+
+  private async resolvePatientProfileIdForUser(orgId: string, userId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        organizationId: orgId,
+        role: UserRole.PATIENT,
+        isSuspended: false,
+      },
+      select: {
+        patientProfileId: true,
+      },
+    });
+
+    if (!user?.patientProfileId) {
+      throw new ForbiddenException(
+        'Patient account is not linked to a patient profile',
+      );
+    }
+
+    return user.patientProfileId;
   }
 }

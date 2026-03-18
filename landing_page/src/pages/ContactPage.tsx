@@ -1,13 +1,39 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2, Mail, Phone, MapPin, Shield, MessageCircle, User } from "lucide-react";
 import { Section, FadeUp, ClinicalCard } from "@/components/shared";
+import { createDemoLead } from "@/lib/api/client";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", org: "", role: "", email: "", phone: "", message: "" });
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); setSubmitted(true); };
+  const submitLead = useMutation({
+    mutationFn: () =>
+      createDemoLead({
+        name: form.name,
+        org: form.org,
+        role: form.role || undefined,
+        email: form.email,
+        phone: form.phone || undefined,
+        message: form.message || undefined,
+        source: "landing_contact_page",
+      }),
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError(null);
+
+    try {
+      await submitLead.mutateAsync();
+      setSubmitted(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Unable to submit request");
+    }
+  };
 
   const inputClass =
     "w-full bg-background border border-foreground/10 rounded-lg px-4 py-3 text-sm font-body text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none";
@@ -46,8 +72,11 @@ export default function ContactPage() {
                   <textarea rows={4} placeholder="Tell us about your organization and goals..."
                     value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })}
                     className={`${inputClass} resize-none`} />
+                  {submitError ? (
+                    <p className="text-sm text-secondary">{submitError}</p>
+                  ) : null}
                   <button type="submit" className="w-full btn-shimmer py-3 rounded-full text-sm font-body font-semibold text-primary-foreground">
-                    Request Demo
+                    {submitLead.isPending ? "Submitting..." : "Request Demo"}
                   </button>
                 </motion.form>
               ) : (

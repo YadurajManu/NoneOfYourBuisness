@@ -1,155 +1,98 @@
-# MediLifecycle Source-of-Truth Context (Implementation Alignment)
+# Startup Context Alignment (Guide -> Current Implementation)
 
-Last updated: March 18, 2026  
-Primary source: `documentation/MediLifecycle_Comprehensive_Guide_v2.docx.pdf`
+Last updated: March 18, 2026 (local)
+Primary product source: `documentation/MediLifecycle_Comprehensive_Guide_v2.docx`
 
-## 1. Decision Rule for This Project
+## 1) Alignment Rule
 
-From this point forward, implementation should follow the startup guide as the product source-of-truth.  
-If code and guide differ, we treat guide requirements as target behavior and mark code as gap/in-progress.
+The startup guide remains the product source-of-truth.  
+Current backend/frontend implementation is measured against that guide and tracked as:
+- Implemented
+- Partially implemented
+- Not implemented yet
 
-Note: Poppler tools (`pdftoppm`, `pdftotext`) were not available in this environment during analysis, so text was extracted via Python (`pypdf`).
+## 2) User Types Accounted For
 
-## 2. User Types in the Startup Guide
+Guide user perspectives:
+1. Patient
+2. Family Member
+3. Primary Doctor
+4. Specialist Doctor
+5. Administrator
+6. AI assistant surface
 
-The guide defines the core multi-experience architecture around these user perspectives:
+Current implementation mapping:
+- Login roles in system: `ADMIN`, `DOCTOR`, `SPECIALIST`, `PATIENT`, `FAMILY_MEMBER`
+- AI assistant surface: implemented as service endpoints (`/api/ai/*`), not a login account role
 
-1. Patient (`2.1 The Patient Experience`)
-2. Family Member (`2.2 The Family Member Experience`)
-3. Primary Doctor (`2.3 The Primary Doctor Experience`)
-4. Specialist Doctor (`2.4 The Specialist Doctor Experience`)
-5. AI Assistant / AI Engine (`2.5 The AI Assistant — Architecture Overview`)
-6. Hospital/Clinic Administration perspective (`Section 10`)
+Coverage count:
+- Guide perspectives: **6**
+- Account roles: **5**
+- AI service surface: **1**
+- Total perspectives represented in architecture: **6/6**
 
-## 3. User Types Currently Accounted in Backend
+## 3) Workflow Spine Alignment
 
-Current role model in backend schema (`backend/prisma/schema.prisma`):
+### 3.1 10-stage lifecycle progression
+- Status: **Partially implemented**
+- Implemented now:
+  - stage transition API
+  - transition blocker checks
+  - transition history + audit
+  - lifecycle hook execution log
+- Remaining:
+  - deeper stage-specific policy/actions and advanced orchestration rules
 
-- `ADMIN`
-- `DOCTOR`
-- `SPECIALIST`
-- `PATIENT`
-- `FAMILY_MEMBER`
+### 3.2 Role-aware shared patient record
+- Status: **Partially implemented**
+- Implemented now:
+  - organization-scoped records
+  - role guards
+  - role-specific portal route separation
+- Remaining:
+  - richer role-specific read/write contracts and production-grade UX depth
 
-Current AI support in backend:
+### 3.3 Consent-first family access
+- Status: **Implemented (baseline)**
+- Implemented now:
+  - grant/revoke access
+  - family-safe view
+  - audit trail
+  - patient self-service family access controls
+- Remaining:
+  - expanded consent policy variants and compliance workflows
 
-- AI exists as service/module endpoints (`/api/ai/*`) but not as login user account type.
+### 3.4 Event/alert/workflow operations
+- Status: **Implemented (baseline)**
+- Implemented now:
+  - clinical events and alerts
+  - clinical orders/tasks/medications/prior-auth/referrals
+  - overdue automation and workflow audit
+- Remaining:
+  - external payer/provider integration depth and advanced SLA automation
 
-### Coverage Count
+### 3.5 Dashboard and timeline views
+- Status: **Implemented (baseline)**
+- Implemented now:
+  - dashboard overview
+  - patient timeline
+  - role-aware caseload endpoint
+- Remaining:
+  - advanced KPI drilldowns and full operational dashboard depth
 
-- Startup guide user perspectives: **6**
-- Explicit backend account roles: **5**
-- AI engine implemented as service (non-account): **1**
+## 4) Portal UI Reality vs Guide
 
-Practical interpretation:
+Implemented now:
+- Single app with landing + portal
+- Role-protected routes for admin/doctor/specialist/patient/family
+- Core connected screens for each role
 
-- All core perspectives now have backend representation, but several are still partial in depth.
+Still required for full guide parity:
+- full workflow-heavy UI depth per role
+- advanced UX around clinical operations, collaboration, and governance
 
-## 4. How Current Users Work in Backend
+## 5) Current Priority Sequence (Guide-first)
 
-### Implemented Behavior
-
-1. `ADMIN`
-- Can register organization and receive JWT.
-- Currently shares generic backend capabilities; no dedicated admin workflow module yet.
-
-2. `DOCTOR` (used for Primary Doctor in current model)
-- Accesses protected patient/document/AI/dashboard APIs via JWT.
-- Can create patients, move lifecycle stage, query AI, review timelines, and record/triage clinical events + alerts.
-
-3. `SPECIALIST`
-- Role exists in schema/JWT payload.
-- Can access the same current clinical surface as doctor (patients, docs, AI, dashboard, clinical alerts).
-- No specialist-specific filtered API behavior yet.
-
-4. `PATIENT`
-- Role exists in schema/JWT payload.
-- No dedicated patient portal API surface yet (currently no patient-specific controller/policy layer).
-
-5. `AI` (engine, not account)
-- `/api/ai/query` and `/api/ai/summarize/:patientId` available.
-- Document pipeline can call AI for structured extraction.
-
-## 5. Workflow Alignment vs Guide
-
-### A) 10-stage lifecycle
-- Guide target: complete lifecycle orchestration.
-- Current:
-  - strict adjacent transition rules (`PATCH /patients/:id/stage`)
-  - transition blockers/prerequisite checks
-  - lifecycle status API (`GET /api/patients/:id/lifecycle/status`)
-  - immutable transition audit API (`GET /api/patients/:id/lifecycle/transitions`)
-  - idempotent lifecycle stage hooks connected to workflows
-- Status: **Partial** (orchestration base now implemented; lifecycle depth/coverage still needs richer stage-specific policies).
-
-### B) Document intelligence
-- Guide target: robust upload, classification, extraction, governance.
-- Current: upload, async processing, PDF extraction, AI metadata storage.
-- Status: **Partial** (core pipeline exists; needs hardening, richer metadata schema, controls).
-
-### C) Role-aware AI
-- Guide target: deeply role-calibrated AI behavior.
-- Current: generic chat and patient summary endpoints.
-- Status: **Partial**.
-
-### D) Real-time family updates/notifications
-- Guide target: live multi-channel updates and family communication.
-- Current:
-  - notification event backbone implemented (DB events + family notification APIs), wired to stage/document/workflow events
-  - realtime SSE stream added for family notification updates
-  - channel preference model + delivery outbox + dispatch endpoint implemented
-- Status: **Partial** (provider-native adapters, template management, and operations-grade delivery receipts still pending).
-
-### E) Clinical events and order workflows
-- Guide target: ordering, coordination, medication/PA workflows.
-- Current: backend now supports clinical event capture and alert triage APIs:
-  - `POST /api/clinical-events/patient/:patientId`
-  - `GET /api/clinical-events/patient/:patientId`
-  - `GET /api/clinical-events/alerts/open`
-  - `GET /api/clinical-events/alerts/patient/:patientId`
-  - `PATCH /api/clinical-events/alerts/:alertId/status`
-- Current clinical workflow APIs now also include:
-  - `POST /api/clinical-workflows/patient/:patientId/orders`
-  - `PATCH /api/clinical-workflows/orders/:orderId/status`
-  - `POST /api/clinical-workflows/orders/:orderId/tasks`
-  - `PATCH /api/clinical-workflows/tasks/:taskId/status`
-  - `POST /api/clinical-workflows/patient/:patientId/medications`
-  - `PATCH /api/clinical-workflows/medications/:planId`
-  - `POST /api/clinical-workflows/patient/:patientId/prior-auths`
-  - `PATCH /api/clinical-workflows/prior-auths/:priorAuthId/status`
-  - `POST /api/clinical-workflows/patient/:patientId/referrals`
-  - `PATCH /api/clinical-workflows/referrals/:referralId/status`
-  - `POST /api/clinical-workflows/automation/overdue/run`
-  - `GET /api/clinical-workflows/patient/:patientId/summary`
-- Status: **Partial** (order/task/medication/prior-auth/referral baseline implemented; payer integration depth and cross-team orchestration rules still pending).
-
-### F) EHR/FHIR integration adapters
-- Guide target: interoperability adapters and integration flows.
-- Current: only FHIR-like patient JSON storage; no external adapter services yet.
-- Status: **Not implemented**.
-
-### G) Dashboards and analytics
-- Guide target: broad reporting/performance dashboards.
-- Current: backend now has starter dashboard APIs:
-  - `GET /api/dashboard/overview`
-  - `GET /api/dashboard/patient/:patientId/timeline`
-- Includes clinical totals/open alerts, workflow KPI totals (pending/escalated/overdue), prior-auth/referral KPIs, and patient timeline items for orders/tasks/medications/prior-auth/referrals.
-- Status: **Partial**.
-
-## 6. Immediate Product Gaps to Reach Guide Fidelity
-
-1. Implement role-specific API policies/views (Primary vs Specialist vs Patient vs Family).
-2. Harden channel delivery stack (provider-native adapters, templates, receipts, alerting).
-3. Build notification/alert expansion for broader transition event types.
-4. Extend workflow depth: payer callbacks, referral packet orchestration, and care-team SLA enforcement.
-5. Expand dashboard KPIs with SLA, turnaround, outcomes, and role-specific drilldowns.
-6. Add integration module layer for EHR/FHIR exchange.
-
-## 7. Build Sequence (Strict Guide-First)
-
-1. Lifecycle orchestration hardening (expand stage-specific rules, edge cases, and policy depth).
-2. Notification/event engine expansion for family and care-team updates across all workflows.
-3. Delivery channel adapters (websocket/push/email/SMS) on top of notification events.
-4. Clinical workflow expansion (orders, meds, PA, follow-ups, escalation on top of events/alerts).
-5. Dashboard/reporting expansion mapped to Section 11 KPIs and operational SLA metrics.
-6. EHR integration adapters and deployment hardening.
+1. Expand role workflow depth from baseline pages to production operations screens.
+2. Complete integrations (EHR/FHIR, payer pipelines, provider notifications).
+3. Add stronger production observability, operational alerts, and resilience controls.
