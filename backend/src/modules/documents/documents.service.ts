@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { AIService } from '../ai/ai.service';
-import * as pdf from 'pdf-parse';
 import * as fs from 'fs';
+import { extname } from 'path';
+import { PDFParse } from 'pdf-parse';
 
 @Injectable()
 export class DocumentsService {
@@ -17,32 +18,33 @@ export class DocumentsService {
     const document = await this.prisma.document.create({
       data: {
         patientId,
-        fileName: file.originalname,
-        fileType: file.mimetype,
+        type: file.mimetype || 'application/octet-stream',
         filePath: file.path,
         status: 'PROCESSING',
       },
     });
 
     // Fire and forget processing to keep API responsive
-    this.processDocument(document.id).catch((err) => {
-      this.logger.error(`Error processing document ${document.id}: ${err.message}`);
+    this.processDocument(document.id).catch((err: unknown) => {
+      this.logger.error(
+        `Error processing document ${document.id}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     });
 
     return document;
   }
 
   async processDocument(documentId: string) {
-    const doc = await this.prisma.document.findUnique({ where: { id: documentId } });
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
     if (!doc) return;
 
     try {
       let extractedText = '';
 
-      if (doc.fileType === 'application/pdf') {
-        const dataBuffer = fs.readFileSync(doc.filePath);
-        const data = await pdf(dataBuffer);
-        extractedText = data.text;
+      if (this.isPdfFile(doc.filePath, doc.type)) {
+        extractedText = await this.extractPdfText(doc.filePath);
       } else {
         // Fallback for text files or simple extraction
         extractedText = fs.readFileSync(doc.filePath, 'utf8');
@@ -52,7 +54,8 @@ export class DocumentsService {
       const aiResponse = await this.aiService.chat([
         {
           role: 'system',
-          content: 'You are a clinical document parser. Extract the diagnosis, medications, and clinical summary from the following text into a structured JSON format.',
+          content:
+            'You are a clinical document parser. Extract the diagnosis, medications, and clinical summary from the following text into a structured JSON format.',
         },
         { role: 'user', content: extractedText },
       ]);
@@ -60,7 +63,7 @@ export class DocumentsService {
       await this.prisma.document.update({
         where: { id: documentId },
         data: {
-          summary: aiResponse.content,
+          metadata: aiResponse.content,
           status: 'COMPLETED',
         },
       });
@@ -80,5 +83,26 @@ export class DocumentsService {
       where: { patientId },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  private isPdfFile(filePath: string, mimeType: string): boolean {
+    const normalizedMimeType = mimeType.toLowerCase();
+    return (
+      normalizedMimeType === 'application/pdf' ||
+      normalizedMimeType.endsWith('/pdf') ||
+      extname(filePath).toLowerCase() === '.pdf'
+    );
+  }
+
+  private async extractPdfText(filePath: string): Promise<string> {
+    const dataBuffer = fs.readFileSync(filePath);
+    const parser = new PDFParse({ data: dataBuffer });
+
+    try {
+      const result = await parser.getText();
+      return result.text;
+    } finally {
+      await parser.destroy();
+    }
   }
 }

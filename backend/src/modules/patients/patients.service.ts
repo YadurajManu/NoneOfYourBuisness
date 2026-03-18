@@ -19,11 +19,11 @@ export class PatientsService {
     });
   }
 
-  async create(orgId: string, fhirResource: any) {
+  async create(orgId: string, fhirResource: Record<string, unknown>) {
     return this.prisma.patient.create({
       data: {
         organizationId: orgId,
-        fhirResource,
+        fhirResource: fhirResource as object,
         lifecycleStage: 1, // Start at stage 1: Referral/Intake
       },
     });

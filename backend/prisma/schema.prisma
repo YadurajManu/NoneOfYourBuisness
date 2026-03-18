@@ -61,7 +61,7 @@ enum UserRole {
 
 enum DocStatus {
   PENDING
-  PROCESSED
-  APPROVED
-  FLAGGED
+  PROCESSING
+  COMPLETED
+  FAILED
 }

@@ -33,7 +33,10 @@ export class DocumentsController {
       }),
     }),
   )
-  async uploadFile(@Param('patientId') patientId: string, @UploadedFile() file: Express.Multer.File) {
+  async uploadFile(
+    @Param('patientId') patientId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     return this.documentsService.create(patientId, file);
   }
 

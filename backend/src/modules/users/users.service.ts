@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import * as bcrypt from 'bcrypt';
 import { UserRole } from '@prisma/client';
 
 @Injectable()
@@ -14,13 +13,22 @@ export class UsersService {
     });
   }
 
-  async create(data: { email: string; passwordHash: string; role: UserRole; organizationId: string }) {
+  async create(data: {
+    email: string;
+    passwordHash: string;
+    role: UserRole;
+    organizationId: string;
+  }) {
     return this.prisma.user.create({
       data,
     });
   }
 
-  async createWithOrganization(orgName: string, adminEmail: string, passwordHash: string) {
+  async createWithOrganization(
+    orgName: string,
+    adminEmail: string,
+    passwordHash: string,
+  ) {
     return this.prisma.organization.create({
       data: {
         name: orgName,
