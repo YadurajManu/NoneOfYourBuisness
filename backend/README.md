@@ -24,7 +24,7 @@ Production-oriented NestJS backend for multi-tenant patient lifecycle management
 - `family-access`: consent grants/revocation, family patient views
 - `notifications`: family event stream and read state
 - `clinical-events`: event logging, alerting, acknowledgement/resolution workflows
-- `clinical-workflows`: clinical orders, care tasks, medication plans, workflow audit
+- `clinical-workflows`: clinical orders, care tasks, medication plans, prior auth, referral handoffs, workflow audit + overdue automation
 - `dashboard`: org overview and patient timeline
 
 ## Prerequisites
@@ -79,6 +79,7 @@ Current migration set includes:
 - `20260318070000_family_access_notifications`
 - `20260318080000_notification_type_clinical_values`
 - `20260318010635_clinical_workflows_orders_medications`
+- `20260318013500_prior_auth_referral_handoffs`
 
 ## Run
 Development:

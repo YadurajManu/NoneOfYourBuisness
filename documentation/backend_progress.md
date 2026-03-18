@@ -46,8 +46,8 @@ Last updated: March 18, 2026
 - Family notifications for clinical events/alerts.
 - Alert acknowledgement/resolution audit fields.
 
-7. Clinical workflows baseline (orders + tasks + medications)
-- Clinical order, care task, medication plan, and workflow audit models added.
+7. Clinical workflows baseline (orders + tasks + medications + prior-auth + referrals)
+- Clinical order, care task, medication plan, prior authorization, referral handoff, and workflow audit models added.
 - APIs:
   - `POST /api/clinical-workflows/patient/:patientId/orders`
   - `GET /api/clinical-workflows/patient/:patientId/orders`
@@ -56,19 +56,24 @@ Last updated: March 18, 2026
   - `PATCH /api/clinical-workflows/tasks/:taskId/status`
   - `POST /api/clinical-workflows/patient/:patientId/medications`
   - `PATCH /api/clinical-workflows/medications/:planId`
+  - `POST /api/clinical-workflows/patient/:patientId/prior-auths`
+  - `PATCH /api/clinical-workflows/prior-auths/:priorAuthId/status`
+  - `POST /api/clinical-workflows/patient/:patientId/referrals`
+  - `PATCH /api/clinical-workflows/referrals/:referralId/status`
+  - `POST /api/clinical-workflows/automation/overdue/run`
   - `GET /api/clinical-workflows/patient/:patientId/summary`
-- Family notifications wired for order create/escalate/complete + medication updates.
-- Workflow audit trail captures status transitions and key actions.
+- Family notifications wired for order create/escalate/complete, medication updates, prior-auth submissions/decisions, and referral transitions.
+- Workflow audit trail captures status transitions, including overdue automation escalations.
 
 8. Dashboard baseline
 - `GET /api/dashboard/overview`
 - `GET /api/dashboard/patient/:patientId/timeline`
-- Overview now includes clinical totals, open alerts, and workflow KPIs (pending/escalated/overdue).
-- Patient timeline now includes document + clinical event/alert + order/task/medication timeline entries.
+- Overview now includes clinical totals, open alerts, workflow KPIs (pending/escalated/overdue), prior-auth load, and referral load.
+- Patient timeline now includes document + clinical event/alert + order/task/medication + prior-auth/referral timeline entries.
 
 9. Automated validation
 - Unit tests and e2e tests passing.
-- e2e covers end-to-end admin -> patient -> family workflow, clinical alert flow, and order/task/medication lifecycle.
+- e2e covers end-to-end admin -> patient -> family workflow, clinical alert flow, order/task/medication lifecycle, prior-auth updates, referral handoff, and overdue automation.
 - Build/lint gates passing.
 
 ## In Progress / Remaining for Guide-Level Parity
@@ -77,7 +82,7 @@ Last updated: March 18, 2026
 - Stage-specific rules, validations, and transition hooks per lifecycle stage.
 
 2. Advanced clinical workflow depth
-- Prior authorization orchestration, referral handoffs, follow-up automation, and cross-team SLA rules.
+- Rich prior-auth document exchange, payer polling callbacks, referral packet generation, and cross-team SLA assignment rules.
 
 3. Real-time delivery channels
 - WebSocket/SSE for live dashboard + family feed.

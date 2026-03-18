@@ -107,8 +107,13 @@ Practical interpretation:
   - `PATCH /api/clinical-workflows/tasks/:taskId/status`
   - `POST /api/clinical-workflows/patient/:patientId/medications`
   - `PATCH /api/clinical-workflows/medications/:planId`
+  - `POST /api/clinical-workflows/patient/:patientId/prior-auths`
+  - `PATCH /api/clinical-workflows/prior-auths/:priorAuthId/status`
+  - `POST /api/clinical-workflows/patient/:patientId/referrals`
+  - `PATCH /api/clinical-workflows/referrals/:referralId/status`
+  - `POST /api/clinical-workflows/automation/overdue/run`
   - `GET /api/clinical-workflows/patient/:patientId/summary`
-- Status: **Partial** (order/task/medication baseline implemented; prior-auth depth and cross-team orchestration still pending).
+- Status: **Partial** (order/task/medication/prior-auth/referral baseline implemented; payer integration depth and cross-team orchestration rules still pending).
 
 ### F) EHR/FHIR integration adapters
 - Guide target: interoperability adapters and integration flows.
@@ -120,7 +125,7 @@ Practical interpretation:
 - Current: backend now has starter dashboard APIs:
   - `GET /api/dashboard/overview`
   - `GET /api/dashboard/patient/:patientId/timeline`
-- Includes clinical totals/open alerts, workflow KPI totals (pending/escalated/overdue), and patient timeline items for orders/tasks/medication plans.
+- Includes clinical totals/open alerts, workflow KPI totals (pending/escalated/overdue), prior-auth/referral KPIs, and patient timeline items for orders/tasks/medications/prior-auth/referrals.
 - Status: **Partial**.
 
 ## 6. Immediate Product Gaps to Reach Guide Fidelity
@@ -128,7 +133,7 @@ Practical interpretation:
 1. Implement role-specific API policies/views (Primary vs Specialist vs Patient vs Family).
 2. Add channel delivery for notifications (websocket/push/email/SMS adapters).
 3. Build notification/alert expansion for broader transition event types.
-4. Extend workflow depth: prior-auth orchestration, referral handoff rules, care-team SLAs, and automation rules per stage.
+4. Extend workflow depth: payer callbacks, referral packet orchestration, care-team SLAs, and automation rules per stage.
 5. Expand dashboard KPIs with SLA, turnaround, outcomes, and role-specific drilldowns.
 6. Add integration module layer for EHR/FHIR exchange.
 

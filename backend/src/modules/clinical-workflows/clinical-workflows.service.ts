@@ -8,6 +8,8 @@ import {
   ClinicalOrderStatus,
   MedicationPlanStatus,
   NotificationType,
+  PriorAuthorizationStatus,
+  ReferralHandoffStatus,
   WorkflowAuditAction,
   WorkflowEntityType,
 } from '@prisma/client';
@@ -19,6 +21,10 @@ import { CreateCareTaskDto } from './dto/create-care-task.dto';
 import { UpdateCareTaskStatusDto } from './dto/update-care-task-status.dto';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 import { UpdateMedicationPlanDto } from './dto/update-medication-plan.dto';
+import { CreatePriorAuthorizationDto } from './dto/create-prior-authorization.dto';
+import { UpdatePriorAuthorizationStatusDto } from './dto/update-prior-authorization-status.dto';
+import { CreateReferralHandoffDto } from './dto/create-referral-handoff.dto';
+import { UpdateReferralHandoffStatusDto } from './dto/update-referral-handoff-status.dto';
 
 @Injectable()
 export class ClinicalWorkflowsService {
@@ -95,6 +101,8 @@ export class ClinicalWorkflowsService {
       include: {
         careTasks: true,
         medicationPlans: true,
+        priorAuthorizations: true,
+        referralHandoffs: true,
       },
       orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
     });
@@ -511,6 +519,9 @@ export class ClinicalWorkflowsService {
       openTasks,
       overdueTasks,
       activeMeds,
+      pendingPriorAuthorizations,
+      activeReferrals,
+      overdueReferrals,
     ] = await Promise.all([
       this.prisma.clinicalOrder.count({
         where: {
@@ -568,6 +579,48 @@ export class ClinicalWorkflowsService {
           status: MedicationPlanStatus.ACTIVE,
         },
       }),
+      this.prisma.priorAuthorization.count({
+        where: {
+          organizationId: orgId,
+          patientId,
+          status: {
+            in: [
+              PriorAuthorizationStatus.SUBMITTED,
+              PriorAuthorizationStatus.IN_REVIEW,
+              PriorAuthorizationStatus.APPEALED,
+            ],
+          },
+        },
+      }),
+      this.prisma.referralHandoff.count({
+        where: {
+          organizationId: orgId,
+          patientId,
+          status: {
+            in: [
+              ReferralHandoffStatus.CREATED,
+              ReferralHandoffStatus.ACCEPTED,
+              ReferralHandoffStatus.IN_PROGRESS,
+              ReferralHandoffStatus.ESCALATED,
+            ],
+          },
+        },
+      }),
+      this.prisma.referralHandoff.count({
+        where: {
+          organizationId: orgId,
+          patientId,
+          dueAt: { lt: now },
+          status: {
+            in: [
+              ReferralHandoffStatus.CREATED,
+              ReferralHandoffStatus.ACCEPTED,
+              ReferralHandoffStatus.IN_PROGRESS,
+              ReferralHandoffStatus.ESCALATED,
+            ],
+          },
+        },
+      }),
     ]);
 
     return {
@@ -576,6 +629,468 @@ export class ClinicalWorkflowsService {
       openTasks,
       overdueTasks,
       activeMedications: activeMeds,
+      pendingPriorAuthorizations,
+      activeReferrals,
+      overdueReferrals,
+    };
+  }
+
+  async createPriorAuthorization(
+    orgId: string,
+    patientId: string,
+    actorUserId: string,
+    dto: CreatePriorAuthorizationDto,
+  ) {
+    await this.ensurePatientInOrganization(patientId, orgId);
+
+    if (dto.clinicalOrderId) {
+      await this.ensureOrderInOrganization(
+        dto.clinicalOrderId,
+        orgId,
+        patientId,
+      );
+    }
+
+    const status = dto.status ?? PriorAuthorizationStatus.DRAFT;
+    const submittedAt =
+      status === PriorAuthorizationStatus.SUBMITTED ? new Date() : null;
+
+    const priorAuthorization = await this.prisma.priorAuthorization.create({
+      data: {
+        organizationId: orgId,
+        patientId,
+        clinicalOrderId: dto.clinicalOrderId,
+        requestedByUserId: actorUserId,
+        payerName: dto.payerName,
+        policyNumber: dto.policyNumber,
+        serviceCodes: (dto.serviceCodes ?? []) as object,
+        requestPayload: dto.requestPayload as object | undefined,
+        status,
+        externalReference: dto.externalReference,
+        submittedAt,
+      },
+    });
+
+    await this.logAudit({
+      organizationId: orgId,
+      patientId,
+      actorUserId,
+      action: WorkflowAuditAction.PRIOR_AUTH_CREATED,
+      entityType: WorkflowEntityType.PRIOR_AUTH,
+      entityId: priorAuthorization.id,
+      metadata: {
+        status: priorAuthorization.status,
+        payerName: priorAuthorization.payerName,
+      },
+    });
+
+    if (
+      dto.notifyFamily !== false &&
+      status === PriorAuthorizationStatus.SUBMITTED
+    ) {
+      await this.notificationsService.emitToPatientFamily(
+        orgId,
+        patientId,
+        NotificationType.PRIOR_AUTH_SUBMITTED,
+        {
+          priorAuthorizationId: priorAuthorization.id,
+          payerName: priorAuthorization.payerName,
+          status: priorAuthorization.status,
+        },
+      );
+    }
+
+    return priorAuthorization;
+  }
+
+  async listPatientPriorAuthorizations(orgId: string, patientId: string) {
+    await this.ensurePatientInOrganization(patientId, orgId);
+
+    return this.prisma.priorAuthorization.findMany({
+      where: {
+        organizationId: orgId,
+        patientId,
+      },
+      include: {
+        clinicalOrder: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updatePriorAuthorizationStatus(
+    orgId: string,
+    actorUserId: string,
+    priorAuthId: string,
+    dto: UpdatePriorAuthorizationStatusDto,
+  ) {
+    const priorAuthorization = await this.prisma.priorAuthorization.findFirst({
+      where: {
+        id: priorAuthId,
+        organizationId: orgId,
+      },
+    });
+
+    if (!priorAuthorization) {
+      throw new NotFoundException('Prior authorization not found');
+    }
+
+    this.assertPriorAuthorizationTransition(
+      priorAuthorization.status,
+      dto.status,
+    );
+
+    const now = new Date();
+    const isDecisionStatus =
+      dto.status === PriorAuthorizationStatus.APPROVED ||
+      dto.status === PriorAuthorizationStatus.DENIED ||
+      dto.status === PriorAuthorizationStatus.EXPIRED;
+
+    const updatedPriorAuthorization =
+      await this.prisma.priorAuthorization.update({
+        where: { id: priorAuthorization.id },
+        data: {
+          status: dto.status,
+          reviewedByUserId: isDecisionStatus
+            ? actorUserId
+            : priorAuthorization.reviewedByUserId,
+          submittedAt:
+            dto.status === PriorAuthorizationStatus.SUBMITTED
+              ? (priorAuthorization.submittedAt ?? now)
+              : priorAuthorization.submittedAt,
+          decidedAt: isDecisionStatus ? now : null,
+          expiresAt: dto.expiresAt
+            ? this.parseRequiredDate(dto.expiresAt, 'expiresAt')
+            : priorAuthorization.expiresAt,
+          externalReference:
+            dto.externalReference ?? priorAuthorization.externalReference,
+          decisionNote: dto.decisionNote ?? priorAuthorization.decisionNote,
+        },
+      });
+
+    await this.logAudit({
+      organizationId: orgId,
+      patientId: priorAuthorization.patientId,
+      actorUserId,
+      action: WorkflowAuditAction.PRIOR_AUTH_STATUS_UPDATED,
+      entityType: WorkflowEntityType.PRIOR_AUTH,
+      entityId: priorAuthorization.id,
+      note: dto.decisionNote,
+      metadata: {
+        previousStatus: priorAuthorization.status,
+        nextStatus: dto.status,
+      },
+    });
+
+    if (dto.notifyFamily !== false) {
+      if (dto.status === PriorAuthorizationStatus.SUBMITTED) {
+        await this.notificationsService.emitToPatientFamily(
+          orgId,
+          priorAuthorization.patientId,
+          NotificationType.PRIOR_AUTH_SUBMITTED,
+          {
+            priorAuthorizationId: priorAuthorization.id,
+            payerName: priorAuthorization.payerName,
+            status: dto.status,
+          },
+        );
+      }
+
+      if (isDecisionStatus) {
+        await this.notificationsService.emitToPatientFamily(
+          orgId,
+          priorAuthorization.patientId,
+          NotificationType.PRIOR_AUTH_DECISION,
+          {
+            priorAuthorizationId: priorAuthorization.id,
+            payerName: priorAuthorization.payerName,
+            status: dto.status,
+            decisionNote: dto.decisionNote,
+          },
+        );
+      }
+    }
+
+    return updatedPriorAuthorization;
+  }
+
+  async createReferralHandoff(
+    orgId: string,
+    patientId: string,
+    actorUserId: string,
+    dto: CreateReferralHandoffDto,
+  ) {
+    await this.ensurePatientInOrganization(patientId, orgId);
+
+    if (dto.clinicalOrderId) {
+      await this.ensureOrderInOrganization(
+        dto.clinicalOrderId,
+        orgId,
+        patientId,
+      );
+    }
+
+    const dueAt = this.parseOptionalDate(dto.dueAt, 'dueAt');
+    const status = dto.status ?? ReferralHandoffStatus.CREATED;
+    const now = new Date();
+
+    const referral = await this.prisma.referralHandoff.create({
+      data: {
+        organizationId: orgId,
+        patientId,
+        clinicalOrderId: dto.clinicalOrderId,
+        createdByUserId: actorUserId,
+        assignedToUserId: dto.assignedToUserId,
+        destinationType: dto.destinationType,
+        destinationName: dto.destinationName,
+        reason: dto.reason,
+        priority: dto.priority,
+        status,
+        dueAt,
+        acceptedAt:
+          status === ReferralHandoffStatus.ACCEPTED ||
+          status === ReferralHandoffStatus.IN_PROGRESS
+            ? now
+            : null,
+        completedAt: status === ReferralHandoffStatus.COMPLETED ? now : null,
+        escalatedAt: status === ReferralHandoffStatus.ESCALATED ? now : null,
+        declinedAt: status === ReferralHandoffStatus.DECLINED ? now : null,
+        metadata: dto.metadata as object | undefined,
+      },
+    });
+
+    await this.logAudit({
+      organizationId: orgId,
+      patientId,
+      actorUserId,
+      action: WorkflowAuditAction.REFERRAL_CREATED,
+      entityType: WorkflowEntityType.REFERRAL,
+      entityId: referral.id,
+      metadata: {
+        status: referral.status,
+        destinationType: referral.destinationType,
+        destinationName: referral.destinationName,
+      },
+    });
+
+    if (dto.notifyFamily !== false) {
+      await this.notificationsService.emitToPatientFamily(
+        orgId,
+        patientId,
+        NotificationType.REFERRAL_CREATED,
+        {
+          referralId: referral.id,
+          destinationType: referral.destinationType,
+          destinationName: referral.destinationName,
+          status: referral.status,
+        },
+      );
+    }
+
+    return referral;
+  }
+
+  async listPatientReferrals(orgId: string, patientId: string) {
+    await this.ensurePatientInOrganization(patientId, orgId);
+
+    return this.prisma.referralHandoff.findMany({
+      where: {
+        organizationId: orgId,
+        patientId,
+      },
+      include: {
+        clinicalOrder: true,
+      },
+      orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  async updateReferralStatus(
+    orgId: string,
+    actorUserId: string,
+    referralId: string,
+    dto: UpdateReferralHandoffStatusDto,
+  ) {
+    const referral = await this.prisma.referralHandoff.findFirst({
+      where: {
+        id: referralId,
+        organizationId: orgId,
+      },
+    });
+
+    if (!referral) {
+      throw new NotFoundException('Referral not found');
+    }
+
+    this.assertReferralTransition(referral.status, dto.status);
+
+    const now = new Date();
+    const updatedReferral = await this.prisma.referralHandoff.update({
+      where: { id: referral.id },
+      data: {
+        status: dto.status,
+        acceptedAt:
+          dto.status === ReferralHandoffStatus.ACCEPTED ||
+          dto.status === ReferralHandoffStatus.IN_PROGRESS
+            ? (referral.acceptedAt ?? now)
+            : referral.acceptedAt,
+        completedAt:
+          dto.status === ReferralHandoffStatus.COMPLETED
+            ? now
+            : referral.completedAt,
+        escalatedAt:
+          dto.status === ReferralHandoffStatus.ESCALATED
+            ? now
+            : referral.escalatedAt,
+        declinedAt:
+          dto.status === ReferralHandoffStatus.DECLINED
+            ? now
+            : referral.declinedAt,
+      },
+    });
+
+    await this.logAudit({
+      organizationId: orgId,
+      patientId: referral.patientId,
+      actorUserId,
+      action: WorkflowAuditAction.REFERRAL_STATUS_UPDATED,
+      entityType: WorkflowEntityType.REFERRAL,
+      entityId: referral.id,
+      note: dto.note,
+      metadata: {
+        previousStatus: referral.status,
+        nextStatus: dto.status,
+      },
+    });
+
+    if (dto.notifyFamily !== false) {
+      await this.notificationsService.emitToPatientFamily(
+        orgId,
+        referral.patientId,
+        NotificationType.REFERRAL_STATUS_UPDATED,
+        {
+          referralId: referral.id,
+          destinationType: referral.destinationType,
+          destinationName: referral.destinationName,
+          status: dto.status,
+          note: dto.note,
+        },
+      );
+    }
+
+    return updatedReferral;
+  }
+
+  async runOverdueAutomation(orgId: string, actorUserId: string) {
+    const now = new Date();
+
+    const overdueTasks = await this.prisma.careTask.findMany({
+      where: {
+        organizationId: orgId,
+        dueAt: { lt: now },
+        status: {
+          in: [
+            CareTaskStatus.OPEN,
+            CareTaskStatus.IN_PROGRESS,
+            CareTaskStatus.BLOCKED,
+          ],
+        },
+      },
+      select: {
+        id: true,
+        patientId: true,
+        clinicalOrderId: true,
+        title: true,
+      },
+    });
+
+    const overdueReferrals = await this.prisma.referralHandoff.findMany({
+      where: {
+        organizationId: orgId,
+        dueAt: { lt: now },
+        status: {
+          in: [
+            ReferralHandoffStatus.CREATED,
+            ReferralHandoffStatus.ACCEPTED,
+            ReferralHandoffStatus.IN_PROGRESS,
+          ],
+        },
+      },
+      select: {
+        id: true,
+        patientId: true,
+        destinationType: true,
+        destinationName: true,
+      },
+    });
+
+    for (const task of overdueTasks) {
+      await this.prisma.careTask.update({
+        where: { id: task.id },
+        data: {
+          status: CareTaskStatus.ESCALATED,
+          escalatedAt: now,
+        },
+      });
+
+      await this.logAudit({
+        organizationId: orgId,
+        patientId: task.patientId,
+        actorUserId,
+        action: WorkflowAuditAction.AUTOMATION_OVERDUE_RUN,
+        entityType: WorkflowEntityType.TASK,
+        entityId: task.id,
+        note: 'Auto-escalated overdue care task',
+      });
+
+      await this.notificationsService.emitToPatientFamily(
+        orgId,
+        task.patientId,
+        NotificationType.CARE_TASK_OVERDUE,
+        {
+          taskId: task.id,
+          orderId: task.clinicalOrderId,
+          taskTitle: task.title,
+          status: CareTaskStatus.ESCALATED,
+        },
+      );
+    }
+
+    for (const referral of overdueReferrals) {
+      await this.prisma.referralHandoff.update({
+        where: { id: referral.id },
+        data: {
+          status: ReferralHandoffStatus.ESCALATED,
+          escalatedAt: now,
+        },
+      });
+
+      await this.logAudit({
+        organizationId: orgId,
+        patientId: referral.patientId,
+        actorUserId,
+        action: WorkflowAuditAction.AUTOMATION_OVERDUE_RUN,
+        entityType: WorkflowEntityType.REFERRAL,
+        entityId: referral.id,
+        note: 'Auto-escalated overdue referral handoff',
+      });
+
+      await this.notificationsService.emitToPatientFamily(
+        orgId,
+        referral.patientId,
+        NotificationType.REFERRAL_OVERDUE,
+        {
+          referralId: referral.id,
+          destinationType: referral.destinationType,
+          destinationName: referral.destinationName,
+          status: ReferralHandoffStatus.ESCALATED,
+        },
+      );
+    }
+
+    return {
+      careTasksEscalated: overdueTasks.length,
+      referralsEscalated: overdueReferrals.length,
     };
   }
 
@@ -593,6 +1108,25 @@ export class ClinicalWorkflowsService {
 
     if (!patient) {
       throw new NotFoundException('Patient not found');
+    }
+  }
+
+  private async ensureOrderInOrganization(
+    orderId: string,
+    orgId: string,
+    patientId: string,
+  ): Promise<void> {
+    const order = await this.prisma.clinicalOrder.findFirst({
+      where: {
+        id: orderId,
+        organizationId: orgId,
+        patientId,
+      },
+      select: { id: true },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Clinical order not found');
     }
   }
 
@@ -632,6 +1166,47 @@ export class ClinicalWorkflowsService {
 
     if (isCurrentTerminal && currentStatus !== nextStatus) {
       throw new BadRequestException('Cannot modify status of terminal order');
+    }
+  }
+
+  private assertPriorAuthorizationTransition(
+    currentStatus: PriorAuthorizationStatus,
+    nextStatus: PriorAuthorizationStatus,
+  ) {
+    const isCurrentTerminal =
+      currentStatus === PriorAuthorizationStatus.APPROVED ||
+      currentStatus === PriorAuthorizationStatus.EXPIRED;
+
+    if (isCurrentTerminal && currentStatus !== nextStatus) {
+      throw new BadRequestException(
+        'Cannot modify status of terminal prior authorization',
+      );
+    }
+
+    if (
+      currentStatus === PriorAuthorizationStatus.DENIED &&
+      nextStatus !== PriorAuthorizationStatus.DENIED &&
+      nextStatus !== PriorAuthorizationStatus.APPEALED
+    ) {
+      throw new BadRequestException(
+        'Denied prior authorization can only move to APPEALED',
+      );
+    }
+  }
+
+  private assertReferralTransition(
+    currentStatus: ReferralHandoffStatus,
+    nextStatus: ReferralHandoffStatus,
+  ) {
+    const isCurrentTerminal =
+      currentStatus === ReferralHandoffStatus.COMPLETED ||
+      currentStatus === ReferralHandoffStatus.DECLINED ||
+      currentStatus === ReferralHandoffStatus.CANCELLED;
+
+    if (isCurrentTerminal && currentStatus !== nextStatus) {
+      throw new BadRequestException(
+        'Cannot modify status of terminal referral handoff',
+      );
     }
   }
 

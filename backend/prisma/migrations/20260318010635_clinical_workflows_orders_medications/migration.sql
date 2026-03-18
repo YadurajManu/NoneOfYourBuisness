@@ -22,19 +22,9 @@ CREATE TYPE "WorkflowAuditAction" AS ENUM ('ORDER_CREATED', 'ORDER_STATUS_UPDATE
 -- CreateEnum
 CREATE TYPE "WorkflowEntityType" AS ENUM ('ORDER', 'TASK', 'MEDICATION_PLAN');
 
--- AlterEnum
--- This migration adds more than one value to an enum.
--- With PostgreSQL versions 11 and earlier, this is not possible
--- in a single migration. This can be worked around by creating
--- multiple migrations, each migration adding only one value to
--- the enum.
-
-
-ALTER TYPE "NotificationType" ADD VALUE 'CLINICAL_ORDER_CREATED';
-ALTER TYPE "NotificationType" ADD VALUE 'CLINICAL_ORDER_ESCALATED';
-ALTER TYPE "NotificationType" ADD VALUE 'CLINICAL_ORDER_COMPLETED';
-ALTER TYPE "NotificationType" ADD VALUE 'MEDICATION_PLAN_UPDATED';
-ALTER TYPE "NotificationType" ADD VALUE 'CARE_TASK_OVERDUE';
+-- NotificationType enum value expansion moved to a dedicated migration
+-- (20260318080000_notification_type_clinical_values) to keep shadow DB
+-- replay stable despite legacy migration ordering.
 
 -- CreateTable
 CREATE TABLE "ClinicalOrder" (

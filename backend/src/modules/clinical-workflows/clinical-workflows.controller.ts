@@ -20,6 +20,10 @@ import { CreateCareTaskDto } from './dto/create-care-task.dto';
 import { UpdateCareTaskStatusDto } from './dto/update-care-task-status.dto';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 import { UpdateMedicationPlanDto } from './dto/update-medication-plan.dto';
+import { CreatePriorAuthorizationDto } from './dto/create-prior-authorization.dto';
+import { UpdatePriorAuthorizationStatusDto } from './dto/update-prior-authorization-status.dto';
+import { CreateReferralHandoffDto } from './dto/create-referral-handoff.dto';
+import { UpdateReferralHandoffStatusDto } from './dto/update-referral-handoff-status.dto';
 
 @Controller('clinical-workflows')
 @UseGuards(JwtAuthGuard)
@@ -154,6 +158,92 @@ export class ClinicalWorkflowsController {
     return this.clinicalWorkflowsService.getPatientWorkflowSummary(
       req.user.orgId,
       patientId,
+    );
+  }
+
+  @Post('patient/:patientId/prior-auths')
+  createPriorAuthorization(
+    @Param('patientId', ParseUUIDPipe) patientId: string,
+    @Body() body: CreatePriorAuthorizationDto,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.clinicalWorkflowsService.createPriorAuthorization(
+      req.user.orgId,
+      patientId,
+      req.user.userId,
+      body,
+    );
+  }
+
+  @Get('patient/:patientId/prior-auths')
+  listPatientPriorAuthorizations(
+    @Param('patientId', ParseUUIDPipe) patientId: string,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.clinicalWorkflowsService.listPatientPriorAuthorizations(
+      req.user.orgId,
+      patientId,
+    );
+  }
+
+  @Patch('prior-auths/:priorAuthId/status')
+  updatePriorAuthorizationStatus(
+    @Param('priorAuthId', ParseUUIDPipe) priorAuthId: string,
+    @Body() body: UpdatePriorAuthorizationStatusDto,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.clinicalWorkflowsService.updatePriorAuthorizationStatus(
+      req.user.orgId,
+      req.user.userId,
+      priorAuthId,
+      body,
+    );
+  }
+
+  @Post('patient/:patientId/referrals')
+  createReferralHandoff(
+    @Param('patientId', ParseUUIDPipe) patientId: string,
+    @Body() body: CreateReferralHandoffDto,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.clinicalWorkflowsService.createReferralHandoff(
+      req.user.orgId,
+      patientId,
+      req.user.userId,
+      body,
+    );
+  }
+
+  @Get('patient/:patientId/referrals')
+  listPatientReferrals(
+    @Param('patientId', ParseUUIDPipe) patientId: string,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.clinicalWorkflowsService.listPatientReferrals(
+      req.user.orgId,
+      patientId,
+    );
+  }
+
+  @Patch('referrals/:referralId/status')
+  updateReferralStatus(
+    @Param('referralId', ParseUUIDPipe) referralId: string,
+    @Body() body: UpdateReferralHandoffStatusDto,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.clinicalWorkflowsService.updateReferralStatus(
+      req.user.orgId,
+      req.user.userId,
+      referralId,
+      body,
+    );
+  }
+
+  @Post('automation/overdue/run')
+  runOverdueAutomation(@Req() req: { user: AuthenticatedUser }) {
+    return this.clinicalWorkflowsService.runOverdueAutomation(
+      req.user.orgId,
+      req.user.userId,
     );
   }
 }

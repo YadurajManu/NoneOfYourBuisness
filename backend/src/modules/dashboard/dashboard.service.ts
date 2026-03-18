@@ -3,6 +3,8 @@ import {
   AlertStatus,
   CareTaskStatus,
   ClinicalOrderStatus,
+  PriorAuthorizationStatus,
+  ReferralHandoffStatus,
 } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 
@@ -19,11 +21,16 @@ export class DashboardService {
       pendingClinicalOrders,
       escalatedClinicalOrders,
       overdueCareTasks,
+      pendingPriorAuthorizations,
+      activeReferrals,
+      overdueReferrals,
       lifecycleGrouping,
       documentStatuses,
       alertStatuses,
       orderStatuses,
       careTaskStatuses,
+      priorAuthorizationStatuses,
+      referralStatuses,
     ] = await Promise.all([
       this.prisma.patient.count({
         where: { organizationId: orgId },
@@ -76,6 +83,45 @@ export class DashboardService {
           },
         },
       }),
+      this.prisma.priorAuthorization.count({
+        where: {
+          organizationId: orgId,
+          status: {
+            in: [
+              PriorAuthorizationStatus.SUBMITTED,
+              PriorAuthorizationStatus.IN_REVIEW,
+              PriorAuthorizationStatus.APPEALED,
+            ],
+          },
+        },
+      }),
+      this.prisma.referralHandoff.count({
+        where: {
+          organizationId: orgId,
+          status: {
+            in: [
+              ReferralHandoffStatus.CREATED,
+              ReferralHandoffStatus.ACCEPTED,
+              ReferralHandoffStatus.IN_PROGRESS,
+              ReferralHandoffStatus.ESCALATED,
+            ],
+          },
+        },
+      }),
+      this.prisma.referralHandoff.count({
+        where: {
+          organizationId: orgId,
+          dueAt: { lt: new Date() },
+          status: {
+            in: [
+              ReferralHandoffStatus.CREATED,
+              ReferralHandoffStatus.ACCEPTED,
+              ReferralHandoffStatus.IN_PROGRESS,
+              ReferralHandoffStatus.ESCALATED,
+            ],
+          },
+        },
+      }),
       this.prisma.patient.groupBy({
         by: ['lifecycleStage'],
         where: { organizationId: orgId },
@@ -109,6 +155,20 @@ export class DashboardService {
         },
       }),
       this.prisma.careTask.groupBy({
+        by: ['status'],
+        where: { organizationId: orgId },
+        _count: {
+          status: true,
+        },
+      }),
+      this.prisma.priorAuthorization.groupBy({
+        by: ['status'],
+        where: { organizationId: orgId },
+        _count: {
+          status: true,
+        },
+      }),
+      this.prisma.referralHandoff.groupBy({
         by: ['status'],
         where: { organizationId: orgId },
         _count: {
@@ -153,6 +213,16 @@ export class DashboardService {
       status: entry.status,
       count: entry._count.status,
     }));
+    const priorAuthorizationStatusBreakdown = priorAuthorizationStatuses.map(
+      (entry) => ({
+        status: entry.status,
+        count: entry._count.status,
+      }),
+    );
+    const referralStatusBreakdown = referralStatuses.map((entry) => ({
+      status: entry.status,
+      count: entry._count.status,
+    }));
 
     return {
       totals: {
@@ -163,12 +233,17 @@ export class DashboardService {
         pendingClinicalOrders,
         escalatedClinicalOrders,
         overdueCareTasks,
+        pendingPriorAuthorizations,
+        activeReferrals,
+        overdueReferrals,
       },
       lifecycleBreakdown,
       documentStatusBreakdown,
       alertStatusBreakdown,
       orderStatusBreakdown,
       careTaskStatusBreakdown,
+      priorAuthorizationStatusBreakdown,
+      referralStatusBreakdown,
       recentPatients,
     };
   }
@@ -235,6 +310,18 @@ export class DashboardService {
       take: 100,
     });
 
+    const priorAuthorizations = await this.prisma.priorAuthorization.findMany({
+      where: { patientId: patient.id, organizationId: orgId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    const referralHandoffs = await this.prisma.referralHandoff.findMany({
+      where: { patientId: patient.id, organizationId: orgId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
     const events = [
       {
         type: 'PATIENT_CREATED',
@@ -266,6 +353,16 @@ export class DashboardService {
         at: task.createdAt,
         detail: `${task.type} - ${task.status}`,
       })),
+      ...priorAuthorizations.map((priorAuthorization) => ({
+        type: 'PRIOR_AUTH',
+        at: priorAuthorization.createdAt,
+        detail: `${priorAuthorization.payerName} - ${priorAuthorization.status}`,
+      })),
+      ...referralHandoffs.map((referral) => ({
+        type: 'REFERRAL',
+        at: referral.createdAt,
+        detail: `${referral.destinationType} - ${referral.status}`,
+      })),
     ].sort((a, b) => b.at.getTime() - a.at.getTime());
 
     return {
@@ -275,6 +372,8 @@ export class DashboardService {
       clinicalOrders,
       medicationPlans,
       careTasks,
+      priorAuthorizations,
+      referralHandoffs,
       events,
     };
   }

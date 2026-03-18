@@ -23,6 +23,8 @@ model Organization {
   medicationPlans    MedicationPlan[]
   careTasks          CareTask[]
   workflowAudits     WorkflowAudit[]
+  priorAuthorizations PriorAuthorization[]
+  referralHandoffs   ReferralHandoff[]
 }
 
 model User {
@@ -45,6 +47,10 @@ model User {
   careTasksCreated      CareTask[]            @relation("CareTaskCreatedBy")
   careTasksAssigned     CareTask[]            @relation("CareTaskAssignedTo")
   workflowAudits        WorkflowAudit[]       @relation("WorkflowAuditActor")
+  priorAuthorizationsRequested PriorAuthorization[] @relation("PriorAuthorizationRequestedBy")
+  priorAuthorizationsReviewed  PriorAuthorization[] @relation("PriorAuthorizationReviewedBy")
+  referralsCreated      ReferralHandoff[]     @relation("ReferralCreatedBy")
+  referralsAssigned     ReferralHandoff[]     @relation("ReferralAssignedTo")
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
 }
@@ -65,6 +71,8 @@ model Patient {
   medicationPlans    MedicationPlan[]
   careTasks          CareTask[]
   workflowAudits     WorkflowAudit[]
+  priorAuthorizations PriorAuthorization[]
+  referralHandoffs   ReferralHandoff[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -210,6 +218,8 @@ model ClinicalOrder {
   assignedToUser   User?               @relation("ClinicalOrderAssignedTo", fields: [assignedToUserId], references: [id])
   careTasks        CareTask[]
   medicationPlans  MedicationPlan[]
+  priorAuthorizations PriorAuthorization[]
+  referralHandoffs ReferralHandoff[]
 
   @@index([organizationId, status, priority, createdAt])
   @@index([patientId, status, dueAt])
@@ -289,6 +299,67 @@ model WorkflowAudit {
   @@index([entityType, entityId, createdAt])
 }
 
+model PriorAuthorization {
+  id                 String                 @id @default(uuid())
+  organizationId     String
+  patientId          String
+  clinicalOrderId    String?
+  requestedByUserId  String
+  reviewedByUserId   String?
+  payerName          String
+  policyNumber       String?
+  serviceCodes       Json?
+  requestPayload     Json?
+  status             PriorAuthorizationStatus @default(DRAFT)
+  externalReference  String?
+  submittedAt        DateTime?
+  decidedAt          DateTime?
+  expiresAt          DateTime?
+  decisionNote       String?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  organization       Organization           @relation(fields: [organizationId], references: [id])
+  patient            Patient                @relation(fields: [patientId], references: [id])
+  clinicalOrder      ClinicalOrder?         @relation(fields: [clinicalOrderId], references: [id])
+  requestedByUser    User                   @relation("PriorAuthorizationRequestedBy", fields: [requestedByUserId], references: [id])
+  reviewedByUser     User?                  @relation("PriorAuthorizationReviewedBy", fields: [reviewedByUserId], references: [id])
+
+  @@index([organizationId, status, createdAt])
+  @@index([patientId, status, createdAt])
+  @@index([clinicalOrderId, status, createdAt])
+}
+
+model ReferralHandoff {
+  id                String              @id @default(uuid())
+  organizationId    String
+  patientId         String
+  clinicalOrderId   String?
+  createdByUserId   String
+  assignedToUserId  String?
+  destinationType   ReferralDestinationType
+  destinationName   String
+  reason            String?
+  priority          ReferralPriority    @default(MEDIUM)
+  status            ReferralHandoffStatus @default(CREATED)
+  dueAt             DateTime?
+  acceptedAt        DateTime?
+  completedAt       DateTime?
+  escalatedAt       DateTime?
+  declinedAt        DateTime?
+  metadata          Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  organization      Organization        @relation(fields: [organizationId], references: [id])
+  patient           Patient             @relation(fields: [patientId], references: [id])
+  clinicalOrder     ClinicalOrder?      @relation(fields: [clinicalOrderId], references: [id])
+  createdByUser     User                @relation("ReferralCreatedBy", fields: [createdByUserId], references: [id])
+  assignedToUser    User?               @relation("ReferralAssignedTo", fields: [assignedToUserId], references: [id])
+
+  @@index([organizationId, status, priority, dueAt])
+  @@index([patientId, status, dueAt])
+  @@index([clinicalOrderId, status, dueAt])
+}
+
 enum UserRole {
   ADMIN
   DOCTOR
@@ -337,6 +408,11 @@ enum NotificationType {
   CLINICAL_ORDER_COMPLETED
   MEDICATION_PLAN_UPDATED
   CARE_TASK_OVERDUE
+  PRIOR_AUTH_SUBMITTED
+  PRIOR_AUTH_DECISION
+  REFERRAL_CREATED
+  REFERRAL_STATUS_UPDATED
+  REFERRAL_OVERDUE
 }
 
 enum ClinicalEventType {
@@ -425,10 +501,51 @@ enum WorkflowAuditAction {
   TASK_STATUS_UPDATED
   MEDICATION_PLAN_CREATED
   MEDICATION_PLAN_UPDATED
+  PRIOR_AUTH_CREATED
+  PRIOR_AUTH_STATUS_UPDATED
+  REFERRAL_CREATED
+  REFERRAL_STATUS_UPDATED
+  AUTOMATION_OVERDUE_RUN
 }
 
 enum WorkflowEntityType {
   ORDER
   TASK
   MEDICATION_PLAN
+  PRIOR_AUTH
+  REFERRAL
+}
+
+enum PriorAuthorizationStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  DENIED
+  APPEALED
+  EXPIRED
+}
+
+enum ReferralDestinationType {
+  INTERNAL_PROVIDER
+  EXTERNAL_PROVIDER
+  FACILITY
+  HOME_CARE
+}
+
+enum ReferralHandoffStatus {
+  CREATED
+  ACCEPTED
+  IN_PROGRESS
+  ESCALATED
+  COMPLETED
+  DECLINED
+  CANCELLED
+}
+
+enum ReferralPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
