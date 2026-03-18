@@ -37,6 +37,22 @@ export class PatientsController {
     return this.patientsService.findOne(id, req.user.orgId);
   }
 
+  @Get(':id/lifecycle/status')
+  getLifecycleStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.patientsService.getLifecycleStatus(id, req.user.orgId);
+  }
+
+  @Get(':id/lifecycle/transitions')
+  listLifecycleTransitions(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
+    return this.patientsService.listLifecycleTransitions(id, req.user.orgId);
+  }
+
   @Post()
   create(
     @Body(new ValidationPipe({ whitelist: false, transform: true }))
@@ -45,6 +61,7 @@ export class PatientsController {
   ) {
     return this.patientsService.create(
       req.user.orgId,
+      req.user.userId,
       fhirResource as Record<string, unknown>,
     );
   }
@@ -55,6 +72,16 @@ export class PatientsController {
     @Body() body: UpdatePatientStageDto,
     @Req() req: { user: AuthenticatedUser },
   ) {
-    return this.patientsService.updateStage(id, req.user.orgId, body.stage);
+    return this.patientsService.updateStage(
+      id,
+      req.user.orgId,
+      req.user.userId,
+      body.stage,
+      {
+        reason: body.reason,
+        metadata: body.metadata,
+        skipAutomations: body.skipAutomations,
+      },
+    );
   }
 }

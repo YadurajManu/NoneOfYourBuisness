@@ -73,6 +73,20 @@ type ReferralHandoffResponse = {
   id: string;
 };
 
+type LifecycleStatusResponse = {
+  currentStage: number;
+  transitions: Array<{
+    toStage: number;
+    allowed: boolean;
+    blockers: string[];
+  }>;
+};
+
+type LifecycleTransitionResponse = {
+  fromStage: number;
+  toStage: number;
+};
+
 describe('Clinical Workflow (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -103,7 +117,7 @@ describe('Clinical Workflow (e2e)', () => {
 
   beforeEach(async () => {
     await prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE "ReferralHandoff", "PriorAuthorization", "WorkflowAudit", "CareTask", "MedicationPlan", "ClinicalOrder", "ClinicalAlert", "ClinicalEvent", "FamilyAccessAudit", "NotificationEvent", "PatientFamilyAccess", "Document", "Patient", "User", "Organization" RESTART IDENTITY CASCADE',
+      'TRUNCATE TABLE "LifecycleHookExecution", "PatientLifecycleTransition", "ReferralHandoff", "PriorAuthorization", "WorkflowAudit", "CareTask", "MedicationPlan", "ClinicalOrder", "ClinicalAlert", "ClinicalEvent", "FamilyAccessAudit", "NotificationEvent", "PatientFamilyAccess", "Document", "Patient", "User", "Organization" RESTART IDENTITY CASCADE',
     );
   });
 
@@ -167,6 +181,20 @@ describe('Clinical Workflow (e2e)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ stage: 2 })
       .expect(200);
+
+    const lifecycleStatusRes = await request(app.getHttpServer())
+      .get(`/patients/${patientId}/lifecycle/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const lifecycleStatusBody =
+      lifecycleStatusRes.body as LifecycleStatusResponse;
+    expect(lifecycleStatusBody.currentStage).toBe(2);
+    expect(
+      lifecycleStatusBody.transitions.some(
+        (transition) => transition.toStage === 3 && transition.allowed,
+      ),
+    ).toBe(false);
 
     await request(app.getHttpServer())
       .post(`/documents/upload/${patientId}`)
@@ -409,6 +437,23 @@ describe('Clinical Workflow (e2e)', () => {
     expect(notificationTypes).toContain('REFERRAL_CREATED');
     expect(notificationTypes).toContain('REFERRAL_STATUS_UPDATED');
     expect(notificationTypes).toContain('REFERRAL_OVERDUE');
+
+    const lifecycleTransitionsRes = await request(app.getHttpServer())
+      .get(`/patients/${patientId}/lifecycle/transitions`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const lifecycleTransitionsBody =
+      lifecycleTransitionsRes.body as LifecycleTransitionResponse[];
+    expect(
+      lifecycleTransitionsBody.some(
+        (transition) => transition.fromStage === 0 && transition.toStage === 1,
+      ),
+    ).toBe(true);
+    expect(
+      lifecycleTransitionsBody.some(
+        (transition) => transition.fromStage === 1 && transition.toStage === 2,
+      ),
+    ).toBe(true);
 
     await request(app.getHttpServer())
       .patch(`/family-access/notifications/${notificationsBody[0].id}/read`)

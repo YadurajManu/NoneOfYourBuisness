@@ -90,10 +90,23 @@ Param:
 - id: UUID
 Body:
 {
-  "stage": 1-10
+  "stage": 1-10,
+  "reason": "optional string",
+  "metadata": "optional object",
+  "skipAutomations": "optional boolean"
 }
 Side effect:
 - Emits family notification event (LIFECYCLE_STAGE_CHANGED) for active family access recipients.
+- Enforces strict adjacent transitions (example: `2 -> 3` allowed, `2 -> 5` blocked).
+- Runs stage prerequisite checks and returns blockers when transition is not allowed.
+- Writes immutable transition audit row.
+- Runs idempotent lifecycle hooks (automation actions) unless `skipAutomations=true`.
+
+GET /patients/:id/lifecycle/status
+Description: Return current stage and allowed next transitions with blockers.
+
+GET /patients/:id/lifecycle/transitions
+Description: Return lifecycle transition history for patient.
 
 -----------------------------------------
 3) AI MODULE (Protected)
@@ -454,12 +467,15 @@ New/updated schema elements:
 - MedicationPlan (structured medication plan)
 - PriorAuthorization (payer approval lifecycle per patient/order)
 - ReferralHandoff (cross-team/provider handoff unit)
+- PatientLifecycleTransition (immutable patient stage transition audit trail)
+- LifecycleHookExecution (idempotent lifecycle automation execution log)
 - WorkflowAudit (immutable workflow action trail)
 - NotificationType, FamilyAccessLevel, FamilyAccessStatus enums
 - ClinicalEventType, ClinicalEventSeverity, AlertPriority, AlertStatus enums
 - ClinicalOrderType, ClinicalOrderStatus, ClinicalOrderPriority enums
 - CareTaskType, CareTaskStatus, MedicationPlanStatus enums
 - PriorAuthorizationStatus, ReferralDestinationType, ReferralHandoffStatus, ReferralPriority enums
+- LifecycleTransitionType, LifecycleHookStatus enums
 - DocStatus aligned to: PENDING, PROCESSING, COMPLETED, FAILED
 
 Migration:
@@ -470,6 +486,7 @@ Migration:
 - 20260318080000_notification_type_clinical_values
 - 20260318010635_clinical_workflows_orders_medications
 - 20260318013500_prior_auth_referral_handoffs
+- 20260318020000_lifecycle_orchestration
 
 -----------------------------------------
 SYSTEM NOTES

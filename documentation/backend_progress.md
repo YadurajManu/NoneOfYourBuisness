@@ -18,7 +18,11 @@ Last updated: March 18, 2026
 
 3. Lifecycle + patient domain
 - Patient creation/list/detail APIs.
-- Lifecycle stage update (`1..10`) via `PATCH /api/patients/:id/stage`.
+- Strict lifecycle stage transition engine (`1..10`) via `PATCH /api/patients/:id/stage`.
+- Adjacent transition enforcement + prerequisite blockers.
+- Lifecycle status endpoint with allowed transitions and blockers.
+- Immutable lifecycle transition audit history endpoint.
+- Idempotent stage hooks to trigger connected workflows during stage progression.
 - Lifecycle updates connected to family notification events.
 
 4. Document intelligence baseline
@@ -78,24 +82,21 @@ Last updated: March 18, 2026
 
 ## In Progress / Remaining for Guide-Level Parity
 
-1. Full stage orchestration engine
-- Stage-specific rules, validations, and transition hooks per lifecycle stage.
-
-2. Advanced clinical workflow depth
+1. Advanced clinical workflow depth
 - Rich prior-auth document exchange, payer polling callbacks, referral packet generation, and cross-team SLA assignment rules.
 
-3. Real-time delivery channels
+2. Real-time delivery channels
 - WebSocket/SSE for live dashboard + family feed.
 - SMS/email/push adapters on top of `NotificationEvent`.
 
-4. Role-specific experiences
+3. Role-specific experiences
 - Separate policy/view contracts for primary doctor vs specialist vs patient vs family.
 
-5. Analytics depth
+4. Analytics depth
 - KPI pack from startup guide section targets (SLA, turnaround, outcomes, escalation metrics).
 
-6. Interoperability layer
+5. Interoperability layer
 - External EHR/FHIR connectors and sync pipelines.
 
-7. Production hardening
+6. Production hardening
 - Secret management, observability, background worker scaling, and deployment pipeline checks.

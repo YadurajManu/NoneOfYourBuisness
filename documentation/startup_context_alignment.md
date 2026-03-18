@@ -74,8 +74,13 @@ Practical interpretation:
 
 ### A) 10-stage lifecycle
 - Guide target: complete lifecycle orchestration.
-- Current: stage is stored as integer (`1..10`) and updatable (`PATCH /patients/:id/stage`).
-- Status: **Partial** (state storage exists; full stage-specific workflows/automation not yet built).
+- Current:
+  - strict adjacent transition rules (`PATCH /patients/:id/stage`)
+  - transition blockers/prerequisite checks
+  - lifecycle status API (`GET /api/patients/:id/lifecycle/status`)
+  - immutable transition audit API (`GET /api/patients/:id/lifecycle/transitions`)
+  - idempotent lifecycle stage hooks connected to workflows
+- Status: **Partial** (orchestration base now implemented; lifecycle depth/coverage still needs richer stage-specific policies).
 
 ### B) Document intelligence
 - Guide target: robust upload, classification, extraction, governance.
@@ -133,13 +138,13 @@ Practical interpretation:
 1. Implement role-specific API policies/views (Primary vs Specialist vs Patient vs Family).
 2. Add channel delivery for notifications (websocket/push/email/SMS adapters).
 3. Build notification/alert expansion for broader transition event types.
-4. Extend workflow depth: payer callbacks, referral packet orchestration, care-team SLAs, and automation rules per stage.
+4. Extend workflow depth: payer callbacks, referral packet orchestration, and care-team SLA enforcement.
 5. Expand dashboard KPIs with SLA, turnaround, outcomes, and role-specific drilldowns.
 6. Add integration module layer for EHR/FHIR exchange.
 
 ## 7. Build Sequence (Strict Guide-First)
 
-1. Lifecycle orchestration layer (rules per stage, transition hooks).
+1. Lifecycle orchestration hardening (expand stage-specific rules, edge cases, and policy depth).
 2. Notification/event engine expansion for family and care-team updates across all workflows.
 3. Delivery channel adapters (websocket/push/email/SMS) on top of notification events.
 4. Clinical workflow expansion (orders, meds, PA, follow-ups, escalation on top of events/alerts).

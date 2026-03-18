@@ -25,6 +25,8 @@ model Organization {
   workflowAudits     WorkflowAudit[]
   priorAuthorizations PriorAuthorization[]
   referralHandoffs   ReferralHandoff[]
+  lifecycleTransitions PatientLifecycleTransition[]
+  lifecycleHookExecutions LifecycleHookExecution[]
 }
 
 model User {
@@ -51,6 +53,8 @@ model User {
   priorAuthorizationsReviewed  PriorAuthorization[] @relation("PriorAuthorizationReviewedBy")
   referralsCreated      ReferralHandoff[]     @relation("ReferralCreatedBy")
   referralsAssigned     ReferralHandoff[]     @relation("ReferralAssignedTo")
+  lifecycleTransitionsAuthored PatientLifecycleTransition[] @relation("LifecycleTransitionActor")
+  lifecycleHookExecutions LifecycleHookExecution[] @relation("LifecycleHookActor")
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
 }
@@ -73,6 +77,8 @@ model Patient {
   workflowAudits     WorkflowAudit[]
   priorAuthorizations PriorAuthorization[]
   referralHandoffs   ReferralHandoff[]
+  lifecycleTransitions PatientLifecycleTransition[]
+  lifecycleHookExecutions LifecycleHookExecution[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -360,6 +366,46 @@ model ReferralHandoff {
   @@index([clinicalOrderId, status, dueAt])
 }
 
+model PatientLifecycleTransition {
+  id             String                  @id @default(uuid())
+  organizationId String
+  patientId      String
+  actorUserId    String
+  fromStage      Int
+  toStage        Int
+  reason         String?
+  metadata       Json?
+  transitionType LifecycleTransitionType @default(MANUAL)
+  createdAt      DateTime                @default(now())
+  organization   Organization            @relation(fields: [organizationId], references: [id])
+  patient        Patient                 @relation(fields: [patientId], references: [id])
+  actorUser      User                    @relation("LifecycleTransitionActor", fields: [actorUserId], references: [id])
+
+  @@index([organizationId, patientId, createdAt])
+  @@index([patientId, fromStage, toStage, createdAt])
+}
+
+model LifecycleHookExecution {
+  id             String              @id @default(uuid())
+  organizationId String
+  patientId      String
+  actorUserId    String
+  fromStage      Int
+  toStage        Int
+  hookKey        String
+  status         LifecycleHookStatus @default(PENDING)
+  result         Json?
+  errorMessage   String?
+  executedAt     DateTime            @default(now())
+  organization   Organization        @relation(fields: [organizationId], references: [id])
+  patient        Patient             @relation(fields: [patientId], references: [id])
+  actorUser      User                @relation("LifecycleHookActor", fields: [actorUserId], references: [id])
+
+  @@unique([patientId, toStage, hookKey])
+  @@index([organizationId, patientId, executedAt])
+  @@index([organizationId, status, executedAt])
+}
+
 enum UserRole {
   ADMIN
   DOCTOR
@@ -548,4 +594,16 @@ enum ReferralPriority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum LifecycleTransitionType {
+  MANUAL
+  AUTOMATED
+}
+
+enum LifecycleHookStatus {
+  PENDING
+  APPLIED
+  SKIPPED
+  FAILED
 }
