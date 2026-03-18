@@ -156,9 +156,14 @@ Includes:
 - totals.documents
 - totals.clinicalEvents
 - totals.openClinicalAlerts
+- totals.pendingClinicalOrders
+- totals.escalatedClinicalOrders
+- totals.overdueCareTasks
 - lifecycleBreakdown
 - documentStatusBreakdown
 - alertStatusBreakdown
+- orderStatusBreakdown
+- careTaskStatusBreakdown
 - recentPatients
 
 GET /dashboard/patient/:patientId/timeline
@@ -169,6 +174,9 @@ Includes:
 - patient summary
 - documents
 - clinicalEvents (with optional linked alert object)
+- clinicalOrders
+- medicationPlans
+- careTasks
 - synthesized timeline events
 
 -----------------------------------------
@@ -287,7 +295,76 @@ Behavior:
 - Prevents acknowledging an already resolved alert.
 
 -----------------------------------------
-8) DATA MODELS ADDED FOR PRODUCTION WORKFLOW
+8) CLINICAL WORKFLOWS MODULE (Protected)
+-----------------------------------------
+Allowed roles: ADMIN, DOCTOR, SPECIALIST
+
+POST /clinical-workflows/patient/:patientId/orders
+Description: Create clinical order.
+Body:
+{
+  "type": "LAB_TEST|IMAGING|PROCEDURE|MEDICATION|CONSULTATION|FOLLOW_UP",
+  "priority": "optional LOW|MEDIUM|HIGH|STAT",
+  "title": "string",
+  "description": "optional string",
+  "dueAt": "optional ISO datetime",
+  "assignedToUserId": "optional uuid",
+  "metadata": "optional object",
+  "notifyFamily": "optional boolean"
+}
+
+GET /clinical-workflows/patient/:patientId/orders
+Description: List patient clinical orders with linked tasks and medication plans.
+
+PATCH /clinical-workflows/orders/:orderId/status
+Description: Update order status.
+Body:
+{
+  "status": "DRAFT|ACTIVE|IN_PROGRESS|ESCALATED|COMPLETED|CANCELLED",
+  "assignedToUserId": "optional uuid",
+  "note": "optional string",
+  "notifyFamily": "optional boolean"
+}
+Behavior:
+- Tracks escalated/completed timestamps.
+- Prevents mutation of terminal orders.
+- Emits family notifications for escalated/completed transitions.
+
+POST /clinical-workflows/orders/:orderId/tasks
+Description: Create care task under an order.
+
+PATCH /clinical-workflows/tasks/:taskId/status
+Description: Update care task status.
+Body:
+{
+  "status": "OPEN|IN_PROGRESS|BLOCKED|ESCALATED|COMPLETED|CANCELLED",
+  "note": "optional string",
+  "notifyFamily": "optional boolean"
+}
+
+GET /clinical-workflows/patient/:patientId/tasks
+Description: List patient care tasks.
+
+POST /clinical-workflows/patient/:patientId/medications
+Description: Create medication plan for patient (optionally linked to order).
+
+PATCH /clinical-workflows/medications/:planId
+Description: Update medication plan details or status.
+
+GET /clinical-workflows/patient/:patientId/medications
+Description: List patient medication plans.
+
+GET /clinical-workflows/patient/:patientId/summary
+Description: Workflow KPI summary for patient.
+Includes:
+- pendingOrders
+- escalatedOrders
+- openTasks
+- overdueTasks
+- activeMedications
+
+-----------------------------------------
+9) DATA MODELS ADDED FOR PRODUCTION WORKFLOW
 -----------------------------------------
 New/updated schema elements:
 - UserRole now includes FAMILY_MEMBER
@@ -296,13 +373,23 @@ New/updated schema elements:
 - NotificationEvent (family update event queue)
 - ClinicalEvent (clinical timeline facts)
 - ClinicalAlert (critical/operational clinical alerts)
+- ClinicalOrder (care workflow order unit)
+- CareTask (operational workflow tasks)
+- MedicationPlan (structured medication plan)
+- WorkflowAudit (immutable workflow action trail)
 - NotificationType, FamilyAccessLevel, FamilyAccessStatus enums
 - ClinicalEventType, ClinicalEventSeverity, AlertPriority, AlertStatus enums
+- ClinicalOrderType, ClinicalOrderStatus, ClinicalOrderPriority enums
+- CareTaskType, CareTaskStatus, MedicationPlanStatus enums
 - DocStatus aligned to: PENDING, PROCESSING, COMPLETED, FAILED
 
 Migration:
-- 20260318070000_family_access_notifications
+- 20260318000000_notification_type_bootstrap
 - 20260318005247_clinical_events_alerts
+- 20260318006000_notification_type_shadow_cleanup
+- 20260318070000_family_access_notifications
+- 20260318080000_notification_type_clinical_values
+- 20260318010635_clinical_workflows_orders_medications
 
 -----------------------------------------
 SYSTEM NOTES

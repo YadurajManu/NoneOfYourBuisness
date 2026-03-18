@@ -1,5 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { AlertStatus } from '@prisma/client';
+import {
+  AlertStatus,
+  CareTaskStatus,
+  ClinicalOrderStatus,
+} from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
@@ -12,9 +16,14 @@ export class DashboardService {
       totalDocuments,
       totalClinicalEvents,
       openClinicalAlerts,
+      pendingClinicalOrders,
+      escalatedClinicalOrders,
+      overdueCareTasks,
       lifecycleGrouping,
       documentStatuses,
       alertStatuses,
+      orderStatuses,
+      careTaskStatuses,
     ] = await Promise.all([
       this.prisma.patient.count({
         where: { organizationId: orgId },
@@ -33,6 +42,38 @@ export class DashboardService {
         where: {
           organizationId: orgId,
           status: AlertStatus.OPEN,
+        },
+      }),
+      this.prisma.clinicalOrder.count({
+        where: {
+          organizationId: orgId,
+          status: {
+            in: [
+              ClinicalOrderStatus.ACTIVE,
+              ClinicalOrderStatus.IN_PROGRESS,
+              ClinicalOrderStatus.ESCALATED,
+            ],
+          },
+        },
+      }),
+      this.prisma.clinicalOrder.count({
+        where: {
+          organizationId: orgId,
+          status: ClinicalOrderStatus.ESCALATED,
+        },
+      }),
+      this.prisma.careTask.count({
+        where: {
+          organizationId: orgId,
+          dueAt: { lt: new Date() },
+          status: {
+            in: [
+              CareTaskStatus.OPEN,
+              CareTaskStatus.IN_PROGRESS,
+              CareTaskStatus.BLOCKED,
+              CareTaskStatus.ESCALATED,
+            ],
+          },
         },
       }),
       this.prisma.patient.groupBy({
@@ -54,6 +95,20 @@ export class DashboardService {
         },
       }),
       this.prisma.clinicalAlert.groupBy({
+        by: ['status'],
+        where: { organizationId: orgId },
+        _count: {
+          status: true,
+        },
+      }),
+      this.prisma.clinicalOrder.groupBy({
+        by: ['status'],
+        where: { organizationId: orgId },
+        _count: {
+          status: true,
+        },
+      }),
+      this.prisma.careTask.groupBy({
         by: ['status'],
         where: { organizationId: orgId },
         _count: {
@@ -90,6 +145,14 @@ export class DashboardService {
       status: entry.status,
       count: entry._count.status,
     }));
+    const orderStatusBreakdown = orderStatuses.map((entry) => ({
+      status: entry.status,
+      count: entry._count.status,
+    }));
+    const careTaskStatusBreakdown = careTaskStatuses.map((entry) => ({
+      status: entry.status,
+      count: entry._count.status,
+    }));
 
     return {
       totals: {
@@ -97,10 +160,15 @@ export class DashboardService {
         documents: totalDocuments,
         clinicalEvents: totalClinicalEvents,
         openClinicalAlerts,
+        pendingClinicalOrders,
+        escalatedClinicalOrders,
+        overdueCareTasks,
       },
       lifecycleBreakdown,
       documentStatusBreakdown,
       alertStatusBreakdown,
+      orderStatusBreakdown,
+      careTaskStatusBreakdown,
       recentPatients,
     };
   }
@@ -146,6 +214,27 @@ export class DashboardService {
       take: 100,
     });
 
+    const clinicalOrders = await this.prisma.clinicalOrder.findMany({
+      where: { patientId: patient.id, organizationId: orgId },
+      include: {
+        careTasks: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    const medicationPlans = await this.prisma.medicationPlan.findMany({
+      where: { patientId: patient.id, organizationId: orgId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    const careTasks = await this.prisma.careTask.findMany({
+      where: { patientId: patient.id, organizationId: orgId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
     const events = [
       {
         type: 'PATIENT_CREATED',
@@ -162,12 +251,30 @@ export class DashboardService {
         at: event.occurredAt,
         detail: `${event.type} - ${event.severity}${event.alert ? ` (${event.alert.status})` : ''}`,
       })),
+      ...clinicalOrders.map((order) => ({
+        type: 'CLINICAL_ORDER',
+        at: order.createdAt,
+        detail: `${order.type} - ${order.status}`,
+      })),
+      ...medicationPlans.map((plan) => ({
+        type: 'MEDICATION_PLAN',
+        at: plan.createdAt,
+        detail: `${plan.medicationName} - ${plan.status}`,
+      })),
+      ...careTasks.map((task) => ({
+        type: 'CARE_TASK',
+        at: task.createdAt,
+        detail: `${task.type} - ${task.status}`,
+      })),
     ].sort((a, b) => b.at.getTime() - a.at.getTime());
 
     return {
       patient,
       documents,
       clinicalEvents,
+      clinicalOrders,
+      medicationPlans,
+      careTasks,
       events,
     };
   }

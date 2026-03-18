@@ -100,7 +100,15 @@ Practical interpretation:
   - `GET /api/clinical-events/alerts/open`
   - `GET /api/clinical-events/alerts/patient/:patientId`
   - `PATCH /api/clinical-events/alerts/:alertId/status`
-- Status: **Partial** (core event/alert domain exists; full order/medication/PA workflows still pending).
+- Current clinical workflow APIs now also include:
+  - `POST /api/clinical-workflows/patient/:patientId/orders`
+  - `PATCH /api/clinical-workflows/orders/:orderId/status`
+  - `POST /api/clinical-workflows/orders/:orderId/tasks`
+  - `PATCH /api/clinical-workflows/tasks/:taskId/status`
+  - `POST /api/clinical-workflows/patient/:patientId/medications`
+  - `PATCH /api/clinical-workflows/medications/:planId`
+  - `GET /api/clinical-workflows/patient/:patientId/summary`
+- Status: **Partial** (order/task/medication baseline implemented; prior-auth depth and cross-team orchestration still pending).
 
 ### F) EHR/FHIR integration adapters
 - Guide target: interoperability adapters and integration flows.
@@ -112,7 +120,7 @@ Practical interpretation:
 - Current: backend now has starter dashboard APIs:
   - `GET /api/dashboard/overview`
   - `GET /api/dashboard/patient/:patientId/timeline`
-- Includes clinical totals/open alerts and patient clinical timeline items.
+- Includes clinical totals/open alerts, workflow KPI totals (pending/escalated/overdue), and patient timeline items for orders/tasks/medication plans.
 - Status: **Partial**.
 
 ## 6. Immediate Product Gaps to Reach Guide Fidelity
@@ -120,7 +128,7 @@ Practical interpretation:
 1. Implement role-specific API policies/views (Primary vs Specialist vs Patient vs Family).
 2. Add channel delivery for notifications (websocket/push/email/SMS adapters).
 3. Build notification/alert expansion for broader transition event types.
-4. Add workflow modules for orders, medications, and prior-authorization/care coordination.
+4. Extend workflow depth: prior-auth orchestration, referral handoff rules, care-team SLAs, and automation rules per stage.
 5. Expand dashboard KPIs with SLA, turnaround, outcomes, and role-specific drilldowns.
 6. Add integration module layer for EHR/FHIR exchange.
 

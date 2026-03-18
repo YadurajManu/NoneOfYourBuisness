@@ -37,6 +37,28 @@ type ClinicalAlertResponse = {
   };
 };
 
+type ClinicalOrderResponse = {
+  id: string;
+};
+
+type MedicationPlanResponse = {
+  id: string;
+};
+
+type WorkflowSummaryResponse = {
+  pendingOrders: number;
+  openTasks: number;
+  overdueTasks: number;
+  activeMedications: number;
+};
+
+type DashboardOverviewResponse = {
+  totals: {
+    pendingClinicalOrders: number;
+    overdueCareTasks: number;
+  };
+};
+
 describe('Clinical Workflow (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -67,7 +89,7 @@ describe('Clinical Workflow (e2e)', () => {
 
   beforeEach(async () => {
     await prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE "FamilyAccessAudit", "NotificationEvent", "PatientFamilyAccess", "Document", "Patient", "User", "Organization" RESTART IDENTITY CASCADE',
+      'TRUNCATE TABLE "WorkflowAudit", "CareTask", "MedicationPlan", "ClinicalOrder", "ClinicalAlert", "ClinicalEvent", "FamilyAccessAudit", "NotificationEvent", "PatientFamilyAccess", "Document", "Patient", "User", "Organization" RESTART IDENTITY CASCADE',
     );
   });
 
@@ -170,6 +192,93 @@ describe('Clinical Workflow (e2e)', () => {
       })
       .expect(200);
 
+    const orderRes = await request(app.getHttpServer())
+      .post(`/clinical-workflows/patient/${patientId}/orders`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        type: 'LAB_TEST',
+        priority: 'HIGH',
+        title: 'Urgent blood culture panel',
+        description: 'Rule out bacteremia',
+        dueAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+        notifyFamily: true,
+      })
+      .expect(201);
+
+    const orderBody = orderRes.body as ClinicalOrderResponse;
+    const orderId = orderBody.id;
+
+    await request(app.getHttpServer())
+      .post(`/clinical-workflows/orders/${orderId}/tasks`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        type: 'PRE_AUTH',
+        title: 'Collect insurance pre-auth',
+        dueAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .patch(`/clinical-workflows/orders/${orderId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        status: 'ESCALATED',
+        note: 'Lab must be completed in next slot',
+      })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .patch(`/clinical-workflows/orders/${orderId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        status: 'COMPLETED',
+      })
+      .expect(200);
+
+    const medicationRes = await request(app.getHttpServer())
+      .post(`/clinical-workflows/patient/${patientId}/medications`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        clinicalOrderId: orderId,
+        medicationName: 'Amoxicillin',
+        dosage: '500mg',
+        frequency: 'BID',
+        startDate: new Date().toISOString(),
+      })
+      .expect(201);
+
+    const medicationBody = medicationRes.body as MedicationPlanResponse;
+
+    await request(app.getHttpServer())
+      .patch(`/clinical-workflows/medications/${medicationBody.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        status: 'PAUSED',
+      })
+      .expect(200);
+
+    const workflowSummaryRes = await request(app.getHttpServer())
+      .get(`/clinical-workflows/patient/${patientId}/summary`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const workflowSummaryBody =
+      workflowSummaryRes.body as WorkflowSummaryResponse;
+    expect(workflowSummaryBody.pendingOrders).toBe(0);
+    expect(workflowSummaryBody.openTasks).toBe(1);
+    expect(workflowSummaryBody.overdueTasks).toBe(1);
+    expect(workflowSummaryBody.activeMedications).toBe(0);
+
+    const dashboardOverviewRes = await request(app.getHttpServer())
+      .get('/dashboard/overview')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const dashboardOverviewBody =
+      dashboardOverviewRes.body as DashboardOverviewResponse;
+    expect(dashboardOverviewBody.totals.pendingClinicalOrders).toBe(0);
+    expect(dashboardOverviewBody.totals.overdueCareTasks).toBe(1);
+
     const familyLoginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
@@ -213,6 +322,10 @@ describe('Clinical Workflow (e2e)', () => {
     expect(notificationTypes).toContain('LIFECYCLE_STAGE_CHANGED');
     expect(notificationTypes).toContain('DOCUMENT_UPLOADED');
     expect(notificationTypes).toContain('CLINICAL_ALERT_CREATED');
+    expect(notificationTypes).toContain('CLINICAL_ORDER_CREATED');
+    expect(notificationTypes).toContain('CLINICAL_ORDER_ESCALATED');
+    expect(notificationTypes).toContain('CLINICAL_ORDER_COMPLETED');
+    expect(notificationTypes).toContain('MEDICATION_PLAN_UPDATED');
 
     await request(app.getHttpServer())
       .patch(`/family-access/notifications/${notificationsBody[0].id}/read`)

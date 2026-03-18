@@ -19,6 +19,10 @@ model Organization {
   notificationEvents NotificationEvent[]
   clinicalEvents     ClinicalEvent[]
   clinicalAlerts     ClinicalAlert[]
+  clinicalOrders     ClinicalOrder[]
+  medicationPlans    MedicationPlan[]
+  careTasks          CareTask[]
+  workflowAudits     WorkflowAudit[]
 }
 
 model User {
@@ -35,6 +39,12 @@ model User {
   clinicalEventsAuthored ClinicalEvent[]      @relation("ClinicalEventActor")
   alertsAcknowledged    ClinicalAlert[]       @relation("AlertAcknowledgedBy")
   alertsResolved        ClinicalAlert[]       @relation("AlertResolvedBy")
+  clinicalOrdersCreated ClinicalOrder[]       @relation("ClinicalOrderCreatedBy")
+  clinicalOrdersAssigned ClinicalOrder[]      @relation("ClinicalOrderAssignedTo")
+  medicationPlansPrescribed MedicationPlan[]  @relation("MedicationPlanPrescribedBy")
+  careTasksCreated      CareTask[]            @relation("CareTaskCreatedBy")
+  careTasksAssigned     CareTask[]            @relation("CareTaskAssignedTo")
+  workflowAudits        WorkflowAudit[]       @relation("WorkflowAuditActor")
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
 }
@@ -51,6 +61,10 @@ model Patient {
   familyAccessAudits FamilyAccessAudit[]
   clinicalEvents     ClinicalEvent[]
   clinicalAlerts     ClinicalAlert[]
+  clinicalOrders     ClinicalOrder[]
+  medicationPlans    MedicationPlan[]
+  careTasks          CareTask[]
+  workflowAudits     WorkflowAudit[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -173,6 +187,108 @@ model ClinicalAlert {
   @@index([patientId, status, createdAt])
 }
 
+model ClinicalOrder {
+  id               String              @id @default(uuid())
+  organizationId   String
+  patientId        String
+  createdByUserId  String
+  assignedToUserId String?
+  type             ClinicalOrderType
+  priority         ClinicalOrderPriority @default(MEDIUM)
+  status           ClinicalOrderStatus @default(ACTIVE)
+  title            String
+  description      String?
+  dueAt            DateTime?
+  escalatedAt      DateTime?
+  completedAt      DateTime?
+  metadata         Json?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  organization     Organization        @relation(fields: [organizationId], references: [id])
+  patient          Patient             @relation(fields: [patientId], references: [id])
+  createdByUser    User                @relation("ClinicalOrderCreatedBy", fields: [createdByUserId], references: [id])
+  assignedToUser   User?               @relation("ClinicalOrderAssignedTo", fields: [assignedToUserId], references: [id])
+  careTasks        CareTask[]
+  medicationPlans  MedicationPlan[]
+
+  @@index([organizationId, status, priority, createdAt])
+  @@index([patientId, status, dueAt])
+  @@index([assignedToUserId, status, dueAt])
+}
+
+model MedicationPlan {
+  id                 String               @id @default(uuid())
+  organizationId     String
+  patientId          String
+  clinicalOrderId    String?
+  prescribedByUserId String
+  medicationName     String
+  dosage             String
+  frequency          String
+  route              String?
+  instructions       String?
+  startDate          DateTime
+  endDate            DateTime?
+  status             MedicationPlanStatus @default(ACTIVE)
+  metadata           Json?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  organization       Organization         @relation(fields: [organizationId], references: [id])
+  patient            Patient              @relation(fields: [patientId], references: [id])
+  clinicalOrder      ClinicalOrder?       @relation(fields: [clinicalOrderId], references: [id])
+  prescribedByUser   User                 @relation("MedicationPlanPrescribedBy", fields: [prescribedByUserId], references: [id])
+
+  @@index([organizationId, status, startDate])
+  @@index([patientId, status, startDate])
+}
+
+model CareTask {
+  id               String         @id @default(uuid())
+  organizationId   String
+  patientId        String
+  clinicalOrderId  String?
+  createdByUserId  String
+  assignedToUserId String?
+  type             CareTaskType
+  status           CareTaskStatus @default(OPEN)
+  title            String
+  description      String?
+  dueAt            DateTime?
+  completedAt      DateTime?
+  escalatedAt      DateTime?
+  metadata         Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  organization     Organization   @relation(fields: [organizationId], references: [id])
+  patient          Patient        @relation(fields: [patientId], references: [id])
+  clinicalOrder    ClinicalOrder? @relation(fields: [clinicalOrderId], references: [id])
+  createdByUser    User           @relation("CareTaskCreatedBy", fields: [createdByUserId], references: [id])
+  assignedToUser   User?          @relation("CareTaskAssignedTo", fields: [assignedToUserId], references: [id])
+
+  @@index([organizationId, status, dueAt])
+  @@index([patientId, status, dueAt])
+  @@index([clinicalOrderId, status, dueAt])
+}
+
+model WorkflowAudit {
+  id             String             @id @default(uuid())
+  organizationId String
+  patientId      String
+  actorUserId    String
+  action         WorkflowAuditAction
+  entityType     WorkflowEntityType
+  entityId       String
+  note           String?
+  metadata       Json?
+  createdAt      DateTime           @default(now())
+  organization   Organization       @relation(fields: [organizationId], references: [id])
+  patient        Patient            @relation(fields: [patientId], references: [id])
+  actorUser      User               @relation("WorkflowAuditActor", fields: [actorUserId], references: [id])
+
+  @@index([organizationId, patientId, createdAt])
+  @@index([entityType, entityId, createdAt])
+}
+
 enum UserRole {
   ADMIN
   DOCTOR
@@ -216,6 +332,11 @@ enum NotificationType {
   DOCUMENT_FAILED
   CLINICAL_EVENT_RECORDED
   CLINICAL_ALERT_CREATED
+  CLINICAL_ORDER_CREATED
+  CLINICAL_ORDER_ESCALATED
+  CLINICAL_ORDER_COMPLETED
+  MEDICATION_PLAN_UPDATED
+  CARE_TASK_OVERDUE
 }
 
 enum ClinicalEventType {
@@ -243,4 +364,71 @@ enum AlertPriority {
   MEDIUM
   HIGH
   CRITICAL
+}
+
+enum ClinicalOrderType {
+  LAB_TEST
+  IMAGING
+  PROCEDURE
+  MEDICATION
+  CONSULTATION
+  FOLLOW_UP
+}
+
+enum ClinicalOrderPriority {
+  LOW
+  MEDIUM
+  HIGH
+  STAT
+}
+
+enum ClinicalOrderStatus {
+  DRAFT
+  ACTIVE
+  IN_PROGRESS
+  ESCALATED
+  COMPLETED
+  CANCELLED
+}
+
+enum MedicationPlanStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  DISCONTINUED
+}
+
+enum CareTaskType {
+  PRE_AUTH
+  SCHEDULING
+  FOLLOW_UP
+  LAB_COLLECTION
+  MEDICATION_REVIEW
+  PATIENT_EDUCATION
+}
+
+enum CareTaskStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  ESCALATED
+  COMPLETED
+  CANCELLED
+}
+
+enum WorkflowAuditAction {
+  ORDER_CREATED
+  ORDER_STATUS_UPDATED
+  ORDER_ESCALATED
+  ORDER_COMPLETED
+  TASK_CREATED
+  TASK_STATUS_UPDATED
+  MEDICATION_PLAN_CREATED
+  MEDICATION_PLAN_UPDATED
+}
+
+enum WorkflowEntityType {
+  ORDER
+  TASK
+  MEDICATION_PLAN
 }

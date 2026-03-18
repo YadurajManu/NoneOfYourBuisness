@@ -46,15 +46,29 @@ Last updated: March 18, 2026
 - Family notifications for clinical events/alerts.
 - Alert acknowledgement/resolution audit fields.
 
-7. Dashboard baseline
+7. Clinical workflows baseline (orders + tasks + medications)
+- Clinical order, care task, medication plan, and workflow audit models added.
+- APIs:
+  - `POST /api/clinical-workflows/patient/:patientId/orders`
+  - `GET /api/clinical-workflows/patient/:patientId/orders`
+  - `PATCH /api/clinical-workflows/orders/:orderId/status`
+  - `POST /api/clinical-workflows/orders/:orderId/tasks`
+  - `PATCH /api/clinical-workflows/tasks/:taskId/status`
+  - `POST /api/clinical-workflows/patient/:patientId/medications`
+  - `PATCH /api/clinical-workflows/medications/:planId`
+  - `GET /api/clinical-workflows/patient/:patientId/summary`
+- Family notifications wired for order create/escalate/complete + medication updates.
+- Workflow audit trail captures status transitions and key actions.
+
+8. Dashboard baseline
 - `GET /api/dashboard/overview`
 - `GET /api/dashboard/patient/:patientId/timeline`
-- Overview now includes clinical totals and open alert counts.
-- Patient timeline now includes document + clinical event/alert timeline entries.
+- Overview now includes clinical totals, open alerts, and workflow KPIs (pending/escalated/overdue).
+- Patient timeline now includes document + clinical event/alert + order/task/medication timeline entries.
 
-8. Automated validation
+9. Automated validation
 - Unit tests and e2e tests passing.
-- e2e covers end-to-end admin -> patient -> family workflow and clinical alert flow.
+- e2e covers end-to-end admin -> patient -> family workflow, clinical alert flow, and order/task/medication lifecycle.
 - Build/lint gates passing.
 
 ## In Progress / Remaining for Guide-Level Parity
@@ -62,8 +76,8 @@ Last updated: March 18, 2026
 1. Full stage orchestration engine
 - Stage-specific rules, validations, and transition hooks per lifecycle stage.
 
-2. Advanced clinical workflow modules
-- Orders, medication workflows, prior authorization, referral handoffs, follow-up orchestration.
+2. Advanced clinical workflow depth
+- Prior authorization orchestration, referral handoffs, follow-up automation, and cross-team SLA rules.
 
 3. Real-time delivery channels
 - WebSocket/SSE for live dashboard + family feed.
