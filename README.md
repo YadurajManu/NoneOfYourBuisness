@@ -1,1 +1,763 @@
 ![Dude Please Stop GIF](https://github.com/user-attachments/assets/d2650d5d-ed00-4002-941b-bbb87e27ea16)
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id                      String                          @id @default(uuid())
+  name                    String
+  createdAt               DateTime                        @default(now())
+  updatedAt               DateTime                        @updatedAt
+  patients                Patient[]
+  users                   User[]
+  notificationEvents      NotificationEvent[]
+  clinicalEvents          ClinicalEvent[]
+  clinicalAlerts          ClinicalAlert[]
+  clinicalOrders          ClinicalOrder[]
+  medicationPlans         MedicationPlan[]
+  careTasks               CareTask[]
+  workflowAudits          WorkflowAudit[]
+  priorAuthorizations     PriorAuthorization[]
+  referralHandoffs        ReferralHandoff[]
+  lifecycleTransitions    PatientLifecycleTransition[]
+  lifecycleHookExecutions LifecycleHookExecution[]
+  notificationPreferences NotificationChannelPreference[]
+  notificationDeliveries  NotificationDelivery[]
+  refreshSessions         RefreshSession[]
+  familyQuestions         FamilyQuestion[]
+}
+
+model User {
+  id                           String                          @id @default(uuid())
+  email                        String                          @unique
+  passwordHash                 String
+  role                         UserRole                        @default(DOCTOR)
+  isSuspended                  Boolean                         @default(false)
+  suspendedAt                  DateTime?
+  organizationId               String
+  patientProfileId             String?                         @unique
+  organization                 Organization                    @relation(fields: [organizationId], references: [id])
+  patientProfile               Patient?                        @relation("PatientUserProfile", fields: [patientProfileId], references: [id])
+  familyAccesses               PatientFamilyAccess[]           @relation("FamilyMemberAccesses")
+  grantedFamilyAccesses        PatientFamilyAccess[]           @relation("FamilyAccessGrantedBy")
+  familyNotifications          NotificationEvent[]             @relation("FamilyNotificationRecipient")
+  accessAuditAsActor           FamilyAccessAudit[]             @relation("FamilyAccessAuditActor")
+  clinicalEventsAuthored       ClinicalEvent[]                 @relation("ClinicalEventActor")
+  alertsAcknowledged           ClinicalAlert[]                 @relation("AlertAcknowledgedBy")
+  alertsResolved               ClinicalAlert[]                 @relation("AlertResolvedBy")
+  clinicalOrdersCreated        ClinicalOrder[]                 @relation("ClinicalOrderCreatedBy")
+  clinicalOrdersAssigned       ClinicalOrder[]                 @relation("ClinicalOrderAssignedTo")
+  medicationPlansPrescribed    MedicationPlan[]                @relation("MedicationPlanPrescribedBy")
+  careTasksCreated             CareTask[]                      @relation("CareTaskCreatedBy")
+  careTasksAssigned            CareTask[]                      @relation("CareTaskAssignedTo")
+  workflowAudits               WorkflowAudit[]                 @relation("WorkflowAuditActor")
+  priorAuthorizationsRequested PriorAuthorization[]            @relation("PriorAuthorizationRequestedBy")
+  priorAuthorizationsReviewed  PriorAuthorization[]            @relation("PriorAuthorizationReviewedBy")
+  referralsCreated             ReferralHandoff[]               @relation("ReferralCreatedBy")
+  referralsAssigned            ReferralHandoff[]               @relation("ReferralAssignedTo")
+  lifecycleTransitionsAuthored PatientLifecycleTransition[]    @relation("LifecycleTransitionActor")
+  lifecycleHookExecutions      LifecycleHookExecution[]        @relation("LifecycleHookActor")
+  notificationPreferences      NotificationChannelPreference[]
+  notificationDeliveries       NotificationDelivery[]          @relation("NotificationDeliveryRecipient")
+  refreshSessions              RefreshSession[]
+  familyQuestionsAsked         FamilyQuestion[]                @relation("FamilyQuestionAskedBy")
+  familyQuestionsAnswered      FamilyQuestion[]                @relation("FamilyQuestionAnsweredBy")
+  createdAt                    DateTime                        @default(now())
+  updatedAt                    DateTime                        @updatedAt
+}
+
+model Patient {
+  id                      String                       @id @default(uuid())
+  organizationId          String
+  organization            Organization                 @relation(fields: [organizationId], references: [id])
+  fhirResource            Json // Stores JSONB FHIR Patient resource
+  lifecycleStage          Int                          @default(1) // 1-10 stages
+  documents               Document[]
+  familyAccesses          PatientFamilyAccess[]
+  notificationEvents      NotificationEvent[]
+  familyAccessAudits      FamilyAccessAudit[]
+  clinicalEvents          ClinicalEvent[]
+  clinicalAlerts          ClinicalAlert[]
+  clinicalOrders          ClinicalOrder[]
+  medicationPlans         MedicationPlan[]
+  careTasks               CareTask[]
+  workflowAudits          WorkflowAudit[]
+  priorAuthorizations     PriorAuthorization[]
+  referralHandoffs        ReferralHandoff[]
+  lifecycleTransitions    PatientLifecycleTransition[]
+  lifecycleHookExecutions LifecycleHookExecution[]
+  patientUser             User?                        @relation("PatientUserProfile")
+  familyQuestions         FamilyQuestion[]
+  createdAt               DateTime                     @default(now())
+  updatedAt               DateTime                     @updatedAt
+}
+
+model Document {
+  id        String    @id @default(uuid())
+  patientId String
+  patient   Patient   @relation(fields: [patientId], references: [id])
+  filePath  String
+  type      String // e.g., "LAB_REPORT", "DISCHARGE_SUMMARY"
+  metadata  Json? // AI extracted data
+  status    DocStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model PatientFamilyAccess {
+  id              String              @id @default(uuid())
+  patientId       String
+  familyUserId    String
+  grantedByUserId String
+  accessLevel     FamilyAccessLevel   @default(VIEW_ONLY)
+  status          FamilyAccessStatus  @default(ACTIVE)
+  consentNote     String?
+  grantedAt       DateTime            @default(now())
+  revokedAt       DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  patient         Patient             @relation(fields: [patientId], references: [id])
+  familyUser      User                @relation("FamilyMemberAccesses", fields: [familyUserId], references: [id])
+  grantedByUser   User                @relation("FamilyAccessGrantedBy", fields: [grantedByUserId], references: [id])
+  audits          FamilyAccessAudit[]
+
+  @@unique([patientId, familyUserId])
+  @@index([familyUserId, status])
+  @@index([patientId, status])
+}
+
+model NotificationEvent {
+  id             String                 @id @default(uuid())
+  organizationId String
+  patientId      String
+  familyUserId   String
+  type           NotificationType
+  payload        Json?
+  isRead         Boolean                @default(false)
+  createdAt      DateTime               @default(now())
+  readAt         DateTime?
+  organization   Organization           @relation(fields: [organizationId], references: [id])
+  patient        Patient                @relation(fields: [patientId], references: [id])
+  familyUser     User                   @relation("FamilyNotificationRecipient", fields: [familyUserId], references: [id])
+  deliveries     NotificationDelivery[]
+
+  @@index([familyUserId, isRead, createdAt])
+  @@index([patientId, createdAt])
+}
+
+model NotificationChannelPreference {
+  id             String       @id @default(uuid())
+  organizationId String
+  familyUserId   String
+  inAppEnabled   Boolean      @default(true)
+  emailEnabled   Boolean      @default(false)
+  smsEnabled     Boolean      @default(false)
+  pushEnabled    Boolean      @default(false)
+  webhookEnabled Boolean      @default(false)
+  emailAddress   String?
+  phoneNumber    String?
+  pushToken      String?
+  webhookUrl     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  familyUser     User         @relation(fields: [familyUserId], references: [id])
+
+  @@unique([organizationId, familyUserId])
+  @@index([familyUserId])
+}
+
+model NotificationDelivery {
+  id                  String                     @id @default(uuid())
+  notificationEventId String
+  organizationId      String
+  familyUserId        String
+  channel             NotificationChannel
+  status              NotificationDeliveryStatus @default(PENDING)
+  attempts            Int                        @default(0)
+  nextAttemptAt       DateTime?
+  lastAttemptAt       DateTime?
+  deliveredAt         DateTime?
+  failureReason       String?
+  providerResponse    Json?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  notificationEvent   NotificationEvent          @relation(fields: [notificationEventId], references: [id])
+  organization        Organization               @relation(fields: [organizationId], references: [id])
+  familyUser          User                       @relation("NotificationDeliveryRecipient", fields: [familyUserId], references: [id])
+
+  @@index([organizationId, status, nextAttemptAt, createdAt])
+  @@index([familyUserId, status, createdAt])
+  @@index([notificationEventId, channel])
+}
+
+model FamilyAccessAudit {
+  id           String              @id @default(uuid())
+  accessId     String
+  actorUserId  String
+  patientId    String
+  familyUserId String
+  action       FamilyAccessAction
+  note         String?
+  metadata     Json?
+  createdAt    DateTime            @default(now())
+  access       PatientFamilyAccess @relation(fields: [accessId], references: [id])
+  actor        User                @relation("FamilyAccessAuditActor", fields: [actorUserId], references: [id])
+  patient      Patient             @relation(fields: [patientId], references: [id])
+
+  @@index([patientId, createdAt])
+  @@index([familyUserId, createdAt])
+}
+
+model ClinicalEvent {
+  id             String                @id @default(uuid())
+  organizationId String
+  patientId      String
+  actorUserId    String
+  type           ClinicalEventType
+  severity       ClinicalEventSeverity @default(INFO)
+  title          String
+  description    String?
+  data           Json?
+  occurredAt     DateTime              @default(now())
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  organization   Organization          @relation(fields: [organizationId], references: [id])
+  patient        Patient               @relation(fields: [patientId], references: [id])
+  actorUser      User                  @relation("ClinicalEventActor", fields: [actorUserId], references: [id])
+  alert          ClinicalAlert?
+
+  @@index([organizationId, patientId, occurredAt])
+  @@index([organizationId, type, severity, occurredAt])
+}
+
+model ClinicalAlert {
+  id                   String        @id @default(uuid())
+  organizationId       String
+  patientId            String
+  clinicalEventId      String        @unique
+  priority             AlertPriority @default(MEDIUM)
+  status               AlertStatus   @default(OPEN)
+  title                String
+  message              String
+  acknowledgedByUserId String?
+  acknowledgedAt       DateTime?
+  resolvedByUserId     String?
+  resolvedAt           DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  organization         Organization  @relation(fields: [organizationId], references: [id])
+  patient              Patient       @relation(fields: [patientId], references: [id])
+  clinicalEvent        ClinicalEvent @relation(fields: [clinicalEventId], references: [id])
+  acknowledgedByUser   User?         @relation("AlertAcknowledgedBy", fields: [acknowledgedByUserId], references: [id])
+  resolvedByUser       User?         @relation("AlertResolvedBy", fields: [resolvedByUserId], references: [id])
+
+  @@index([organizationId, status, priority, createdAt])
+  @@index([patientId, status, createdAt])
+}
+
+model ClinicalOrder {
+  id                  String                @id @default(uuid())
+  organizationId      String
+  patientId           String
+  createdByUserId     String
+  assignedToUserId    String?
+  type                ClinicalOrderType
+  priority            ClinicalOrderPriority @default(MEDIUM)
+  status              ClinicalOrderStatus   @default(ACTIVE)
+  title               String
+  description         String?
+  dueAt               DateTime?
+  escalatedAt         DateTime?
+  completedAt         DateTime?
+  metadata            Json?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  organization        Organization          @relation(fields: [organizationId], references: [id])
+  patient             Patient               @relation(fields: [patientId], references: [id])
+  createdByUser       User                  @relation("ClinicalOrderCreatedBy", fields: [createdByUserId], references: [id])
+  assignedToUser      User?                 @relation("ClinicalOrderAssignedTo", fields: [assignedToUserId], references: [id])
+  careTasks           CareTask[]
+  medicationPlans     MedicationPlan[]
+  priorAuthorizations PriorAuthorization[]
+  referralHandoffs    ReferralHandoff[]
+
+  @@index([organizationId, status, priority, createdAt])
+  @@index([patientId, status, dueAt])
+  @@index([assignedToUserId, status, dueAt])
+}
+
+model MedicationPlan {
+  id                 String               @id @default(uuid())
+  organizationId     String
+  patientId          String
+  clinicalOrderId    String?
+  prescribedByUserId String
+  medicationName     String
+  dosage             String
+  frequency          String
+  route              String?
+  instructions       String?
+  startDate          DateTime
+  endDate            DateTime?
+  status             MedicationPlanStatus @default(ACTIVE)
+  metadata           Json?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  organization       Organization         @relation(fields: [organizationId], references: [id])
+  patient            Patient              @relation(fields: [patientId], references: [id])
+  clinicalOrder      ClinicalOrder?       @relation(fields: [clinicalOrderId], references: [id])
+  prescribedByUser   User                 @relation("MedicationPlanPrescribedBy", fields: [prescribedByUserId], references: [id])
+
+  @@index([organizationId, status, startDate])
+  @@index([patientId, status, startDate])
+}
+
+model CareTask {
+  id               String         @id @default(uuid())
+  organizationId   String
+  patientId        String
+  clinicalOrderId  String?
+  createdByUserId  String
+  assignedToUserId String?
+  type             CareTaskType
+  status           CareTaskStatus @default(OPEN)
+  title            String
+  description      String?
+  dueAt            DateTime?
+  completedAt      DateTime?
+  escalatedAt      DateTime?
+  metadata         Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  organization     Organization   @relation(fields: [organizationId], references: [id])
+  patient          Patient        @relation(fields: [patientId], references: [id])
+  clinicalOrder    ClinicalOrder? @relation(fields: [clinicalOrderId], references: [id])
+  createdByUser    User           @relation("CareTaskCreatedBy", fields: [createdByUserId], references: [id])
+  assignedToUser   User?          @relation("CareTaskAssignedTo", fields: [assignedToUserId], references: [id])
+
+  @@index([organizationId, status, dueAt])
+  @@index([patientId, status, dueAt])
+  @@index([clinicalOrderId, status, dueAt])
+}
+
+model WorkflowAudit {
+  id             String              @id @default(uuid())
+  organizationId String
+  patientId      String
+  actorUserId    String
+  action         WorkflowAuditAction
+  entityType     WorkflowEntityType
+  entityId       String
+  note           String?
+  metadata       Json?
+  createdAt      DateTime            @default(now())
+  organization   Organization        @relation(fields: [organizationId], references: [id])
+  patient        Patient             @relation(fields: [patientId], references: [id])
+  actorUser      User                @relation("WorkflowAuditActor", fields: [actorUserId], references: [id])
+
+  @@index([organizationId, patientId, createdAt])
+  @@index([entityType, entityId, createdAt])
+}
+
+model PriorAuthorization {
+  id                String                   @id @default(uuid())
+  organizationId    String
+  patientId         String
+  clinicalOrderId   String?
+  requestedByUserId String
+  reviewedByUserId  String?
+  payerName         String
+  policyNumber      String?
+  serviceCodes      Json?
+  requestPayload    Json?
+  status            PriorAuthorizationStatus @default(DRAFT)
+  externalReference String?
+  submittedAt       DateTime?
+  decidedAt         DateTime?
+  expiresAt         DateTime?
+  decisionNote      String?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  organization      Organization             @relation(fields: [organizationId], references: [id])
+  patient           Patient                  @relation(fields: [patientId], references: [id])
+  clinicalOrder     ClinicalOrder?           @relation(fields: [clinicalOrderId], references: [id])
+  requestedByUser   User                     @relation("PriorAuthorizationRequestedBy", fields: [requestedByUserId], references: [id])
+  reviewedByUser    User?                    @relation("PriorAuthorizationReviewedBy", fields: [reviewedByUserId], references: [id])
+
+  @@index([organizationId, status, createdAt])
+  @@index([patientId, status, createdAt])
+  @@index([clinicalOrderId, status, createdAt])
+}
+
+model ReferralHandoff {
+  id               String                  @id @default(uuid())
+  organizationId   String
+  patientId        String
+  clinicalOrderId  String?
+  createdByUserId  String
+  assignedToUserId String?
+  destinationType  ReferralDestinationType
+  destinationName  String
+  reason           String?
+  priority         ReferralPriority        @default(MEDIUM)
+  status           ReferralHandoffStatus   @default(CREATED)
+  dueAt            DateTime?
+  acceptedAt       DateTime?
+  completedAt      DateTime?
+  escalatedAt      DateTime?
+  declinedAt       DateTime?
+  metadata         Json?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  organization     Organization            @relation(fields: [organizationId], references: [id])
+  patient          Patient                 @relation(fields: [patientId], references: [id])
+  clinicalOrder    ClinicalOrder?          @relation(fields: [clinicalOrderId], references: [id])
+  createdByUser    User                    @relation("ReferralCreatedBy", fields: [createdByUserId], references: [id])
+  assignedToUser   User?                   @relation("ReferralAssignedTo", fields: [assignedToUserId], references: [id])
+
+  @@index([organizationId, status, priority, dueAt])
+  @@index([patientId, status, dueAt])
+  @@index([clinicalOrderId, status, dueAt])
+}
+
+model PatientLifecycleTransition {
+  id             String                  @id @default(uuid())
+  organizationId String
+  patientId      String
+  actorUserId    String
+  fromStage      Int
+  toStage        Int
+  reason         String?
+  metadata       Json?
+  transitionType LifecycleTransitionType @default(MANUAL)
+  createdAt      DateTime                @default(now())
+  organization   Organization            @relation(fields: [organizationId], references: [id])
+  patient        Patient                 @relation(fields: [patientId], references: [id])
+  actorUser      User                    @relation("LifecycleTransitionActor", fields: [actorUserId], references: [id])
+
+  @@index([organizationId, patientId, createdAt])
+  @@index([patientId, fromStage, toStage, createdAt])
+}
+
+model LifecycleHookExecution {
+  id             String              @id @default(uuid())
+  organizationId String
+  patientId      String
+  actorUserId    String
+  fromStage      Int
+  toStage        Int
+  hookKey        String
+  status         LifecycleHookStatus @default(PENDING)
+  result         Json?
+  errorMessage   String?
+  executedAt     DateTime            @default(now())
+  organization   Organization        @relation(fields: [organizationId], references: [id])
+  patient        Patient             @relation(fields: [patientId], references: [id])
+  actorUser      User                @relation("LifecycleHookActor", fields: [actorUserId], references: [id])
+
+  @@unique([patientId, toStage, hookKey])
+  @@index([organizationId, patientId, executedAt])
+  @@index([organizationId, status, executedAt])
+}
+
+model RefreshSession {
+  id                  String       @id @default(uuid())
+  userId              String
+  organizationId      String
+  hashedToken         String
+  userAgent           String?
+  ipAddress           String?
+  deviceInfo          String?
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedBySessionId String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  user                User         @relation(fields: [userId], references: [id])
+  organization        Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([userId, expiresAt])
+  @@index([organizationId, expiresAt])
+  @@index([hashedToken])
+}
+
+model DemoLead {
+  id        String         @id @default(uuid())
+  name      String
+  org       String
+  role      String?
+  email     String
+  phone     String?
+  message   String?
+  source    String         @default("landing_page")
+  status    DemoLeadStatus @default(NEW)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email, createdAt])
+}
+
+model FamilyQuestion {
+  id               String               @id @default(uuid())
+  organizationId   String
+  patientId        String
+  askedByUserId    String
+  question         String
+  context          String?
+  status           FamilyQuestionStatus @default(OPEN)
+  answer           String?
+  answeredByUserId String?
+  answeredAt       DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  organization     Organization         @relation(fields: [organizationId], references: [id])
+  patient          Patient              @relation(fields: [patientId], references: [id])
+  askedByUser      User                 @relation("FamilyQuestionAskedBy", fields: [askedByUserId], references: [id])
+  answeredByUser   User?                @relation("FamilyQuestionAnsweredBy", fields: [answeredByUserId], references: [id])
+
+  @@index([organizationId, patientId, status, createdAt])
+  @@index([askedByUserId, status, createdAt])
+}
+
+enum UserRole {
+  ADMIN
+  DOCTOR
+  SPECIALIST
+  PATIENT
+  FAMILY_MEMBER
+}
+
+enum DocStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum FamilyAccessLevel {
+  VIEW_ONLY
+  FULL_UPDATES
+  EMERGENCY_CONTACT
+}
+
+enum FamilyAccessStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum FamilyAccessAction {
+  GRANTED
+  REVOKED
+  VIEWED_PATIENT
+  VIEWED_DOCUMENTS
+  VIEWED_NOTIFICATIONS
+}
+
+enum NotificationType {
+  ACCESS_GRANTED
+  ACCESS_REVOKED
+  LIFECYCLE_STAGE_CHANGED
+  DOCUMENT_UPLOADED
+  DOCUMENT_PROCESSED
+  DOCUMENT_FAILED
+  CLINICAL_EVENT_RECORDED
+  CLINICAL_ALERT_CREATED
+  CLINICAL_ORDER_CREATED
+  CLINICAL_ORDER_ESCALATED
+  CLINICAL_ORDER_COMPLETED
+  MEDICATION_PLAN_UPDATED
+  CARE_TASK_OVERDUE
+  PRIOR_AUTH_SUBMITTED
+  PRIOR_AUTH_DECISION
+  REFERRAL_CREATED
+  REFERRAL_STATUS_UPDATED
+  REFERRAL_OVERDUE
+}
+
+enum ClinicalEventType {
+  LAB
+  VITAL
+  MEDICATION
+  ORDER
+  FOLLOW_UP
+}
+
+enum ClinicalEventSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum AlertPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ClinicalOrderType {
+  LAB_TEST
+  IMAGING
+  PROCEDURE
+  MEDICATION
+  CONSULTATION
+  FOLLOW_UP
+}
+
+enum ClinicalOrderPriority {
+  LOW
+  MEDIUM
+  HIGH
+  STAT
+}
+
+enum ClinicalOrderStatus {
+  DRAFT
+  ACTIVE
+  IN_PROGRESS
+  ESCALATED
+  COMPLETED
+  CANCELLED
+}
+
+enum MedicationPlanStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  DISCONTINUED
+}
+
+enum CareTaskType {
+  PRE_AUTH
+  SCHEDULING
+  FOLLOW_UP
+  LAB_COLLECTION
+  MEDICATION_REVIEW
+  PATIENT_EDUCATION
+}
+
+enum CareTaskStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  ESCALATED
+  COMPLETED
+  CANCELLED
+}
+
+enum WorkflowAuditAction {
+  ORDER_CREATED
+  ORDER_STATUS_UPDATED
+  ORDER_ESCALATED
+  ORDER_COMPLETED
+  TASK_CREATED
+  TASK_STATUS_UPDATED
+  MEDICATION_PLAN_CREATED
+  MEDICATION_PLAN_UPDATED
+  PRIOR_AUTH_CREATED
+  PRIOR_AUTH_STATUS_UPDATED
+  REFERRAL_CREATED
+  REFERRAL_STATUS_UPDATED
+  AUTOMATION_OVERDUE_RUN
+}
+
+enum WorkflowEntityType {
+  ORDER
+  TASK
+  MEDICATION_PLAN
+  PRIOR_AUTH
+  REFERRAL
+}
+
+enum PriorAuthorizationStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  DENIED
+  APPEALED
+  EXPIRED
+}
+
+enum ReferralDestinationType {
+  INTERNAL_PROVIDER
+  EXTERNAL_PROVIDER
+  FACILITY
+  HOME_CARE
+}
+
+enum ReferralHandoffStatus {
+  CREATED
+  ACCEPTED
+  IN_PROGRESS
+  ESCALATED
+  COMPLETED
+  DECLINED
+  CANCELLED
+}
+
+enum ReferralPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum LifecycleTransitionType {
+  MANUAL
+  AUTOMATED
+}
+
+enum LifecycleHookStatus {
+  PENDING
+  APPLIED
+  SKIPPED
+  FAILED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+  WEBHOOK
+}
+
+enum NotificationDeliveryStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum DemoLeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CLOSED_WON
+  CLOSED_LOST
+  SPAM
+}
+
+enum FamilyQuestionStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
