@@ -1,79 +1,258 @@
 =========================================
-      Aarogya360 (MedLifeCycle) API
+       Aarogya360 / MediLifecycle API
 =========================================
-Base URL: http://localhost:3100/api
-Date: March 18, 2026
+Version: Backend current state (March 18, 2026)
+Base URL: http://localhost:<PORT>/api  (default fallback PORT=3005)
 Format: JSON
 Auth: Bearer Token (JWT)
 
 -----------------------------------------
-1. AUTHENTICATION MODULE
+GLOBAL SECURITY + ROLE MODEL
+-----------------------------------------
+Authenticated roles currently supported:
+- ADMIN
+- DOCTOR
+- SPECIALIST
+- PATIENT
+- FAMILY_MEMBER
+
+Role guard:
+- Endpoints are protected by JWT and role checks where applicable.
+- Organization (tenant) isolation is enforced in service layer.
+
+-----------------------------------------
+1) AUTHENTICATION MODULE
 -----------------------------------------
 
 POST /auth/register
--------------------
-Description: Registers a new Organization and an Admin User.
+Description: Register a new organization + first ADMIN user.
 Body:
 {
-  "orgName": "string",
-  "email": "string",
-  "password": "string"
+  "orgName": "string (2-120)",
+  "email": "valid email",
+  "password": "string (8-128)"
 }
-Response: 201 Created (Returns user object and access_token)
+Response:
+{
+  "access_token": "jwt",
+  "user": {
+    "id": "uuid",
+    "email": "string",
+    "role": "ADMIN",
+    "organization": "string"
+  }
+}
 
 POST /auth/login
-----------------
-Description: Authenticates user and returns a session token.
+Description: Login existing user.
 Body:
 {
-  "email": "string",
-  "password": "string"
+  "email": "valid email",
+  "password": "string (8-128)"
 }
-Response: 200 OK
+Response:
 {
-  "access_token": "string",
-  "user": { "id": "uuid", "email": "string", "role": "ADMIN", "organization": "string" }
+  "access_token": "jwt",
+  "user": {
+    "id": "uuid",
+    "email": "string",
+    "role": "ADMIN|DOCTOR|SPECIALIST|PATIENT|FAMILY_MEMBER",
+    "organization": "string"
+  }
 }
 
 -----------------------------------------
-2. PATIENT LIFECYCLE MODULE (Protected)
+2) PATIENT LIFECYCLE MODULE (Protected)
 -----------------------------------------
-Note: All Patient endpoints require 'Authorization: Bearer <JWT>'
+Allowed roles: ADMIN, DOCTOR, SPECIALIST
 
 GET /patients
--------------
-Description: Retrieves all patients belonging to the authenticated user's organization.
-Response: 200 OK (Array of Patient objects)
+Description: List patients in caller organization.
 
 GET /patients/:id
------------------
-Description: Retrieves full details (including medical documents) for a specific patient.
-Response: 200 OK (Single Patient object)
+Description: Get patient details + linked documents.
+Param:
+- id: UUID
 
 POST /patients
---------------
-Description: Creates a new patient record using a FHIR-compliant resource.
-Body: (FHIR Patient Resource)
+Description: Create patient from FHIR-like payload.
+Body (minimum):
 {
   "resourceType": "Patient",
-  "name": [{ "family": "Doe", "given": ["John"] }],
-  "gender": "male",
-  "birthDate": "1980-01-01"
+  "...": "other FHIR-like fields"
 }
-Response: 201 Created
+Validation:
+- resourceType must be "Patient"
 
 PATCH /patients/:id/stage
---------------------------
-Description: Updates the patient's current lifecycle stage (Referral, Intake, etc.).
+Description: Update lifecycle stage (1..10).
+Param:
+- id: UUID
 Body:
 {
-  "stage": number (1-7)
+  "stage": 1-10
 }
-Response: 200 OK
+Side effect:
+- Emits family notification event (LIFECYCLE_STAGE_CHANGED) for active family access recipients.
 
 -----------------------------------------
-SYSTEM NOTES:
-- Local Port: 3100 (Default)
-- Database: PostgreSQL (FHIR-first)
-- Encryption: Bcrypt (Passwords), JWT (Sessions)
+3) AI MODULE (Protected)
+-----------------------------------------
+Allowed roles: ADMIN, DOCTOR, SPECIALIST
+
+POST /ai/query
+Description: General AI query endpoint.
+Body:
+{
+  "prompt": "string (2-8000)"
+}
+Response:
+{
+  "role": "assistant",
+  "content": "string"
+}
+
+GET /ai/summarize/:patientId
+Description: Generate patient summary from patient record.
+Param:
+- patientId: UUID
+
+-----------------------------------------
+4) DOCUMENTS MODULE (Protected)
+-----------------------------------------
+Allowed roles: ADMIN, DOCTOR, SPECIALIST
+
+POST /documents/upload/:patientId
+Description: Upload patient document and trigger async extraction/classification.
+Param:
+- patientId: UUID
+Content-Type: multipart/form-data
+Field:
+- file: binary
+Behavior:
+- Upload stored locally
+- Document row created with PROCESSING status
+- Async processing runs extraction + AI structuring
+- Emits family notification events:
+  - DOCUMENT_UPLOADED
+  - DOCUMENT_PROCESSED (on success)
+  - DOCUMENT_FAILED (on failure)
+- Organization-safe checks: patient must belong to caller org
+
+GET /documents/patient/:patientId
+Description: List documents for patient in caller organization.
+Param:
+- patientId: UUID
+
+-----------------------------------------
+5) DASHBOARD MODULE (Protected)
+-----------------------------------------
+Allowed roles: ADMIN, DOCTOR, SPECIALIST
+
+GET /dashboard/overview
+Description: Organization-level dashboard aggregates.
+Includes:
+- totals.patients
+- totals.documents
+- lifecycleBreakdown
+- documentStatusBreakdown
+- recentPatients
+
+GET /dashboard/patient/:patientId/timeline
+Description: Patient-specific timeline view.
+Param:
+- patientId: UUID
+Includes:
+- patient summary
+- documents
+- synthesized timeline events
+
+-----------------------------------------
+6) FAMILY ACCESS + CONSENT MODULE (Protected)
+-----------------------------------------
+
+POST /family-access/family-member
+Allowed roles: ADMIN, DOCTOR
+Description: Create FAMILY_MEMBER account in caller organization.
+Body:
+{
+  "email": "valid email",
+  "password": "string (8-128)"
+}
+
+POST /family-access/grant/:patientId
+Allowed roles: ADMIN, DOCTOR
+Description: Grant family access to patient (consent model).
+Param:
+- patientId: UUID
+Body:
+{
+  "familyUserId": "uuid (optional if familyEmail given)",
+  "familyEmail": "email (optional if familyUserId given)",
+  "accessLevel": "VIEW_ONLY|FULL_UPDATES|EMERGENCY_CONTACT",
+  "consentNote": "optional string",
+  "expiresAt": "optional ISO datetime"
+}
+Behavior:
+- Upserts patient-family access
+- Writes family access audit record
+- Emits ACCESS_GRANTED notification event
+
+PATCH /family-access/revoke/:accessId
+Allowed roles: ADMIN, DOCTOR
+Description: Revoke a family access grant.
+Param:
+- accessId: UUID
+Body:
+{
+  "note": "optional string"
+}
+Behavior:
+- Marks grant as REVOKED
+- Writes family access audit record
+
+GET /family-access/patient/:patientId/grants
+Allowed roles: ADMIN, DOCTOR
+Description: List family grants for patient.
+
+GET /family-access/my-patients
+Allowed roles: FAMILY_MEMBER
+Description: List active patient accesses for logged-in family user.
+
+GET /family-access/patient/:patientId
+Allowed roles: FAMILY_MEMBER
+Description: Family-safe patient view for authorized patient only.
+Behavior:
+- Enforces active access (and expiry check)
+- Writes family access audit record (VIEWED_PATIENT)
+
+GET /family-access/notifications
+Allowed roles: FAMILY_MEMBER
+Description: List notification events for logged-in family user.
+
+PATCH /family-access/notifications/:notificationId/read
+Allowed roles: FAMILY_MEMBER
+Description: Mark one notification as read.
+
+-----------------------------------------
+7) DATA MODELS ADDED FOR PRODUCTION WORKFLOW
+-----------------------------------------
+New/updated schema elements:
+- UserRole now includes FAMILY_MEMBER
+- PatientFamilyAccess (consent + access level + expiry)
+- FamilyAccessAudit (audit trail)
+- NotificationEvent (family update event queue)
+- NotificationType, FamilyAccessLevel, FamilyAccessStatus enums
+- DocStatus aligned to: PENDING, PROCESSING, COMPLETED, FAILED
+
+Migration:
+- 20260318070000_family_access_notifications
+
+-----------------------------------------
+SYSTEM NOTES
+-----------------------------------------
+- PostgreSQL: localhost:5432
+- Redis: localhost:6379
+- JWT auth + role guard enabled
+- Multi-tenant isolation enforced by organization checks
 =========================================

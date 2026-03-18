@@ -27,8 +27,13 @@ Audit scope for this update: backend codebase review across `backend/src`, `back
   - `User`
   - `Patient`
   - `Document`
+- [x] Family/consent and notification models added:
+  - `PatientFamilyAccess`
+  - `FamilyAccessAudit`
+  - `NotificationEvent`
 - [x] Multi-tenant linkage implemented through `organizationId` on users and patients.
 - [x] Initial migration exists: `20260317221437_init`.
+- [x] Incremental migration added: `20260318070000_family_access_notifications`.
 - [x] Prisma schema validation passes.
 - [x] Prisma client generation passes.
 
@@ -71,6 +76,32 @@ Audit scope for this update: backend codebase review across `backend/src`, `back
 - [x] PDF text extraction path implemented via `pdf-parse`.
 - [x] AI-based metadata extraction pipeline implemented conceptually.
 
+#### G) Dashboard Module (Phase 6 Backend Starter)
+- [x] `GET /dashboard/overview` implemented (org-scoped patient/document aggregates).
+- [x] `GET /dashboard/patient/:patientId/timeline` implemented (patient timeline + document events).
+- [x] Dashboard endpoints protected by JWT and org context.
+
+#### H) Family Access Module (Guide Alignment)
+- [x] `POST /family-access/family-member` implemented (create family member account under org).
+- [x] `POST /family-access/grant/:patientId` implemented (consent grant with access level).
+- [x] `PATCH /family-access/revoke/:accessId` implemented (revoke family access).
+- [x] `GET /family-access/patient/:patientId/grants` implemented (doctor/admin grant visibility).
+- [x] `GET /family-access/my-patients` implemented (family member authorized patient list).
+- [x] `GET /family-access/patient/:patientId` implemented (family-scoped patient view).
+- [x] `GET /family-access/notifications` + `PATCH /family-access/notifications/:notificationId/read` implemented.
+- [x] Family access audit log creation implemented for grant/revoke/patient-view actions.
+
+#### I) Notifications Module (Event Backbone)
+- [x] Notification emission service added for active family access recipients.
+- [x] Lifecycle stage change events now emit notifications.
+- [x] Document upload/processed/failed events now emit notifications.
+
+#### J) Role-Based Access Control Hardening
+- [x] `Roles` decorator + `RolesGuard` implemented.
+- [x] Global role guard registered using `APP_GUARD`.
+- [x] `patients`, `ai`, `documents`, and `dashboard` controllers restricted to clinical/admin roles.
+- [x] Family member routes restricted to `FAMILY_MEMBER` where applicable.
+
 ### 1.5 API Surface Implemented (Current)
 - [x] Auth:
   - `POST /api/auth/register`
@@ -86,6 +117,18 @@ Audit scope for this update: backend codebase review across `backend/src`, `back
 - [x] Documents (JWT protected):
   - `POST /api/documents/upload/:patientId`
   - `GET /api/documents/patient/:patientId`
+- [x] Dashboard (JWT protected):
+  - `GET /api/dashboard/overview`
+  - `GET /api/dashboard/patient/:patientId/timeline`
+- [x] Family Access (JWT protected + role restricted):
+  - `POST /api/family-access/family-member`
+  - `POST /api/family-access/grant/:patientId`
+  - `PATCH /api/family-access/revoke/:accessId`
+  - `GET /api/family-access/patient/:patientId/grants`
+  - `GET /api/family-access/my-patients`
+  - `GET /api/family-access/patient/:patientId`
+  - `GET /api/family-access/notifications`
+  - `PATCH /api/family-access/notifications/:notificationId/read`
 
 ## 2. Test and Build Health (Current Reality)
 
@@ -104,12 +147,21 @@ Audit scope for this update: backend codebase review across `backend/src`, `back
   - File-type detection aligned to persisted document data (`type` + extension check).
 - [x] Unit test dependency wiring fixed with proper provider mocks.
 - [x] e2e smoke test made DB-independent for local/CI stability by overriding `PrismaService` in test context.
+- [x] DTO-based request validation added for:
+  - auth login/register payloads
+  - AI query payload
+  - patient stage updates
+  - patient creation minimum FHIR shape (`resourceType`)
+- [x] Organization-safe access control enforced for document upload/list endpoints:
+  - patient ownership verified against authenticated user organization
+  - UUID validation added for patient/document route params
+- [x] Patient safety fixes:
+  - `findOne` now returns 404 for non-org/non-existent patient
+  - lifecycle stage update now validates org ownership before update
 
 ## 3. Notable Consistency Gaps Found
 
-- [ ] Prisma migration enum and current schema enum differ for `DocStatus`:
-  - Migration: `PENDING`, `PROCESSED`, `APPROVED`, `FLAGGED`
-  - Current schema: `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`
+- [x] Prisma migration/state mismatch for `DocStatus` is now resolved by new incremental migration.
 - [ ] Backend README is still default NestJS template; project-specific backend runbook is not yet documented there.
 - [ ] Some documentation references older/default ports and setup values that do not fully match current backend code defaults.
 
@@ -119,6 +171,8 @@ Audit scope for this update: backend codebase review across `backend/src`, `back
 - [x] Core backend architecture and modules are in place.
 - [x] Auth, patient lifecycle, AI query/summarization, and document upload flows are implemented at endpoint/service level.
 - [x] Local infra scaffolding (Postgres + Redis) and Prisma layer are established.
+- [x] Family member consent/access workflow now has backend implementation.
+- [x] Event-based family notification backbone exists and is wired to key workflow changes.
 
 ### In Progress / Not Yet Stable
 - [ ] Document intelligence flow is operational but still needs production-hardening (input validation, size limits, async job queueing, and stronger error mapping).
@@ -127,8 +181,8 @@ Audit scope for this update: backend codebase review across `backend/src`, `back
 
 ## 5. Recommended Immediate Next Steps (Backend)
 
-1. Add explicit DTOs + validation decorators for auth, patients stage update, AI prompt, and document upload metadata.
-2. Introduce authorization checks for document access by tenant/org context.
-3. Refresh `backend/README.md` and setup docs to reflect actual env vars, ports, scripts, and current API surface.
-4. Add one real integration e2e workflow (`register -> login -> patient create -> stage update -> document upload`) with test database setup.
-5. Start Phase 6 backend support for dashboard APIs (patient timeline and role-focused summaries).
+1. Refresh `backend/README.md` and setup docs to reflect actual env vars, ports, role model, and API surface.
+2. Add strong integration tests for full family workflow (`create family user -> grant -> list my patients -> patient view -> notifications`).
+3. Add clinical event entities (orders, meds, follow-ups) and feed them into dashboard/notification pipelines.
+4. Add consent expiry/revocation automation jobs and notification delivery channels (websocket/email/SMS adapters).
+5. Implement role-specific AI policy layers (different prompts/context windows per Patient/Family/Doctor/Specialist).

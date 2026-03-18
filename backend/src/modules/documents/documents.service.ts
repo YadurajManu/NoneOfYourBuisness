@@ -1,6 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { AIService } from '../ai/ai.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as fs from 'fs';
 import { extname } from 'path';
 import { PDFParse } from 'pdf-parse';
@@ -12,9 +19,16 @@ export class DocumentsService {
   constructor(
     private prisma: PrismaService,
     private aiService: AIService,
+    private notificationsService: NotificationsService,
   ) {}
 
-  async create(patientId: string, file: Express.Multer.File) {
+  async create(orgId: string, patientId: string, file: Express.Multer.File) {
+    await this.ensurePatientInOrganization(patientId, orgId);
+
+    if (!file.path) {
+      throw new BadRequestException('Invalid file upload');
+    }
+
     const document = await this.prisma.document.create({
       data: {
         patientId,
@@ -23,6 +37,17 @@ export class DocumentsService {
         status: 'PROCESSING',
       },
     });
+
+    await this.notificationsService.emitToPatientFamily(
+      orgId,
+      patientId,
+      NotificationType.DOCUMENT_UPLOADED,
+      {
+        documentId: document.id,
+        type: document.type,
+        status: document.status,
+      },
+    );
 
     // Fire and forget processing to keep API responsive
     this.processDocument(document.id).catch((err: unknown) => {
@@ -37,6 +62,13 @@ export class DocumentsService {
   async processDocument(documentId: string) {
     const doc = await this.prisma.document.findUnique({
       where: { id: documentId },
+      include: {
+        patient: {
+          select: {
+            organizationId: true,
+          },
+        },
+      },
     });
     if (!doc) return;
 
@@ -68,19 +100,48 @@ export class DocumentsService {
         },
       });
 
+      await this.notificationsService.emitToPatientFamily(
+        doc.patient.organizationId,
+        doc.patientId,
+        NotificationType.DOCUMENT_PROCESSED,
+        {
+          documentId,
+          type: doc.type,
+          status: 'COMPLETED',
+        },
+      );
+
       this.logger.log(`Document ${documentId} processed successfully.`);
     } catch (error) {
       await this.prisma.document.update({
         where: { id: documentId },
         data: { status: 'FAILED' },
       });
+
+      await this.notificationsService.emitToPatientFamily(
+        doc.patient.organizationId,
+        doc.patientId,
+        NotificationType.DOCUMENT_FAILED,
+        {
+          documentId,
+          type: doc.type,
+          status: 'FAILED',
+        },
+      );
       throw error;
     }
   }
 
-  async findAllByPatient(patientId: string) {
+  async findAllByPatient(orgId: string, patientId: string) {
+    await this.ensurePatientInOrganization(patientId, orgId);
+
     return this.prisma.document.findMany({
-      where: { patientId },
+      where: {
+        patientId,
+        patient: {
+          organizationId: orgId,
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -103,6 +164,23 @@ export class DocumentsService {
       return result.text;
     } finally {
       await parser.destroy();
+    }
+  }
+
+  private async ensurePatientInOrganization(
+    patientId: string,
+    orgId: string,
+  ): Promise<void> {
+    const patient = await this.prisma.patient.findFirst({
+      where: {
+        id: patientId,
+        organizationId: orgId,
+      },
+      select: { id: true },
+    });
+
+    if (!patient) {
+      throw new NotFoundException('Patient not found');
     }
   }
 }

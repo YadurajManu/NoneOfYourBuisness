@@ -10,46 +10,113 @@ datasource db {
 }
 
 model Organization {
-  id        String    @id @default(uuid())
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  patients  Patient[]
-  users     User[]
+  id                 String               @id @default(uuid())
+  name               String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  patients           Patient[]
+  users              User[]
+  notificationEvents NotificationEvent[]
 }
 
 model User {
-  id             String       @id @default(uuid())
-  email          String       @unique
-  passwordHash   String
-  role           UserRole     @default(DOCTOR)
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id                     String               @id @default(uuid())
+  email                  String               @unique
+  passwordHash           String
+  role                   UserRole             @default(DOCTOR)
+  organizationId         String
+  organization           Organization         @relation(fields: [organizationId], references: [id])
+  familyAccesses         PatientFamilyAccess[] @relation("FamilyMemberAccesses")
+  grantedFamilyAccesses  PatientFamilyAccess[] @relation("FamilyAccessGrantedBy")
+  familyNotifications    NotificationEvent[]   @relation("FamilyNotificationRecipient")
+  accessAuditAsActor     FamilyAccessAudit[]   @relation("FamilyAccessAuditActor")
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
 }
 
 model Patient {
-  id             String       @id @default(uuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  fhirResource   Json         // Stores JSONB FHIR Patient resource
-  lifecycleStage Int          @default(1) // 1-10 stages
-  documents      Document[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id                 String               @id @default(uuid())
+  organizationId     String
+  organization       Organization         @relation(fields: [organizationId], references: [id])
+  fhirResource       Json                 // Stores JSONB FHIR Patient resource
+  lifecycleStage     Int                  @default(1) // 1-10 stages
+  documents          Document[]
+  familyAccesses     PatientFamilyAccess[]
+  notificationEvents NotificationEvent[]
+  familyAccessAudits FamilyAccessAudit[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 }
 
 model Document {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   patientId String
-  patient   Patient  @relation(fields: [patientId], references: [id])
+  patient   Patient   @relation(fields: [patientId], references: [id])
   filePath  String
-  type      String   // e.g., "LAB_REPORT", "DISCHARGE_SUMMARY"
-  metadata  Json?    // AI extracted data
+  type      String    // e.g., "LAB_REPORT", "DISCHARGE_SUMMARY"
+  metadata  Json?     // AI extracted data
   status    DocStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model PatientFamilyAccess {
+  id              String             @id @default(uuid())
+  patientId       String
+  familyUserId    String
+  grantedByUserId String
+  accessLevel     FamilyAccessLevel  @default(VIEW_ONLY)
+  status          FamilyAccessStatus @default(ACTIVE)
+  consentNote     String?
+  grantedAt       DateTime           @default(now())
+  revokedAt       DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  patient         Patient            @relation(fields: [patientId], references: [id])
+  familyUser      User               @relation("FamilyMemberAccesses", fields: [familyUserId], references: [id])
+  grantedByUser   User               @relation("FamilyAccessGrantedBy", fields: [grantedByUserId], references: [id])
+  audits          FamilyAccessAudit[]
+
+  @@unique([patientId, familyUserId])
+  @@index([familyUserId, status])
+  @@index([patientId, status])
+}
+
+model NotificationEvent {
+  id             String           @id @default(uuid())
+  organizationId String
+  patientId      String
+  familyUserId   String
+  type           NotificationType
+  payload        Json?
+  isRead         Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  readAt         DateTime?
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+  patient        Patient          @relation(fields: [patientId], references: [id])
+  familyUser     User             @relation("FamilyNotificationRecipient", fields: [familyUserId], references: [id])
+
+  @@index([familyUserId, isRead, createdAt])
+  @@index([patientId, createdAt])
+}
+
+model FamilyAccessAudit {
+  id           String             @id @default(uuid())
+  accessId     String
+  actorUserId  String
+  patientId    String
+  familyUserId String
+  action       FamilyAccessAction
+  note         String?
+  metadata     Json?
+  createdAt    DateTime           @default(now())
+  access       PatientFamilyAccess @relation(fields: [accessId], references: [id])
+  actor        User                @relation("FamilyAccessAuditActor", fields: [actorUserId], references: [id])
+  patient      Patient             @relation(fields: [patientId], references: [id])
+
+  @@index([patientId, createdAt])
+  @@index([familyUserId, createdAt])
 }
 
 enum UserRole {
@@ -57,6 +124,7 @@ enum UserRole {
   DOCTOR
   SPECIALIST
   PATIENT
+  FAMILY_MEMBER
 }
 
 enum DocStatus {
@@ -64,4 +132,32 @@ enum DocStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum FamilyAccessLevel {
+  VIEW_ONLY
+  FULL_UPDATES
+  EMERGENCY_CONTACT
+}
+
+enum FamilyAccessStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum FamilyAccessAction {
+  GRANTED
+  REVOKED
+  VIEWED_PATIENT
+  VIEWED_DOCUMENTS
+  VIEWED_NOTIFICATIONS
+}
+
+enum NotificationType {
+  ACCESS_GRANTED
+  ACCESS_REVOKED
+  LIFECYCLE_STAGE_CHANGED
+  DOCUMENT_UPLOADED
+  DOCUMENT_PROCESSED
+  DOCUMENT_FAILED
 }
