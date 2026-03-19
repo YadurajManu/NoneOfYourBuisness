@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Search,
   Stethoscope,
+  Upload,
 } from "lucide-react";
 import {
   claimReferralFromPool,
@@ -29,6 +30,7 @@ import {
   listPatientAlerts,
   listPatientOrders,
   listPatientReferrals,
+  uploadPatientDocumentForCareTeam,
   updateClinicalOrderStatus,
   updateReferralStatus,
 } from "@/lib/api/client";
@@ -165,6 +167,7 @@ export default function SpecialistCaseloadPage() {
   const [eventTitle, setEventTitle] = useState("");
   const [eventDescription, setEventDescription] = useState("");
   const [eventNotifyFamily, setEventNotifyFamily] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   const caseloadQuery = useQuery({
     queryKey: ["specialist", "caseload"],
@@ -302,6 +305,15 @@ export default function SpecialistCaseloadPage() {
     },
   });
 
+  const uploadMutation = useMutation({
+    mutationFn: (payload: { patientId: string; file: File }) =>
+      uploadPatientDocumentForCareTeam(payload.patientId, payload.file),
+    onSuccess: (_, vars) => {
+      refreshPatientQueries(vars.patientId);
+      setUploadFile(null);
+    },
+  });
+
   const claimReferralMutation = useMutation({
     mutationFn: (referralId: string) => claimReferralFromPool(referralId, "Claimed from specialist pool in portal"),
     onSuccess: (data) => {
@@ -417,6 +429,12 @@ export default function SpecialistCaseloadPage() {
     e.preventDefault();
     if (!selectedPatientId || !eventTitle.trim()) return;
     createEventMutation.mutate({ patientId: selectedPatientId });
+  }
+
+  function handleUploadDocument(e: FormEvent) {
+    e.preventDefault();
+    if (!selectedPatientId || !uploadFile) return;
+    uploadMutation.mutate({ patientId: selectedPatientId, file: uploadFile });
   }
 
   function handleSelectPatient(patientId: string) {
@@ -536,12 +554,11 @@ export default function SpecialistCaseloadPage() {
         </div>
       </Panel>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:items-start xl:grid-cols-[0.78fr_1.22fr]">
         <Panel
           title="Assigned Specialist Queue"
           eyebrow="Patient List"
           description="Select a patient to manage referrals, orders, and specialist event logs. On smaller screens, actions are shown below this list."
-          className="h-full"
         >
           <div className="space-y-3">
             {filteredPatients.map((patient) => (
@@ -628,7 +645,7 @@ export default function SpecialistCaseloadPage() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 2xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <form onSubmit={handleUpdateReferral} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
                     <p className="text-xs uppercase tracking-[0.2em] text-primary/70">Update referral</p>
                     <div className="mt-3 grid grid-cols-1 gap-3">
@@ -772,6 +789,35 @@ export default function SpecialistCaseloadPage() {
                         className="h-10 rounded-xl border border-white/10 bg-white/[0.04] text-sm font-semibold text-foreground transition-colors hover:border-primary/30 disabled:opacity-60"
                       >
                         {createEventMutation.isPending ? "Saving..." : "Record Specialist Event"}
+                      </button>
+                    </div>
+                  </form>
+
+                  <form onSubmit={handleUploadDocument} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary/70">Report upload</p>
+                    <div className="mt-3 grid grid-cols-1 gap-3">
+                      <label className="flex h-10 cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-background/70 px-3 text-sm text-foreground">
+                        <span className="truncate pr-3">
+                          {uploadFile ? uploadFile.name : "Upload report photo or PDF"}
+                        </span>
+                        <Upload className="h-4 w-4 text-primary" strokeWidth={1.8} />
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          capture="environment"
+                          className="hidden"
+                          onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                        />
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Mobile camera capture is enabled for bedside report photos.
+                      </p>
+                      <button
+                        type="submit"
+                        disabled={!uploadFile || uploadMutation.isPending}
+                        className="h-10 rounded-xl border border-white/10 bg-white/[0.04] text-sm font-semibold text-foreground transition-colors hover:border-primary/30 disabled:opacity-60"
+                      >
+                        {uploadMutation.isPending ? "Uploading..." : "Upload Report"}
                       </button>
                     </div>
                   </form>

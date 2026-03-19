@@ -77,14 +77,17 @@ export class AuthService {
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
-      user: {
+      user: this.usersService.toPortalUserView({
         id: user.id,
         email: user.email,
         role: user.role,
         organization: user.organization.name,
         orgId: user.organizationId,
         patientProfileId: user.patientProfileId ?? null,
-      },
+        displayName: user.displayName ?? null,
+        avatarPath: user.avatarPath ?? null,
+        avatarUpdatedAt: user.avatarUpdatedAt ?? null,
+      }),
     };
   }
 
@@ -175,14 +178,17 @@ export class AuthService {
     return {
       access_token,
       refresh_token: nextRefreshToken,
-      user: {
+      user: this.usersService.toPortalUserView({
         id: session.user.id,
         email: session.user.email,
         role: session.user.role,
         organization: session.user.organization.name,
         orgId: session.user.organizationId,
         patientProfileId: session.user.patientProfileId ?? null,
-      },
+        displayName: session.user.displayName ?? null,
+        avatarPath: session.user.avatarPath ?? null,
+        avatarUpdatedAt: session.user.avatarUpdatedAt ?? null,
+      }),
     };
   }
 
@@ -201,12 +207,17 @@ export class AuthService {
     }
 
     return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      orgId: user.organizationId,
-      organization: user.organization.name,
-      patientProfileId: user.patientProfileId ?? null,
+      ...this.usersService.toPortalUserView({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        organization: user.organization.name,
+        orgId: user.organizationId,
+        patientProfileId: user.patientProfileId ?? null,
+        displayName: user.displayName ?? null,
+        avatarPath: user.avatarPath ?? null,
+        avatarUpdatedAt: user.avatarUpdatedAt ?? null,
+      }),
       isSuspended: user.isSuspended,
     };
   }

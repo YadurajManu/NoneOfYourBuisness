@@ -3,6 +3,12 @@ import type { AuthResponse, DemoLeadInput } from "./types";
 const rawBase = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
 const API_BASE_URL = rawBase.endsWith("/") ? rawBase.slice(0, -1) : rawBase;
 
+function resolveApiOriginFromBase(baseUrl: string) {
+  if (!/^https?:\/\//i.test(baseUrl)) return "";
+  const normalized = baseUrl.endsWith("/api") ? baseUrl.slice(0, -4) : baseUrl;
+  return normalized.replace(/\/+$/, "");
+}
+
 let accessToken: string | null = null;
 
 export class ApiError extends Error {
@@ -85,6 +91,62 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return (await parseJsonSafe(response)) as T;
 }
 
+function parseContentDispositionFilename(headerValue: string | null) {
+  if (!headerValue) return null;
+  const match =
+    /filename\*=UTF-8''([^;]+)/i.exec(headerValue) ||
+    /filename=\"?([^\";]+)\"?/i.exec(headerValue);
+
+  if (!match?.[1]) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
+async function requestBlob(path: string, options: RequestOptions = {}) {
+  const { auth = false, retryOn401 = true, headers, ...rest } = options;
+  const finalHeaders = new Headers(headers || {});
+
+  if (auth && accessToken) {
+    finalHeaders.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...rest,
+    credentials: "include",
+    headers: finalHeaders,
+  });
+
+  if (response.status === 401 && auth && retryOn401) {
+    try {
+      await refreshSession();
+      return requestBlob(path, { ...options, retryOn401: false });
+    } catch {
+      clearAccessToken();
+      throw new ApiError("Unauthorized", 401, null);
+    }
+  }
+
+  if (!response.ok) {
+    const data = await parseJsonSafe(response);
+    throw new ApiError(
+      parseMessage(data, `Request failed (${response.status})`),
+      response.status,
+      data,
+    );
+  }
+
+  return {
+    blob: await response.blob(),
+    fileName:
+      parseContentDispositionFilename(response.headers.get("content-disposition")) ||
+      "report",
+    contentType: response.headers.get("content-type") || "application/octet-stream",
+  };
+}
+
 export function setAccessToken(token: string | null) {
   accessToken = token;
 }
@@ -95,6 +157,22 @@ export function clearAccessToken() {
 
 export function getAccessToken() {
   return accessToken;
+}
+
+export function resolveApiAssetUrl(pathOrUrl: string | null | undefined) {
+  if (!pathOrUrl) return "";
+
+  if (/^(https?:)?\/\//i.test(pathOrUrl) || pathOrUrl.startsWith("data:") || pathOrUrl.startsWith("blob:")) {
+    return pathOrUrl;
+  }
+
+  if (!pathOrUrl.startsWith("/")) {
+    return pathOrUrl;
+  }
+
+  const apiOrigin = resolveApiOriginFromBase(API_BASE_URL);
+  if (!apiOrigin) return pathOrUrl;
+  return `${apiOrigin}${pathOrUrl}`;
 }
 
 export async function login(email: string, password: string) {
@@ -323,6 +401,12 @@ export function uploadPatientDocumentForCareTeam(patientId: string, file: File) 
   });
 }
 
+export function downloadCareTeamDocument(documentId: string) {
+  return requestBlob(`/documents/${documentId}/download`, {
+    auth: true,
+  });
+}
+
 export function listOpenClinicalAlerts() {
   return request<Array<Record<string, unknown>>>("/clinical-events/alerts/open", {
     auth: true,
@@ -408,6 +492,7 @@ export function createAdminUser(payload: {
   role: "ADMIN" | "DOCTOR" | "SPECIALIST" | "PATIENT" | "FAMILY_MEMBER";
   patientProfileId?: string;
   patientName?: string;
+  displayName?: string;
 }) {
   return request<Record<string, unknown>>("/admin/users", {
     method: "POST",
@@ -443,6 +528,35 @@ export function listActiveDoctors() {
   return request<Array<Record<string, unknown>>>("/users/doctors", { auth: true });
 }
 
+export function getMyUserProfile() {
+  return request<Record<string, unknown>>("/users/me/profile", { auth: true });
+}
+
+export function updateMyUserProfile(payload: { displayName?: string }) {
+  return request<Record<string, unknown>>("/users/me/profile", {
+    method: "PATCH",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function uploadMyUserAvatar(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+
+  return request<Record<string, unknown>>("/users/me/avatar", {
+    method: "POST",
+    auth: true,
+    body: form,
+  });
+}
+
+export function getMyVirtualCard() {
+  return request<Record<string, unknown>>("/users/me/virtual-card", {
+    auth: true,
+  });
+}
+
 export function listAdminLeads() {
   return request<Array<Record<string, unknown>>>("/admin/leads", { auth: true });
 }
@@ -475,6 +589,12 @@ export function uploadPatientPortalDocument(file: File) {
     method: "POST",
     auth: true,
     body: form,
+  });
+}
+
+export function downloadPatientPortalDocument(documentId: string) {
+  return requestBlob(`/patient/documents/${documentId}/download`, {
+    auth: true,
   });
 }
 
@@ -617,6 +737,23 @@ export function updateFamilyNotificationPreferences(payload: {
 
 export function getFamilyPatientView(patientId: string) {
   return request<Record<string, unknown>>(`/family-access/patient/${patientId}`, {
+    auth: true,
+  });
+}
+
+export function uploadFamilyPatientDocument(patientId: string, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+
+  return request<Record<string, unknown>>(`/family-access/patient/${patientId}/documents/upload`, {
+    method: "POST",
+    auth: true,
+    body: form,
+  });
+}
+
+export function downloadFamilyPatientDocument(patientId: string, documentId: string) {
+  return requestBlob(`/family-access/patient/${patientId}/documents/${documentId}/download`, {
     auth: true,
   });
 }

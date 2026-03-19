@@ -35,6 +35,9 @@ export interface UserWithOrganization {
   role: string;
   organizationId: string;
   patientProfileId?: string | null;
+  displayName?: string | null;
+  avatarPath?: string | null;
+  avatarUpdatedAt?: Date | null;
   isSuspended?: boolean;
   organization: { name: string };
 }

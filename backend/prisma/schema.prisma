@@ -39,6 +39,10 @@ model User {
   email                        String                          @unique
   passwordHash                 String
   role                         UserRole                        @default(DOCTOR)
+  displayName                  String?
+  avatarPath                   String?
+  avatarMimeType               String?
+  avatarUpdatedAt              DateTime?
   isSuspended                  Boolean                         @default(false)
   suspendedAt                  DateTime?
   organizationId               String

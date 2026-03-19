@@ -28,4 +28,9 @@ export class CreateAdminUserDto {
   @IsString()
   @MaxLength(120)
   patientName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  displayName?: string;
 }

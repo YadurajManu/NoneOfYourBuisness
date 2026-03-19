@@ -10,15 +10,18 @@ import {
   FileText,
   HeartPulse,
   Mail,
+  Search,
   ShieldCheck,
   ShieldMinus,
   Stethoscope,
+  Upload,
 } from "lucide-react";
 import {
   createFamilyAccessInvite,
   createClinicalEvent,
   createClinicalOrder,
   createReferralHandoff,
+  downloadCareTeamDocument,
   getPatientTimeline,
   getPatientWorkflowSummary,
   listActiveSpecialists,
@@ -26,6 +29,7 @@ import {
   listFamilyAccessGrantsForPatient,
   listFamilyAccessInvitesForPatient,
   revokeFamilyAccessGrant,
+  uploadPatientDocumentForCareTeam,
   updateClinicalOrderStatus,
   updatePatientLifecycleStage,
   updateReferralStatus,
@@ -85,6 +89,79 @@ function safeDate(value: unknown) {
   if (!asString) return "-";
   const parsed = new Date(asString);
   return Number.isNaN(parsed.getTime()) ? asString : parsed.toLocaleString();
+}
+
+type DocumentInsight = {
+  reportType: string | null;
+  summary: string | null;
+  diagnoses: string[];
+  medications: string[];
+  criticalFlags: string[];
+  extractionEngine: string | null;
+  searchableText: string;
+};
+
+function normalizeText(value: unknown) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function asStringArray(value: unknown) {
+  return Array.isArray(value)
+    ? value
+        .map((item) => String(item || "").trim())
+        .filter((item) => item.length > 0)
+    : [];
+}
+
+function getDocumentInsight(row: Record<string, unknown>): DocumentInsight {
+  const metadata = asRecord(row.metadata);
+  const structured = asRecord(metadata.structuredExtraction);
+
+  return {
+    reportType: String(structured.reportType || "").trim() || null,
+    summary: String(structured.summary || "").trim() || null,
+    diagnoses: asStringArray(structured.diagnoses).slice(0, 4),
+    medications: asStringArray(structured.medications).slice(0, 4),
+    criticalFlags: asStringArray(structured.criticalFlags).slice(0, 3),
+    extractionEngine: String(metadata.extractionEngine || "").trim() || null,
+    searchableText: String(metadata.searchableText || "").trim(),
+  };
+}
+
+function documentMatchesQuery(row: Record<string, unknown>, query: string) {
+  const trimmed = normalizeText(query);
+  if (!trimmed) return true;
+
+  const insight = getDocumentInsight(row);
+  const blob = [
+    String(row.type || ""),
+    insight.reportType || "",
+    insight.summary || "",
+    insight.diagnoses.join(" "),
+    insight.medications.join(" "),
+    insight.criticalFlags.join(" "),
+    insight.searchableText,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return blob.includes(trimmed);
+}
+
+function openBlobInNewTab(blob: Blob, fileName: string) {
+  const blobUrl = URL.createObjectURL(blob);
+  const opened = window.open(blobUrl, "_blank", "noopener,noreferrer");
+
+  if (!opened) {
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = fileName;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.click();
+  }
+
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
 }
 
 const orderStatuses = ["ACTIVE", "IN_PROGRESS", "ESCALATED", "COMPLETED", "CANCELLED"] as const;
@@ -228,6 +305,9 @@ export function PatientDetailWorkspace({ mode }: { mode: ClinicalRoleMode }) {
     useState<FamilyAccessLevel>("VIEW_ONLY");
   const [familyInviteConsentNote, setFamilyInviteConsentNote] = useState("");
   const [familyInviteExpiresAt, setFamilyInviteExpiresAt] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [downloadDocumentId, setDownloadDocumentId] = useState<string | null>(null);
+  const [documentSearch, setDocumentSearch] = useState("");
 
   const familyInvites = useMemo(() => {
     return asArray<Record<string, unknown>>(familyInvitesQuery.data).map((row) => {
@@ -244,6 +324,11 @@ export function PatientDetailWorkspace({ mode }: { mode: ClinicalRoleMode }) {
       } as FamilyInviteRow;
     });
   }, [familyInvitesQuery.data]);
+
+  const filteredDocuments = useMemo(
+    () => documents.filter((row) => documentMatchesQuery(row, documentSearch)),
+    [documents, documentSearch],
+  );
 
   const familyGrants = useMemo(() => {
     return asArray<Record<string, unknown>>(familyGrantsQuery.data).map((row) => {
@@ -392,6 +477,14 @@ export function PatientDetailWorkspace({ mode }: { mode: ClinicalRoleMode }) {
     },
   });
 
+  const uploadDocumentMutation = useMutation({
+    mutationFn: (file: File) => uploadPatientDocumentForCareTeam(patientId, file),
+    onSuccess: () => {
+      setUploadFile(null);
+      refreshDetail();
+    },
+  });
+
   const inviteFamilyMutation = useMutation({
     mutationFn: () =>
       createFamilyAccessInvite(patientId, {
@@ -461,6 +554,22 @@ export function PatientDetailWorkspace({ mode }: { mode: ClinicalRoleMode }) {
     e.preventDefault();
     if (!referralDestinationName.trim()) return;
     createReferralMutation.mutate();
+  }
+
+  function handleUploadDocument(e: FormEvent) {
+    e.preventDefault();
+    if (!uploadFile) return;
+    uploadDocumentMutation.mutate(uploadFile);
+  }
+
+  async function handleOpenDocument(documentId: string) {
+    setDownloadDocumentId(documentId);
+    try {
+      const file = await downloadCareTeamDocument(documentId);
+      openBlobInNewTab(file.blob, file.fileName);
+    } finally {
+      setDownloadDocumentId(null);
+    }
   }
 
   function handleInviteFamily(e: FormEvent) {
@@ -562,13 +671,61 @@ export function PatientDetailWorkspace({ mode }: { mode: ClinicalRoleMode }) {
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Documents</p>
-                {documents.slice(0, 6).map((row) => (
-                  <div key={String(row.id)} className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
-                    <p className="text-sm text-foreground/90">{String(row.type || "Document")}</p>
-                    <p className="text-xs text-muted-foreground">{String(row.status || "-")} • {safeDate(row.createdAt)}</p>
-                  </div>
-                ))}
+                <label className="flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-background/70 px-3 text-sm text-foreground">
+                  <Search className="h-4 w-4 text-primary" strokeWidth={1.8} />
+                  <input
+                    value={documentSearch}
+                    onChange={(e) => setDocumentSearch(e.target.value)}
+                    placeholder="Search diagnosis, medicine, report text"
+                    className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                  />
+                </label>
+                {filteredDocuments.slice(0, 6).map((row) => {
+                  const insight = getDocumentInsight(row);
+                  return (
+                    <div key={String(row.id)} className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm text-foreground/90">{String(row.type || "Document")}</p>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDocument(String(row.id || ""))}
+                          disabled={!String(row.id || "") || downloadDocumentId === String(row.id || "")}
+                          className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1 text-[11px] text-foreground transition-colors hover:border-primary/35 hover:text-primary disabled:opacity-60"
+                        >
+                          {downloadDocumentId === String(row.id || "") ? "Opening..." : "Open"}
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {String(row.status || "-")} • {safeDate(row.createdAt)}
+                        {insight.extractionEngine ? ` • ${insight.extractionEngine}` : ""}
+                      </p>
+
+                      {insight.diagnoses.length > 0 || insight.medications.length > 0 || insight.criticalFlags.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {insight.diagnoses.slice(0, 2).map((item) => (
+                            <span key={`${String(row.id)}-diag-${item}`} className="rounded-full border border-primary/25 bg-primary/[0.1] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-primary/90">
+                              Dx: {item}
+                            </span>
+                          ))}
+                          {insight.medications.slice(0, 2).map((item) => (
+                            <span key={`${String(row.id)}-med-${item}`} className="rounded-full border border-white/12 bg-white/[0.05] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-foreground/80">
+                              Med: {item}
+                            </span>
+                          ))}
+                          {insight.criticalFlags.slice(0, 1).map((item) => (
+                            <span key={`${String(row.id)}-flag-${item}`} className="rounded-full border border-amber/25 bg-amber/[0.08] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-amber/90">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
                 {documents.length === 0 ? <p className="text-sm text-muted-foreground">No documents.</p> : null}
+                {documents.length > 0 && filteredDocuments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No documents match this search.</p>
+                ) : null}
               </div>
 
               <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
@@ -662,6 +819,35 @@ export function PatientDetailWorkspace({ mode }: { mode: ClinicalRoleMode }) {
             description="Perform chart-level actions without leaving this detailed patient page."
           >
             <div className="space-y-4">
+              <form onSubmit={handleUploadDocument} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-primary/70">Upload Report (Photo or PDF)</p>
+                <div className="mt-3 grid grid-cols-1 gap-3">
+                  <label className="flex h-11 cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-background/70 px-3 text-sm text-foreground">
+                    <span className="truncate pr-3">
+                      {uploadFile ? uploadFile.name : "Select report image or PDF"}
+                    </span>
+                    <Upload className="h-4 w-4 text-primary" strokeWidth={1.8} />
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    Mobile camera capture is enabled for bedside report photos.
+                  </p>
+                  <button
+                    type="submit"
+                    disabled={!uploadFile || uploadDocumentMutation.isPending}
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.04] text-sm font-semibold text-foreground transition-colors hover:border-primary/30 disabled:opacity-60"
+                  >
+                    {uploadDocumentMutation.isPending ? "Uploading..." : "Upload Report"}
+                  </button>
+                </div>
+              </form>
+
               <form onSubmit={handleOrderStatusSubmit} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-primary/70">Update Order Status</p>
                 <div className="mt-3 grid grid-cols-1 gap-3">
@@ -1080,6 +1266,7 @@ export function PatientDetailWorkspace({ mode }: { mode: ClinicalRoleMode }) {
       updateStageMutation.isError ||
       createOrderMutation.isError ||
       createReferralMutation.isError ||
+      uploadDocumentMutation.isError ||
       inviteFamilyMutation.isError ||
       revokeFamilyMutation.isError ? (
         <div className="mt-4 rounded-2xl border border-amber/20 bg-amber/[0.08] p-3 text-sm text-amber-100">

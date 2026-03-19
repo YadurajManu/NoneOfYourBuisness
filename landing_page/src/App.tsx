@@ -34,6 +34,8 @@ import PatientDashboardPage from "@/portal/pages/patient/PatientDashboardPage";
 import PatientFamilyAccessPage from "@/portal/pages/patient/PatientFamilyAccessPage";
 import FamilyDashboardPage from "@/portal/pages/family/FamilyDashboardPage";
 import FamilyQuestionsPage from "@/portal/pages/family/FamilyQuestionsPage";
+import PortalHelpPage from "@/portal/pages/help/PortalHelpPage";
+import PortalProfilePage from "@/portal/pages/profile/PortalProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -188,6 +190,24 @@ function AppRoutes() {
             element={
               <ProtectedRoute allow={["FAMILY_MEMBER"]}>
                 <FamilyQuestionsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/portal/help"
+            element={
+              <ProtectedRoute>
+                <PortalHelpPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/portal/profile"
+            element={
+              <ProtectedRoute>
+                <PortalProfilePage />
               </ProtectedRoute>
             }
           />

@@ -548,11 +548,13 @@ export default function DoctorCaseloadPage() {
                     <div className="mt-3 grid grid-cols-1 gap-3">
                       <label className="flex h-11 cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-background/70 px-3 text-sm text-foreground">
                         <span className="truncate">
-                          {uploadFile ? uploadFile.name : "Select file to upload"}
+                          {uploadFile ? uploadFile.name : "Upload report photo or PDF"}
                         </span>
                         <Upload className="h-4 w-4 text-primary" strokeWidth={1.8} />
                         <input
                           type="file"
+                          accept="image/*,application/pdf"
+                          capture="environment"
                           className="hidden"
                           onChange={(e) => {
                             const file = e.target.files?.[0] || null;
@@ -560,6 +562,9 @@ export default function DoctorCaseloadPage() {
                           }}
                         />
                       </label>
+                      <p className="text-xs text-muted-foreground">
+                        Mobile: tap to open camera directly for bedside report photos.
+                      </p>
                       <button
                         type="submit"
                         disabled={!uploadFile || uploadMutation.isPending}

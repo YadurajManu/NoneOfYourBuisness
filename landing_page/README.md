@@ -22,6 +22,7 @@ VITE_DEV_API_PROXY=http://localhost:3100
 Notes:
 - `VITE_API_BASE_URL=/api` works for same-domain reverse proxy or Vite dev proxy.
 - For separate API domain, set `VITE_API_BASE_URL` to full backend URL, for example `https://api.yourdomain.com/api`.
+- For your Cloudflare Tunnel setup use: `VITE_API_BASE_URL=https://arogyaapi.yaduraj.me/api`.
 - `VITE_DEV_API_PROXY` should match your local backend port.
 
 ## Run

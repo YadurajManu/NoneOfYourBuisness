@@ -36,6 +36,8 @@ landing_page/src
 │       ├── patient/
 │       │   ├── PatientDashboardPage.tsx
 │       │   └── PatientFamilyAccessPage.tsx
+│       ├── help/
+│       │   └── PortalHelpPage.tsx
 │       └── family/
 │           ├── FamilyDashboardPage.tsx
 │           └── FamilyQuestionsPage.tsx
@@ -56,6 +58,7 @@ landing_page/src
 Defined in `src/App.tsx`:
 - Public marketing routes remain outside `/portal/*`.
 - Portal auth route: `/portal/login`
+- Shared authenticated route: `/portal/help`
 - Protected role routes:
   - admin: `/portal/admin*`
   - doctor: `/portal/doctor*`
@@ -95,6 +98,9 @@ Defined in `src/App.tsx`:
 - Family:
   - patient list + patient detail + notifications connected
   - question submission + thread history + notification preference updates connected
+  - consent-level report upload/download from selected patient context connected
+- Shared:
+  - role-aware Help/Workflow guide page (`/portal/help`) connected to shell navigation
 
 ## 6) Next UI Structure Expansion
 

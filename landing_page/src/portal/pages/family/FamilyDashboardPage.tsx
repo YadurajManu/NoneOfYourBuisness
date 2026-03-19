@@ -5,6 +5,7 @@ import {
   BellRing,
   Check,
   Clock3,
+  FilePlus2,
   Mail,
   Phone,
   ShieldCheck,
@@ -14,9 +15,11 @@ import {
 import {
   getFamilyNotificationPreferences,
   getFamilyPatientView,
+  downloadFamilyPatientDocument,
   listFamilyNotifications,
   listFamilyPatients,
   markFamilyNotificationRead,
+  uploadFamilyPatientDocument,
   updateFamilyNotificationPreferences,
 } from "@/lib/api/client";
 import { Panel } from "@/portal/panel";
@@ -41,6 +44,18 @@ type FamilyNotification = {
 
 function asArray<T = Record<string, unknown>>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+function asStringArray(value: unknown) {
+  return Array.isArray(value)
+    ? value
+        .map((item) => String(item || "").trim())
+        .filter((item) => item.length > 0)
+    : [];
 }
 
 function getPatientName(resource: unknown, fallbackId: string) {
@@ -74,6 +89,8 @@ function relativeTime(value: string) {
 export default function FamilyDashboardPage() {
   const qc = useQueryClient();
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [reportFile, setReportFile] = useState<File | null>(null);
+  const [downloadDocumentId, setDownloadDocumentId] = useState<string | null>(null);
 
   const [inAppEnabled, setInAppEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(false);
@@ -145,6 +162,13 @@ export default function FamilyDashboardPage() {
     const kind = item.type.toUpperCase();
     return kind.includes("ALERT") || kind.includes("OVERDUE") || kind.includes("ESCALATED");
   }).length;
+  const expiringSoonCount = grants.filter((grant) => {
+    if (!grant.expiresAt) return false;
+    const expires = new Date(grant.expiresAt);
+    const now = new Date();
+    const diff = expires.getTime() - now.getTime();
+    return diff > 0 && diff <= 1000 * 60 * 60 * 24 * 14;
+  }).length;
 
   useEffect(() => {
     const source = (preferencesQuery.data || {}) as Record<string, unknown>;
@@ -174,10 +198,56 @@ export default function FamilyDashboardPage() {
     },
   });
 
+  const uploadDocumentMutation = useMutation({
+    mutationFn: () =>
+      uploadFamilyPatientDocument(selectedPatientId as string, reportFile as File),
+    onSuccess: () => {
+      setReportFile(null);
+      qc.invalidateQueries({ queryKey: ["family", "patient-view", selectedPatientId] });
+      qc.invalidateQueries({ queryKey: ["family", "notifications"] });
+    },
+  });
+
   const selectedGrant = grants.find((grant) => grant.patientId === selectedPatientId) || null;
   const patientView = (patientViewQuery.data || {}) as Record<string, unknown>;
   const selectedPatient = (patientView.patient || {}) as Record<string, unknown>;
-  const selectedPatientDocuments = asArray<Record<string, unknown>>(selectedPatient.documents).slice(0, 6);
+  const selectedPatientDocuments = asArray<Record<string, unknown>>(selectedPatient.documents)
+    .slice(0, 6)
+    .map((row) => {
+      const metadata = asRecord(row.metadata);
+      const structured = asRecord(metadata.structuredExtraction);
+      return {
+        id: String(row.id || ""),
+        type: String(row.type || "Document"),
+        status: String(row.status || "UNKNOWN"),
+        createdAt: String(row.createdAt || ""),
+        summary: String(structured.summary || ""),
+        diagnoses: asStringArray(structured.diagnoses).slice(0, 2),
+      };
+    });
+
+  async function handleOpenDocument(documentId: string) {
+    if (!selectedPatientId) return;
+    setDownloadDocumentId(documentId);
+    try {
+      const file = await downloadFamilyPatientDocument(selectedPatientId, documentId);
+      const blobUrl = URL.createObjectURL(file.blob);
+      const opened = window.open(blobUrl, "_blank", "noopener,noreferrer");
+
+      if (!opened) {
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = file.fileName;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.click();
+      }
+
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } finally {
+      setDownloadDocumentId(null);
+    }
+  }
 
   return (
     <PortalShell title="Family Dashboard">
@@ -186,37 +256,29 @@ export default function FamilyDashboardPage() {
         eyebrow="Consent-Aware Access"
         description="Track shared patient updates, stay aligned with care teams, and control your notification channels from one place."
       >
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
               { label: "Linked Patients", value: grants.length, note: "Active access grants", icon: Users },
               { label: "Unread Alerts", value: unreadCount, note: "Needs review", icon: BellRing },
               { label: "High Priority", value: highPriorityCount, note: "Escalation-type updates", icon: ShieldCheck },
-              {
-                label: "Expiring Soon",
-                value: grants.filter((grant) => {
-                  if (!grant.expiresAt) return false;
-                  const expires = new Date(grant.expiresAt);
-                  const now = new Date();
-                  const diff = expires.getTime() - now.getTime();
-                  return diff > 0 && diff <= 1000 * 60 * 60 * 24 * 14;
-                }).length,
-                note: "Within 14 days",
-                icon: Clock3,
-              },
+              { label: "Expiring Soon", value: expiringSoonCount, note: "Within 14 days", icon: Clock3 },
             ].map((metric) => (
-              <div key={metric.label} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+              <article
+                key={metric.label}
+                className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{metric.label}</p>
                     <p className="mt-2 font-display text-4xl font-bold tracking-[-0.05em] text-foreground">{metric.value}</p>
                   </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                     <metric.icon className="h-4 w-4" strokeWidth={1.8} />
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">{metric.note}</p>
-              </div>
+              </article>
             ))}
           </div>
 
@@ -225,52 +287,63 @@ export default function FamilyDashboardPage() {
               e.preventDefault();
               savePreferencesMutation.mutate();
             }}
-            className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4"
+            className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4 sm:p-5"
           >
-            <p className="text-xs uppercase tracking-[0.2em] text-primary/70">Notification channels</p>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {[
-                { label: "In-app", checked: inAppEnabled, setChecked: setInAppEnabled, icon: Bell },
-                { label: "Email", checked: emailEnabled, setChecked: setEmailEnabled, icon: Mail },
-                { label: "SMS", checked: smsEnabled, setChecked: setSmsEnabled, icon: Phone },
-              ].map((channel) => (
-                <label key={channel.label} className="flex items-center justify-between rounded-xl border border-white/10 bg-background/50 px-3 py-2 text-sm text-foreground">
-                  <span className="flex items-center gap-2">
-                    <channel.icon className="h-4 w-4 text-primary" strokeWidth={1.8} />
-                    {channel.label}
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={channel.checked}
-                    onChange={(e) => channel.setChecked(e.target.checked)}
-                    className="h-4 w-4 rounded border-white/30 bg-background"
-                  />
-                </label>
-              ))}
-            </div>
+            <p className="text-xs uppercase tracking-[0.2em] text-primary/70">Notification Channels</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Choose where family updates should arrive.
+            </p>
 
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <input
-                value={emailAddress}
-                onChange={(e) => setEmailAddress(e.target.value)}
-                placeholder="Notification email"
-                className="h-10 rounded-xl border border-white/10 bg-background/70 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40"
-              />
-              <input
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="SMS number"
-                className="h-10 rounded-xl border border-white/10 bg-background/70 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40"
-              />
-            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+              <div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {[
+                    { label: "In-app", checked: inAppEnabled, setChecked: setInAppEnabled, icon: Bell },
+                    { label: "Email", checked: emailEnabled, setChecked: setEmailEnabled, icon: Mail },
+                    { label: "SMS", checked: smsEnabled, setChecked: setSmsEnabled, icon: Phone },
+                  ].map((channel) => (
+                    <label
+                      key={channel.label}
+                      className="flex min-h-[52px] items-center justify-between rounded-xl border border-white/10 bg-background/55 px-3 py-2 text-sm text-foreground"
+                    >
+                      <span className="flex items-center gap-2">
+                        <channel.icon className="h-4 w-4 text-primary" strokeWidth={1.8} />
+                        {channel.label}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={channel.checked}
+                        onChange={(e) => channel.setChecked(e.target.checked)}
+                        className="h-4 w-4 rounded border-white/30 bg-background"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              disabled={savePreferencesMutation.isPending}
-              className="mt-3 h-10 rounded-xl border border-primary/30 bg-primary/10 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
-            >
-              {savePreferencesMutation.isPending ? "Saving..." : "Save Preferences"}
-            </button>
+              <div className="space-y-3">
+                <input
+                  value={emailAddress}
+                  onChange={(e) => setEmailAddress(e.target.value)}
+                  placeholder="Notification email"
+                  className="h-11 w-full rounded-xl border border-white/10 bg-background/70 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40"
+                />
+                <input
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="SMS number"
+                  className="h-11 w-full rounded-xl border border-white/10 bg-background/70 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40"
+                />
+
+                <button
+                  type="submit"
+                  disabled={savePreferencesMutation.isPending}
+                  className="h-11 w-full rounded-xl border border-primary/30 bg-primary/10 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
+                >
+                  {savePreferencesMutation.isPending ? "Saving..." : "Save Preferences"}
+                </button>
+              </div>
+            </div>
           </form>
         </div>
       </Panel>
@@ -371,16 +444,68 @@ export default function FamilyDashboardPage() {
 
                 <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
                   <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Recent documents</p>
+                  {selectedGrant && selectedGrant.accessLevel !== "VIEW_ONLY" ? (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!reportFile || !selectedPatientId) return;
+                        uploadDocumentMutation.mutate();
+                      }}
+                      className="mt-3 rounded-xl border border-white/10 bg-background/60 p-3"
+                    >
+                      <label className="flex h-10 cursor-pointer items-center justify-between rounded-lg border border-white/10 bg-background/70 px-3 text-sm text-foreground">
+                        <span className="truncate pr-3">{reportFile ? reportFile.name : "Upload report photo or PDF"}</span>
+                        <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 text-[11px] text-primary">
+                          <FilePlus2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+                          Browse
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          capture="environment"
+                          onChange={(e) => setReportFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="submit"
+                        disabled={!reportFile || uploadDocumentMutation.isPending}
+                        className="mt-2 h-9 rounded-lg border border-primary/30 bg-primary/10 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
+                      >
+                        {uploadDocumentMutation.isPending ? "Uploading..." : "Upload to Shared Timeline"}
+                      </button>
+                    </form>
+                  ) : null}
                   <div className="mt-3 space-y-2">
                     {selectedPatientDocuments.length === 0 ? (
                       <p className="text-sm text-muted-foreground">No documents shared yet.</p>
                     ) : (
                       selectedPatientDocuments.map((document) => (
                         <div key={String(document.id)} className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
-                          <p className="text-sm text-foreground/90">{String(document.type || "Document")}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {String(document.status || "UNKNOWN")} • {relativeTime(String(document.createdAt || ""))}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm text-foreground/90">{document.type}</p>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDocument(document.id)}
+                              disabled={!document.id || downloadDocumentId === document.id}
+                              className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1 text-[11px] text-foreground transition-colors hover:border-primary/35 hover:text-primary disabled:opacity-60"
+                            >
+                              {downloadDocumentId === document.id ? "Opening..." : "Open"}
+                            </button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{document.status} • {relativeTime(document.createdAt)}</p>
+                          {document.summary ? (
+                            <p className="mt-1 text-xs text-muted-foreground">{document.summary}</p>
+                          ) : null}
+                          {document.diagnoses.length > 0 ? (
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              {document.diagnoses.map((item) => (
+                                <span key={`${document.id}-dx-${item}`} className="rounded-full border border-primary/25 bg-primary/[0.1] px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-primary/90">
+                                  Dx: {item}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
                         </div>
                       ))
                     )}
@@ -439,6 +564,7 @@ export default function FamilyDashboardPage() {
       {patientsQuery.isError ? <p className="mt-4 text-secondary">Unable to load family patients.</p> : null}
       {notificationsQuery.isError ? <p className="mt-2 text-secondary">Unable to load notifications.</p> : null}
       {savePreferencesMutation.isError ? <p className="mt-2 text-secondary">Unable to save preferences.</p> : null}
+      {uploadDocumentMutation.isError ? <p className="mt-2 text-secondary">Unable to upload family report.</p> : null}
     </PortalShell>
   );
 }

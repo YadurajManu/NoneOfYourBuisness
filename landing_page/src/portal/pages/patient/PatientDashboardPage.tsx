@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, FilePlus2, FileText, ShieldAlert, Timer } from "lucide-react";
 import {
+  downloadPatientPortalDocument,
   getPatientPortalDocuments,
   getPatientPortalMe,
   getPatientPortalTimeline,
@@ -12,6 +13,18 @@ import { PortalShell } from "@/portal/portal-shell";
 
 function asArray<T = Record<string, unknown>>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+function asStringArray(value: unknown) {
+  return Array.isArray(value)
+    ? value
+        .map((item) => String(item || "").trim())
+        .filter((item) => item.length > 0)
+    : [];
 }
 
 function getPatientName(resource: unknown, fallbackId: string) {
@@ -32,6 +45,7 @@ function getPatientName(resource: unknown, fallbackId: string) {
 export default function PatientDashboardPage() {
   const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
+  const [downloadDocumentId, setDownloadDocumentId] = useState<string | null>(null);
 
   const meQuery = useQuery({ queryKey: ["patient", "me"], queryFn: getPatientPortalMe });
   const timelineQuery = useQuery({ queryKey: ["patient", "timeline"], queryFn: getPatientPortalTimeline });
@@ -59,6 +73,10 @@ export default function PatientDashboardPage() {
       type: String(row.type || "DOCUMENT"),
       status: String(row.status || "PENDING"),
       createdAt: String(row.createdAt || ""),
+      summary: String(asRecord(asRecord(row.metadata).structuredExtraction).summary || ""),
+      diagnoses: asStringArray(asRecord(asRecord(row.metadata).structuredExtraction).diagnoses).slice(0, 2),
+      criticalFlags: asStringArray(asRecord(asRecord(row.metadata).structuredExtraction).criticalFlags).slice(0, 1),
+      extractionEngine: String(asRecord(row.metadata).extractionEngine || ""),
     }));
   }, [documentsQuery.data]);
 
@@ -75,6 +93,28 @@ export default function PatientDashboardPage() {
     e.preventDefault();
     if (!file) return;
     uploadMutation.mutate();
+  }
+
+  async function handleOpenDocument(documentId: string) {
+    setDownloadDocumentId(documentId);
+    try {
+      const filePayload = await downloadPatientPortalDocument(documentId);
+      const blobUrl = URL.createObjectURL(filePayload.blob);
+      const opened = window.open(blobUrl, "_blank", "noopener,noreferrer");
+
+      if (!opened) {
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filePayload.fileName;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.click();
+      }
+
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } finally {
+      setDownloadDocumentId(null);
+    }
   }
 
   return (
@@ -183,11 +223,16 @@ export default function PatientDashboardPage() {
               </span>
               <input
                 type="file"
+                accept="image/*,application/pdf"
+                capture="environment"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
                 className="hidden"
                 required
               />
             </label>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Mobile camera capture is enabled for report photos.
+            </p>
 
             <button
               type="submit"
@@ -209,19 +254,51 @@ export default function PatientDashboardPage() {
               <div key={document.id} className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm text-foreground/90">{document.type}</p>
-                  <span
-                    className={`rounded-full border px-2 py-1 text-[11px] uppercase tracking-[0.12em] ${
-                      document.status === "COMPLETED"
-                        ? "border-emerald-400/20 bg-emerald-400/[0.1] text-emerald-200"
-                        : document.status === "FAILED"
-                          ? "border-rose-400/20 bg-rose-400/[0.1] text-rose-200"
-                          : "border-amber/25 bg-amber/[0.1] text-amber/90"
-                    }`}
-                  >
-                    {document.status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDocument(document.id)}
+                      disabled={downloadDocumentId === document.id}
+                      className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1 text-[11px] text-foreground transition-colors hover:border-primary/35 hover:text-primary disabled:opacity-60"
+                    >
+                      {downloadDocumentId === document.id ? "Opening..." : "Open"}
+                    </button>
+                    <span
+                      className={`rounded-full border px-2 py-1 text-[11px] uppercase tracking-[0.12em] ${
+                        document.status === "COMPLETED"
+                          ? "border-emerald-400/20 bg-emerald-400/[0.1] text-emerald-200"
+                          : document.status === "FAILED"
+                            ? "border-rose-400/20 bg-rose-400/[0.1] text-rose-200"
+                            : "border-amber/25 bg-amber/[0.1] text-amber/90"
+                      }`}
+                    >
+                      {document.status}
+                    </span>
+                  </div>
                 </div>
+                {document.summary ? (
+                  <p className="mt-1 text-xs text-muted-foreground">{document.summary}</p>
+                ) : null}
+                {document.diagnoses.length > 0 || document.criticalFlags.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {document.diagnoses.map((item) => (
+                      <span key={`${document.id}-dx-${item}`} className="rounded-full border border-primary/25 bg-primary/[0.1] px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-primary/90">
+                        Dx: {item}
+                      </span>
+                    ))}
+                    {document.criticalFlags.map((item) => (
+                      <span key={`${document.id}-flag-${item}`} className="rounded-full border border-amber/25 bg-amber/[0.08] px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-amber/90">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <p className="mt-1 text-xs text-muted-foreground">{new Date(document.createdAt).toLocaleString()}</p>
+                {document.extractionEngine ? (
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                    {document.extractionEngine}
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>

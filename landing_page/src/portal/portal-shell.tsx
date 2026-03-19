@@ -2,20 +2,22 @@ import type { ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import {
   ActivitySquare,
+  BookOpenText,
   BriefcaseMedical,
   ChevronRight,
   HeartHandshake,
   LayoutDashboard,
   ListChecks,
-  ShieldCheck,
   Sparkles,
   Stethoscope,
+  UserCircle2,
   UserRound,
   UserRoundCog,
   Users,
   type LucideIcon,
 } from "lucide-react";
 import type { UserRole } from "@/lib/api/types";
+import { resolveApiAssetUrl } from "@/lib/api/client";
 import { useAuth } from "@/portal/auth-context";
 
 type NavItem = {
@@ -58,12 +60,34 @@ const roleLabels: Record<UserRole, string> = {
   FAMILY_MEMBER: "Family Member",
 };
 
+const helpNavItem: NavItem = {
+  to: "/portal/help",
+  label: "Help",
+  hint: "Role guide and workflows",
+  icon: BookOpenText,
+};
+
+const profileNavItem: NavItem = {
+  to: "/portal/profile",
+  label: "Profile",
+  hint: "Photo and ID card",
+  icon: UserCircle2,
+};
+
 export function PortalShell({ title, children }: { title: string; children: ReactNode }) {
   const { user, signOut } = useAuth();
 
   if (!user) return null;
 
-  const items = navByRole[user.role] || [];
+  const items = [...(navByRole[user.role] || []), profileNavItem, helpNavItem];
+  const avatarUrl = resolveApiAssetUrl(user.avatarUrl || "");
+  const initials = (user.displayName || user.email || "U")
+    .split(" ")
+    .map((part) => part.trim()[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background pt-20 text-foreground">
@@ -81,14 +105,25 @@ export function PortalShell({ title, children }: { title: string; children: Reac
           </Link>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 md:flex">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/12 text-primary">
-                <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />
-              </div>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={user.displayName || user.email}
+                  className="h-8 w-8 rounded-full border border-white/15 object-cover"
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-primary/12 text-[11px] font-semibold text-primary">
+                  {initials || "U"}
+                </div>
+              )}
               <div className="text-right">
                 <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground">
                   {roleLabels[user.role]}
                 </p>
-                <p className="max-w-[16rem] truncate text-xs text-foreground/80">{user.email}</p>
+                <p className="max-w-[16rem] truncate text-xs text-foreground/90">
+                  {user.displayName || user.email}
+                </p>
+                <p className="max-w-[16rem] truncate text-[11px] text-muted-foreground">{user.email}</p>
               </div>
             </div>
             <button

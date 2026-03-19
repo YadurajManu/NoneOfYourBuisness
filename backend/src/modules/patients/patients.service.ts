@@ -142,7 +142,10 @@ export class PatientsService {
           : {};
 
       const nextGiven =
-        firstName || (Array.isArray(existingPrimary.given) ? existingPrimary.given[0] : undefined);
+        firstName ||
+        (Array.isArray(existingPrimary.given)
+          ? existingPrimary.given[0]
+          : undefined);
       const nextFamily = lastName || existingPrimary.family;
 
       resource.name = [
@@ -180,7 +183,9 @@ export class PatientsService {
     ) {
       resource.address = [
         {
-          line: dto.addressLine1?.trim() ? [dto.addressLine1.trim()] : undefined,
+          line: dto.addressLine1?.trim()
+            ? [dto.addressLine1.trim()]
+            : undefined,
           city: dto.city?.trim() || undefined,
           state: dto.state?.trim() || undefined,
           postalCode: dto.postalCode?.trim() || undefined,
@@ -190,7 +195,11 @@ export class PatientsService {
     }
 
     if (dto.medicalRecordNumber?.trim()) {
-      this.upsertIdentifier(resource, MRN_IDENTIFIER_SYSTEM, dto.medicalRecordNumber.trim());
+      this.upsertIdentifier(
+        resource,
+        MRN_IDENTIFIER_SYSTEM,
+        dto.medicalRecordNumber.trim(),
+      );
     }
 
     const updated = await this.prisma.patient.update({
@@ -241,15 +250,27 @@ export class PatientsService {
     ]);
 
     if (nextPrimaryDoctorId && !doctor) {
-      throw new BadRequestException('Selected primary doctor is not active in organization');
+      throw new BadRequestException(
+        'Selected primary doctor is not active in organization',
+      );
     }
 
     if (nextSpecialistId && !specialist) {
-      throw new BadRequestException('Selected specialist is not active in organization');
+      throw new BadRequestException(
+        'Selected specialist is not active in organization',
+      );
     }
 
-    this.upsertExtension(resource, PRIMARY_DOCTOR_EXTENSION_URL, doctor?.id || null);
-    this.upsertExtension(resource, PREFERRED_SPECIALIST_EXTENSION_URL, specialist?.id || null);
+    this.upsertExtension(
+      resource,
+      PRIMARY_DOCTOR_EXTENSION_URL,
+      doctor?.id || null,
+    );
+    this.upsertExtension(
+      resource,
+      PREFERRED_SPECIALIST_EXTENSION_URL,
+      specialist?.id || null,
+    );
 
     const createInitialTask = Boolean(dto.createInitialTask);
     const createReferral = Boolean(dto.createReferral);
@@ -305,7 +326,8 @@ export class PatientsService {
             priority: ClinicalOrderPriority.MEDIUM,
             status: ClinicalOrderStatus.ACTIVE,
             title: `Specialist consult for ${this.getPatientDisplayName(resource, patient.id)}`,
-            description: 'Created from admin onboarding to bootstrap specialist workflow.',
+            description:
+              'Created from admin onboarding to bootstrap specialist workflow.',
           },
           select: { id: true },
         });
@@ -455,7 +477,9 @@ export class PatientsService {
     system: 'email' | 'phone',
     value: string,
   ) {
-    const current = Array.isArray(resource.telecom) ? [...resource.telecom] : [];
+    const current = Array.isArray(resource.telecom)
+      ? [...resource.telecom]
+      : [];
     const idx = current.findIndex((row) => row.system === system);
     const entry = {
       ...(idx >= 0 ? current[idx] : {}),
@@ -477,7 +501,9 @@ export class PatientsService {
     system: string,
     value: string,
   ) {
-    const current = Array.isArray(resource.identifier) ? [...resource.identifier] : [];
+    const current = Array.isArray(resource.identifier)
+      ? [...resource.identifier]
+      : [];
     const idx = current.findIndex((row) => row.system === system);
     const entry = {
       ...(idx >= 0 ? current[idx] : {}),
@@ -499,7 +525,9 @@ export class PatientsService {
     url: string,
     value: string | null,
   ) {
-    const current = Array.isArray(resource.extension) ? [...resource.extension] : [];
+    const current = Array.isArray(resource.extension)
+      ? [...resource.extension]
+      : [];
     const idx = current.findIndex((row) => String(row.url || '') === url);
 
     if (!value) {
@@ -523,7 +551,10 @@ export class PatientsService {
     resource.extension = current.length > 0 ? current : undefined;
   }
 
-  private getPatientDisplayName(resource: FhirPatientResource, fallbackId: string) {
+  private getPatientDisplayName(
+    resource: FhirPatientResource,
+    fallbackId: string,
+  ) {
     const primary = Array.isArray(resource.name) ? resource.name[0] : undefined;
     if (!primary) {
       return `Patient ${fallbackId.slice(0, 8)}`;
@@ -533,8 +564,11 @@ export class PatientsService {
       return primary.text.trim();
     }
 
-    const given = Array.isArray(primary.given) ? primary.given.join(' ').trim() : '';
-    const family = typeof primary.family === 'string' ? primary.family.trim() : '';
+    const given = Array.isArray(primary.given)
+      ? primary.given.join(' ').trim()
+      : '';
+    const family =
+      typeof primary.family === 'string' ? primary.family.trim() : '';
     const fullName = [given, family].filter(Boolean).join(' ').trim();
     return fullName || `Patient ${fallbackId.slice(0, 8)}`;
   }

@@ -834,7 +834,10 @@ export class ClinicalWorkflowsService {
     }
 
     if (dto.assignedToUserId) {
-      await this.ensureActiveSpecialistInOrganization(dto.assignedToUserId, orgId);
+      await this.ensureActiveSpecialistInOrganization(
+        dto.assignedToUserId,
+        orgId,
+      );
     }
 
     const dueAt = this.parseOptionalDate(dto.dueAt, 'dueAt');
@@ -1049,7 +1052,9 @@ export class ClinicalWorkflowsService {
     }
 
     if (referral.assignedToUserId && referral.assignedToUserId !== actor.id) {
-      throw new BadRequestException('Referral is already assigned to another specialist');
+      throw new BadRequestException(
+        'Referral is already assigned to another specialist',
+      );
     }
 
     const now = new Date();
@@ -1262,7 +1267,10 @@ export class ClinicalWorkflowsService {
     }
   }
 
-  private async ensureActiveSpecialistInOrganization(userId: string, orgId: string) {
+  private async ensureActiveSpecialistInOrganization(
+    userId: string,
+    orgId: string,
+  ) {
     const specialist = await this.prisma.user.findFirst({
       where: {
         id: userId,

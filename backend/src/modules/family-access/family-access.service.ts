@@ -491,6 +491,7 @@ export class FamilyAccessService {
             id: true,
             type: true,
             status: true,
+            metadata: true,
             createdAt: true,
             updatedAt: true,
           },
@@ -517,6 +518,42 @@ export class FamilyAccessService {
       access,
       patient,
     };
+  }
+
+  async assertFamilyDocumentAccess(
+    orgId: string,
+    familyUserId: string,
+    patientId: string,
+    mode: 'VIEW' | 'UPLOAD',
+  ) {
+    const access = await this.prisma.patientFamilyAccess.findFirst({
+      where: {
+        patientId,
+        familyUserId,
+        status: 'ACTIVE',
+        patient: { organizationId: orgId },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      select: {
+        id: true,
+        accessLevel: true,
+      },
+    });
+
+    if (!access) {
+      throw new ForbiddenException('No active family access for this patient');
+    }
+
+    if (
+      mode === 'UPLOAD' &&
+      access.accessLevel === FamilyAccessLevel.VIEW_ONLY
+    ) {
+      throw new ForbiddenException(
+        'Current family access level does not allow report uploads',
+      );
+    }
+
+    return access;
   }
 
   async listMyNotifications(orgId: string, familyUserId: string) {
@@ -713,8 +750,8 @@ export class FamilyAccessService {
     }
 
     if (!user) {
-      throw new NotFoundException(
-        'Family member account not found in this organization',
+      throw new BadRequestException(
+        'Family member account not found in this organization. Create a FAMILY_MEMBER user first, then send invite.',
       );
     }
 

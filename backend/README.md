@@ -29,6 +29,7 @@ Production-oriented NestJS backend for multi-tenant patient lifecycle management
 - `leads`: public lead intake + admin lead operations
 - `admin`: org user management + audit feed
 - `patient-portal`: patient self-service APIs
+- OCR + structured extraction: image/PDF reports become searchable clinical metadata
 
 ## Prerequisites
 - Node.js 20+
@@ -47,6 +48,7 @@ PORT=3100
 JWT_SECRET=replace_with_strong_secret
 ACCESS_TOKEN_EXPIRES_IN=15m
 REFRESH_TOKEN_EXPIRES_IN_DAYS=14
+PUBLIC_API_BASE_URL=https://arogyaapi.yourdomain.com
 COOKIE_DOMAIN=
 COOKIE_SAME_SITE=lax
 CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
@@ -56,6 +58,13 @@ ENABLE_PUBLIC_LEADS=true
 LLM_ENDPOINT=http://localhost:1234/v1
 LLM_MODEL=local-model
 STORAGE_PATH=./data/uploads
+DOCUMENT_STORAGE_DRIVER=local
+DOCUMENT_STORAGE_LOCAL_DIR=./data/uploads
+DOCUMENT_UPLOAD_MAX_MB=20
+DOCUMENT_OCR_ENABLED=true
+DOCUMENT_OCR_LANGUAGE=eng
+DOCUMENT_OCR_TIMEOUT_MS=45000
+DOCUMENT_EXTRACTION_MAX_TEXT_CHARS=16000
 ENCRYPTION_KEY=32_character_key_placeholder
 NOTIFY_AUTO_DISPATCH=true
 NOTIFY_MAX_ATTEMPTS=5
@@ -119,4 +128,14 @@ npm run test:e2e
 - Keep migrations in deployment pipeline.
 - Use strong secrets manager for `JWT_SECRET` and webhook tokens.
 - Configure CORS and cookie domain/same-site before hosted use.
+- Set `PUBLIC_API_BASE_URL` so server-generated asset URLs (avatars) resolve correctly on hosted frontend.
 - Move upload storage to persistent secure storage in production.
+- Document storage abstraction now supports local driver with cloud-driver-ready config (`DOCUMENT_STORAGE_DRIVER`).
+- OCR/extraction controls:
+  - `DOCUMENT_OCR_ENABLED` toggle
+  - `DOCUMENT_OCR_LANGUAGE` (default `eng`)
+  - `DOCUMENT_OCR_TIMEOUT_MS`
+  - `DOCUMENT_EXTRACTION_MAX_TEXT_CHARS`
+
+## Cloudflare Tunnel Runbook
+- `/Users/sujeetkumarsingh/Desktop/MedLifeCycle/documentation/cloudflare_tunnel_deployment_guide.md`

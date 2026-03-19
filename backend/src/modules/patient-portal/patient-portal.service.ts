@@ -48,6 +48,15 @@ export class PatientPortalService {
     return this.documentsService.create(orgId, context.patient.id, file);
   }
 
+  async getDocumentDownload(orgId: string, userId: string, documentId: string) {
+    const context = await this.resolvePatientContext(orgId, userId);
+    return this.documentsService.getDocumentDownload(
+      orgId,
+      documentId,
+      context.patient.id,
+    );
+  }
+
   async listFamilyAccess(orgId: string, userId: string) {
     const context = await this.resolvePatientContext(orgId, userId);
     return this.familyAccessService.listPatientAccessGrants(
@@ -95,12 +104,20 @@ export class PatientPortalService {
     body: RespondFamilyAccessInviteDto,
   ) {
     await this.resolvePatientContext(orgId, userId);
-    return this.familyAccessService.respondToInvite(orgId, userId, inviteId, body);
+    return this.familyAccessService.respondToInvite(
+      orgId,
+      userId,
+      inviteId,
+      body,
+    );
   }
 
   async listFamilyAccessAudit(orgId: string, userId: string) {
     await this.resolvePatientContext(orgId, userId);
-    return this.familyAccessService.listPatientAuditForPatientUser(orgId, userId);
+    return this.familyAccessService.listPatientAuditForPatientUser(
+      orgId,
+      userId,
+    );
   }
 
   private async resolvePatientContext(orgId: string, userId: string) {

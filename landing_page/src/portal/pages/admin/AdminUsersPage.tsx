@@ -7,11 +7,11 @@ import {
   Stethoscope,
   UserPlus2,
   Users2,
-  UserSquare2,
 } from "lucide-react";
 import {
   createAdminUser,
   listAdminUsers,
+  resolveApiAssetUrl,
   setAdminUserSuspension,
   updateAdminUserRole,
 } from "@/lib/api/client";
@@ -56,6 +56,16 @@ function formatRole(role: string) {
   return role.replace("_", " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function initials(nameOrEmail: string) {
+  return nameOrEmail
+    .split(/[ @._-]+/)
+    .map((part) => part.trim()[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 export default function AdminUsersPage() {
   const qc = useQueryClient();
   const { user: authUser } = useAuth();
@@ -64,6 +74,7 @@ export default function AdminUsersPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("DOCTOR");
   const [patientName, setPatientName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const users = useQuery({ queryKey: ["admin", "users"], queryFn: listAdminUsers });
@@ -75,12 +86,14 @@ export default function AdminUsersPage() {
         password,
         role,
         patientName: role === "PATIENT" ? patientName : undefined,
+        displayName: displayName.trim() || undefined,
       }),
     onSuccess: () => {
       setEmail("");
       setPassword("");
       setRole("DOCTOR");
       setPatientName("");
+      setDisplayName("");
       setError(null);
       qc.invalidateQueries({ queryKey: ["admin", "users"] });
     },
@@ -281,10 +294,16 @@ export default function AdminUsersPage() {
                 />
               </label>
             ) : (
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Experience</p>
-                <p className="mt-2 text-sm leading-6 text-foreground/80">{roleConfig[role].hint}</p>
-              </div>
+              <label className="block">
+                <span className="mb-2 block text-xs uppercase tracking-[0.2em] text-muted-foreground">Display name (optional)</span>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="How this user appears in portal"
+                  className="h-12 w-full rounded-2xl border border-white/10 bg-background/70 px-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                />
+              </label>
             )}
 
             <div className="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -320,14 +339,17 @@ export default function AdminUsersPage() {
           {rows.map((typed) => {
             const isSelf = typed.id === authUser?.id;
             const suspended = Boolean(typed.isSuspended);
+            const display = String(typed.displayName || typed.email || "");
+            const avatarUrl = resolveApiAssetUrl(String(typed.avatarUrl || ""));
 
             return (
               <div key={typed.id as string} className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate font-display text-lg font-semibold tracking-[-0.02em] text-foreground">
-                      {typed.email as string}
+                      {display}
                     </p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">{typed.email as string}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                         {formatRole(String(typed.role))}
@@ -348,9 +370,17 @@ export default function AdminUsersPage() {
                       ) : null}
                     </div>
                   </div>
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-muted-foreground">
-                    <UserSquare2 className="h-4 w-4" strokeWidth={1.8} />
-                  </div>
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={display}
+                      className="h-10 w-10 shrink-0 rounded-2xl border border-white/10 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-muted-foreground">
+                      <span className="text-xs font-semibold">{initials(display || String(typed.email || "U"))}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 gap-3">
@@ -403,18 +433,29 @@ export default function AdminUsersPage() {
               {rows.map((typed) => {
                 const isSelf = typed.id === authUser?.id;
                 const suspended = Boolean(typed.isSuspended);
+                const display = String(typed.displayName || typed.email || "");
+                const avatarUrl = resolveApiAssetUrl(String(typed.avatarUrl || ""));
 
                 return (
                   <tr key={typed.id as string} className="border-t border-white/6 bg-white/[0.015]">
                     <td className="px-5 py-4 align-top">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-primary">
-                          <Users2 className="h-5 w-5" strokeWidth={1.8} />
-                        </div>
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt={display}
+                            className="h-12 w-12 shrink-0 rounded-2xl border border-white/10 object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-primary">
+                            <span className="text-sm font-semibold">{initials(display || String(typed.email || "U"))}</span>
+                          </div>
+                        )}
                         <div>
                           <p className="font-display text-base font-semibold tracking-[-0.02em] text-foreground">
-                            {typed.email as string}
+                            {display}
                           </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{typed.email as string}</p>
                           <div className="mt-2 flex flex-wrap gap-2">
                             {isSelf ? (
                               <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-medium text-foreground/80">

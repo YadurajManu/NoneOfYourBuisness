@@ -12,6 +12,8 @@ export interface AuthUser {
   orgId: string;
   organization: string;
   patientProfileId?: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface AuthResponse {

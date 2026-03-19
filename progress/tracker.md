@@ -19,6 +19,8 @@ Status owner: engineering implementation snapshot
 - Milestone C (specialist/family operational screens): **done**
 - Milestone D (patient dashboard + consent controls): **done**
 - Production hardening phase (workflow depth + integrations + observability): **in progress**
+- OCR + structured report intelligence: **implemented baseline**
+- In-app role help center (`/portal/help`): **implemented**
 
 ## 2) What Is Implemented (Code Truth)
 
@@ -51,6 +53,10 @@ Status owner: engineering implementation snapshot
 - Clinical platform modules:
   - patient lifecycle (10-stage transitions + blocker checks + transition audit)
   - documents upload/processing
+  - photo/PDF report ingestion support + document download endpoints (role-scoped)
+  - validated upload policy (type + size limits) and storage-driver abstraction (`DOCUMENT_STORAGE_DRIVER`)
+  - OCR for image reports (`tesseract.js`) + structured clinical extraction (diagnoses/medications/vitals/labs/recommendations/critical flags)
+  - searchable report metadata persisted in document records (`searchableText`, `structuredExtraction`, `extractionEngine`)
   - AI query + summary
   - family consent access + notifications + SSE stream
   - family invitation workflow with patient approval/rejection endpoints
@@ -70,6 +76,7 @@ Status owner: engineering implementation snapshot
   - `/portal/specialist`, `/portal/specialist/caseload`, `/portal/specialist/patient/:patientId`
   - `/portal/patient`, `/portal/patient/family-access`
   - `/portal/family`, `/portal/family/questions`
+  - `/portal/help` (all authenticated roles)
 - Admin patient workspace includes:
   - intake form (FHIR profile create + optional stage set)
   - patient registry search/filter
@@ -85,6 +92,14 @@ Status owner: engineering implementation snapshot
   - pending invite consent inbox (approve/reject)
   - access level + expiry visibility
   - audit trail visibility
+- Mobile-friendly report upload now enabled in doctor/specialist/patient UX:
+  - upload accepts `image/*` + `application/pdf`
+  - camera capture prompt on supported phones
+  - open/download action for stored reports
+- Family role can now upload/download reports from consented patient context:
+  - upload endpoint restricted by active access level (`VIEW_ONLY` blocked)
+  - extracted report metadata visible in family/patient/doctor-specialist views
+- Patient detail workspace now includes document search over extracted clinical text/fields.
 - API client with:
   - `VITE_API_BASE_URL` support
   - `credentials: include`
@@ -152,3 +167,8 @@ Key new entities already in schema:
   - backend is running
   - frontend proxy target matches backend port
   - browser cookies are not blocked
+
+## 9) Operator Guide Artifact
+
+- Detailed role-by-role usage guide maintained at:
+  - `/Users/sujeetkumarsingh/Desktop/MedLifeCycle/documentation/portal_user_guide.md`

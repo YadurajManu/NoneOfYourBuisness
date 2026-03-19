@@ -304,11 +304,32 @@ Content-Type:
 Field:
 - file
 Description:
-- Upload patient document and trigger processing pipeline.
+- Upload patient report and trigger processing pipeline.
+- Supported primary formats for portal UX:
+  - `application/pdf`
+  - `image/*` (camera/gallery photos)
+- Upload policy:
+  - max size controlled by `DOCUMENT_UPLOAD_MAX_MB` (default 20 MB)
+  - unsupported types are rejected
+- Processing behavior:
+  - PDF -> text extraction (`pdf-parse`)
+  - image -> OCR extraction (`tesseract.js`, configurable)
+  - text formats -> direct parse
+  - structured clinical extraction runs on extracted text (diagnoses, meds, vitals, labs, recommendations, critical flags)
 
 GET /documents/patient/:patientId
 Description:
 - List documents for patient in caller organization.
+- Includes `metadata` with:
+  - `structuredExtraction`
+  - `searchableText` (truncated)
+  - `extractionEngine`
+  - `extractionMethod`
+  - `ocrConfidence` (when OCR was used)
+
+GET /documents/:documentId/download
+Description:
+- Download/open report file by document id (org and role scoped).
 
 =========================================
 6) AI MODULE
@@ -450,6 +471,25 @@ Role:
 - FAMILY_MEMBER
 Description:
 - Family-safe patient view (requires active access).
+- Document list in response includes extraction metadata for shared context.
+
+POST /family-access/patient/:patientId/documents/upload
+Role:
+- FAMILY_MEMBER
+Content-Type:
+- multipart/form-data
+Field:
+- file
+Description:
+- Upload report photo/PDF/text file for authorized patient.
+- Requires active family access.
+- `VIEW_ONLY` access level cannot upload.
+
+GET /family-access/patient/:patientId/documents/:documentId/download
+Role:
+- FAMILY_MEMBER
+Description:
+- Download/open authorized patient document (active family access required).
 
 GET /family-access/notifications
 Role:
@@ -529,6 +569,7 @@ Description:
 GET /patient/documents
 Description:
 - Document list for linked patient.
+- Includes extraction metadata for OCR/search-aware UX.
 
 POST /patient/documents/upload
 Content-Type:
@@ -536,7 +577,14 @@ Content-Type:
 Field:
 - file
 Description:
-- Upload document for linked patient.
+- Upload document for linked patient (including mobile camera photos and PDF reports).
+- Upload policy:
+  - max size controlled by `DOCUMENT_UPLOAD_MAX_MB` (default 20 MB)
+- Structured extraction runs automatically after upload.
+
+GET /patient/documents/:documentId/download
+Description:
+- Download/open linked patient document by id.
 
 GET /patient/family-access
 Description:

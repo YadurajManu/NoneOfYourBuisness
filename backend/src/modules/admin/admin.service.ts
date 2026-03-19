@@ -23,7 +23,8 @@ export class AdminService {
   }
 
   async createUser(actorUserId: string, dto: CreateAdminUserDto) {
-    const { organizationId: orgId } = await this.resolveAdminContext(actorUserId);
+    const { organizationId: orgId } =
+      await this.resolveAdminContext(actorUserId);
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) {
       throw new ConflictException('User already exists');
@@ -43,13 +44,17 @@ export class AdminService {
       passwordHash,
       role: dto.role,
       organizationId: orgId,
+      ...(dto.displayName?.trim()
+        ? { displayName: dto.displayName.trim() }
+        : {}),
     });
 
     return this.toUserView(user.id);
   }
 
   async updateUserRole(actorUserId: string, userId: string, role: UserRole) {
-    const { organizationId: orgId } = await this.resolveAdminContext(actorUserId);
+    const { organizationId: orgId } =
+      await this.resolveAdminContext(actorUserId);
     const result = await this.usersService.updateRole(userId, orgId, role);
     if (result.count === 0) {
       throw new NotFoundException('User not found');
@@ -63,7 +68,8 @@ export class AdminService {
     userId: string,
     suspended: boolean,
   ) {
-    const { organizationId: orgId } = await this.resolveAdminContext(actorUserId);
+    const { organizationId: orgId } =
+      await this.resolveAdminContext(actorUserId);
     const result = await this.usersService.setSuspended(
       userId,
       orgId,
@@ -77,7 +83,8 @@ export class AdminService {
   }
 
   async listAuditEvents(actorUserId: string) {
-    const { organizationId: orgId } = await this.resolveAdminContext(actorUserId);
+    const { organizationId: orgId } =
+      await this.resolveAdminContext(actorUserId);
     const [familyAccessAudits, workflowAudits, lifecycleTransitions] =
       await Promise.all([
         this.prisma.familyAccessAudit.findMany({
@@ -137,7 +144,9 @@ export class AdminService {
       });
 
       if (!patient) {
-        throw new NotFoundException('Patient profile not found in organization');
+        throw new NotFoundException(
+          'Patient profile not found in organization',
+        );
       }
     }
 
@@ -175,6 +184,8 @@ export class AdminService {
           role: UserRole.PATIENT,
           organizationId: orgId,
           patientProfileId,
+          displayName:
+            dto.displayName?.trim() || dto.patientName?.trim() || undefined,
         },
         select: { id: true },
       });
@@ -190,6 +201,9 @@ export class AdminService {
         id: true,
         email: true,
         role: true,
+        displayName: true,
+        avatarPath: true,
+        avatarUpdatedAt: true,
         isSuspended: true,
         suspendedAt: true,
         patientProfileId: true,
@@ -202,6 +216,6 @@ export class AdminService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    return this.usersService.toPortalDirectoryUser(user);
   }
 }

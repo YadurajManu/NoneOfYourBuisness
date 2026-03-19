@@ -42,6 +42,11 @@ Last updated: March 18, 2026 (local)
 - Patient document upload with async processing pipeline
 - Document status flow (`PENDING -> PROCESSING -> COMPLETED/FAILED`)
 - AI query and patient summary endpoints
+- Binary-safe document processing for report photos/images (no text parse failure path)
+- Report download endpoints for clinical roles and patient self-service
+- Upload hardening with centralized type/size policy (`DOCUMENT_UPLOAD_MAX_MB`) and storage abstraction (`DOCUMENT_STORAGE_DRIVER`, `DOCUMENT_STORAGE_LOCAL_DIR`)
+- OCR extraction for image reports using `tesseract.js` (configurable language/timeout)
+- Structured clinical extraction persisted in metadata (`structuredExtraction`, `searchableText`, `extractionEngine`, `ocrConfidence`)
 
 ### Family Access + Notification System
 - Family member account creation
@@ -49,6 +54,7 @@ Last updated: March 18, 2026 (local)
 - Invite-based family access request workflow (`ADMIN/DOCTOR` -> `PATIENT` consent)
 - Patient approve/reject invite endpoints with access activation on approval
 - Family-safe patient view and access logs
+- Family report upload/download endpoints scoped by consent/access level (VIEW_ONLY blocked for uploads)
 - Family notification list/read
 - Notification preference management
 - Realtime SSE notifications stream
