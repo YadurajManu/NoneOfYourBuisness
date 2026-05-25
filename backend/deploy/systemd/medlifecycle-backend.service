@@ -1,0 +1,20 @@
+[Unit]
+Description=MediLifecycle NestJS Backend
+After=network.target docker.service
+Requires=network.target
+
+[Service]
+Type=simple
+User=medlifecycle
+Group=medlifecycle
+WorkingDirectory=/srv/medlifecycle/backend
+EnvironmentFile=/etc/medlifecycle/backend.env
+ExecStart=/usr/bin/node dist/main
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+KillSignal=SIGTERM
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
