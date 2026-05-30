@@ -11,10 +11,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
+  const normalizeOrigin = (origin: string) => origin.trim().replace(/\/+$/, '');
   const originConfig = configService.get<string>('CORS_ALLOWED_ORIGINS') ?? '';
   const allowedOrigins = originConfig
     .split(',')
-    .map((origin) => origin.trim())
+    .map(normalizeOrigin)
     .filter(Boolean);
   const allowAllLocal = process.env.NODE_ENV !== 'production';
 
@@ -23,15 +24,17 @@ async function bootstrap() {
       origin: string | undefined,
       callback: (error: Error | null, allow?: boolean) => void,
     ) {
-      if (!origin && allowAllLocal) {
+      const requestOrigin = origin ? normalizeOrigin(origin) : undefined;
+
+      if (!requestOrigin && allowAllLocal) {
         callback(null, true);
         return;
       }
 
       if (
-        !origin ||
+        !requestOrigin ||
         allowedOrigins.length === 0 ||
-        allowedOrigins.includes(origin)
+        allowedOrigins.includes(requestOrigin)
       ) {
         callback(null, true);
         return;
@@ -39,6 +42,8 @@ async function bootstrap() {
       callback(new Error('Origin not allowed by CORS'));
     },
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
   });
 
   app.use(helmet());
