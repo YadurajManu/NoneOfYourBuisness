@@ -10,19 +10,10 @@ CREATE TYPE "ReferralHandoffStatus" AS ENUM ('CREATED', 'ACCEPTED', 'IN_PROGRESS
 -- CreateEnum
 CREATE TYPE "ReferralPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
 
--- AlterEnum
--- This migration adds more than one value to an enum.
--- With PostgreSQL versions 11 and earlier, this is not possible
--- in a single migration. This can be worked around by creating
--- multiple migrations, each migration adding only one value to
--- the enum.
-
-
-ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'PRIOR_AUTH_SUBMITTED';
-ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'PRIOR_AUTH_DECISION';
-ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'REFERRAL_CREATED';
-ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'REFERRAL_STATUS_UPDATED';
-ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'REFERRAL_OVERDUE';
+-- NotificationType values are added in
+-- 20260318080000_notification_type_clinical_values.
+-- This migration runs before NotificationEvent/NotificationType is created,
+-- so altering that enum here breaks fresh production deploys.
 
 -- AlterEnum
 -- This migration adds more than one value to an enum.

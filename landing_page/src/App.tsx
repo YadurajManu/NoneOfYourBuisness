@@ -15,6 +15,7 @@ import BlogPage from "@/pages/BlogPage";
 import UseCasesPage from "@/pages/UseCasesPage";
 import CareersPage from "@/pages/CareersPage";
 import LifecyclePage from "@/pages/LifecyclePage";
+import LegalPage from "@/pages/LegalPage";
 import NotFound from "@/pages/NotFound";
 import { AuthProvider } from "@/portal/auth-context";
 import { ProtectedRoute } from "@/portal/protected-route";
@@ -66,6 +67,9 @@ function AppRoutes() {
           <Route path="/use-cases" element={<UseCasesPage />} />
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/lifecycle" element={<LifecyclePage />} />
+          <Route path="/privacy" element={<LegalPage slug="privacy" />} />
+          <Route path="/terms" element={<LegalPage slug="terms" />} />
+          <Route path="/baa" element={<LegalPage slug="baa" />} />
 
           <Route path="/portal/login" element={<PortalLoginPage />} />
           <Route

@@ -65,12 +65,12 @@ ALTER TABLE "NotificationChannelPreference" ADD CONSTRAINT "NotificationChannelP
 -- AddForeignKey
 ALTER TABLE "NotificationChannelPreference" ADD CONSTRAINT "NotificationChannelPreference_familyUserId_fkey" FOREIGN KEY ("familyUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
-ALTER TABLE "NotificationDelivery" ADD CONSTRAINT "NotificationDelivery_notificationEventId_fkey" FOREIGN KEY ("notificationEventId") REFERENCES "NotificationEvent"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- NotificationEvent is introduced later in
+-- 20260318070000_family_access_notifications.
+-- The foreign key is added in a follow-up migration once that table exists.
 
 -- AddForeignKey
 ALTER TABLE "NotificationDelivery" ADD CONSTRAINT "NotificationDelivery_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "NotificationDelivery" ADD CONSTRAINT "NotificationDelivery_familyUserId_fkey" FOREIGN KEY ("familyUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-

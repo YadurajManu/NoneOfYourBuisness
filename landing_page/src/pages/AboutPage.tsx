@@ -1,21 +1,11 @@
 import { motion } from "framer-motion";
-import { Eye, Brain, ArrowRight, Sparkles, MapPin, Linkedin, Quote } from "lucide-react";
+import { Eye, Brain, ArrowRight, MapPin, Linkedin, Quote } from "lucide-react";
 import { Section, FadeUp, ClinicalCard } from "@/components/shared";
 
 const values = [
   { icon: Eye, title: "Transparency", desc: "Every stakeholder sees the truth of a patient's journey — no hidden data, no access barriers, no information asymmetry." },
   { icon: Brain, title: "Intelligence", desc: "AI that augments clinical judgment without replacing it. Every recommendation is traceable, explainable, and physician-approved." },
   { icon: ArrowRight, title: "Continuity", desc: "Care doesn't end at discharge. We track the full lifecycle from first referral to long-term follow-up and everything between." },
-];
-
-
-const milestones = [
-  { year: "2024", event: "Founded in Dehradun by Yaduraj Singh" },
-  { year: "2024 Q2", event: "First hospital partner onboarded" },
-  { year: "2024 Q4", event: "SOC 2 Type II certification achieved" },
-  { year: "2025 Q1", event: "HIPAA compliance & BAA framework launched" },
-  { year: "2025 Q2", event: "1M patient records processed" },
-  { year: "2025", event: "ISO 27001 certification" },
 ];
 
 export default function AboutPage() {
@@ -103,26 +93,6 @@ export default function AboutPage() {
       </Section>
 
 
-      {/* Timeline */}
-      <Section>
-        <FadeUp>
-          <h2 className="text-3xl font-display font-bold tracking-[-0.03em] text-foreground mb-12">Our Journey</h2>
-        </FadeUp>
-        <div className="overflow-x-auto pb-4 -mx-6 px-6 snap-x snap-mandatory">
-          <div className="flex gap-6 min-w-max">
-            {milestones.map((m, i) => (
-              <FadeUp key={m.year} delay={i * 0.08}>
-                <div className="snap-start w-64 shrink-0">
-                  <ClinicalCard className="h-full">
-                    <span className="text-2xl font-display font-bold text-primary tabular-nums">{m.year}</span>
-                    <p className="mt-3 text-sm text-muted-foreground font-body leading-relaxed">{m.event}</p>
-                  </ClinicalCard>
-                </div>
-              </FadeUp>
-            ))}
-          </div>
-        </div>
-      </Section>
     </div>
   );
 }
