@@ -4,13 +4,16 @@
 
 @layer base {
   :root {
+    --brand-accent: #00C4B4;
+    --brand-accent-rgb: 0, 196, 180;
+    --brand-accent-hsl: 175 100% 38%;
     --background: 216 50% 7%;
     --foreground: 210 40% 98%;
     --card: 213 43% 11%;
     --card-foreground: 210 40% 98%;
     --popover: 213 43% 11%;
     --popover-foreground: 210 40% 98%;
-    --primary: 177 100% 41%;
+    --primary: var(--brand-accent-hsl);
     --primary-foreground: 216 50% 7%;
     --secondary: 38 92% 50%;
     --secondary-foreground: 216 50% 7%;
@@ -22,28 +25,28 @@
     --destructive-foreground: 210 40% 98%;
     --border: 0 0% 100% / 0.05;
     --input: 0 0% 100% / 0.08;
-    --ring: 177 100% 41%;
+    --ring: var(--brand-accent-hsl);
     --radius: 0.75rem;
     --sidebar-background: 216 50% 5%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 177 100% 41%;
+    --sidebar-primary: var(--brand-accent-hsl);
     --sidebar-primary-foreground: 216 50% 7%;
     --sidebar-accent: 213 43% 16%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 0 0% 100% / 0.05;
-    --sidebar-ring: 177 100% 41%;
+    --sidebar-ring: var(--brand-accent-hsl);
 
     /* Custom tokens */
     --obsidian-900: 216 50% 7%;
     --obsidian-800: 213 43% 11%;
     --obsidian-700: 215 26% 17%;
-    --teal: 177 100% 41%;
-    --teal-glow: 177 100% 41% / 0.15;
+    --teal: var(--brand-accent-hsl);
+    --teal-glow: var(--brand-accent-hsl) / 0.15;
     --amber: 38 92% 50%;
     --footer-bg: 216 60% 4%;
 
     --shadow-clinical: 0 10px 30px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
-    --shadow-glow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0, 212, 200, 0.1);
+    --shadow-glow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(var(--brand-accent-rgb), 0.1);
   }
 }
 
@@ -65,13 +68,13 @@
 @layer utilities {
   .text-gradient-teal {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(177 100% 41%), hsl(177 100% 55%));
+    background-image: linear-gradient(135deg, var(--brand-accent), var(--brand-accent));
   }
   .glow-teal {
-    text-shadow: 0 0 30px rgba(0, 212, 200, 0.4), 0 0 60px rgba(0, 212, 200, 0.15);
+    text-shadow: 0 0 30px rgba(var(--brand-accent-rgb), 0.4), 0 0 60px rgba(var(--brand-accent-rgb), 0.15);
   }
   .border-glow-teal {
-    box-shadow: 0 0 20px rgba(0, 212, 200, 0.15), inset 0 0 20px rgba(0, 212, 200, 0.05);
+    box-shadow: 0 0 20px rgba(var(--brand-accent-rgb), 0.15), inset 0 0 20px rgba(var(--brand-accent-rgb), 0.05);
   }
   .no-scrollbar {
     scrollbar-width: none;
@@ -89,7 +92,7 @@
 }
 
 .btn-shimmer {
-  background: linear-gradient(90deg, #00D4C8 0%, #00F2E6 50%, #00D4C8 100%);
+  background: linear-gradient(90deg, var(--brand-accent) 0%, var(--brand-accent) 50%, var(--brand-accent) 100%);
   background-size: 200% auto;
 }
 .btn-shimmer:hover {

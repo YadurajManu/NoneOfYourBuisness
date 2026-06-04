@@ -567,7 +567,7 @@ export default function SpecialistCaseloadPage() {
                 onClick={() => handleSelectPatient(patient.id)}
                 className={`w-full rounded-[22px] border p-4 text-left transition-all ${
                   selectedPatientId === patient.id
-                    ? "cursor-default border-primary/30 bg-primary/[0.08] shadow-[0_0_0_1px_rgba(0,212,200,0.1)]"
+                    ? "cursor-default border-primary/30 bg-primary/[0.08] shadow-[0_0_0_1px_rgba(var(--brand-accent-rgb),0.1)]"
                     : "cursor-pointer border-white/8 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04] active:scale-[0.998]"
                 }`}
               >

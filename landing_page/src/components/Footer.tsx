@@ -51,7 +51,7 @@ function useIndianTime() {
 
 function FooterHeading({ children }: { children: string }) {
   return (
-    <h4 className="mb-7 text-[10px] font-body font-semibold uppercase tracking-[0.42em] text-primary/80">
+    <h4 className="mb-7 text-[10px] font-body font-semibold uppercase tracking-[0.42em] text-[var(--brand-accent)]">
       {children}
     </h4>
   );
@@ -61,24 +61,23 @@ export default function Footer() {
   const time = useIndianTime();
 
   return (
-    <footer className="relative overflow-hidden border-t border-primary/15 bg-[hsl(var(--footer-bg))]">
-      <div className="absolute inset-x-0 top-0 h-px bg-primary/50" />
-      <div className="absolute inset-x-0 top-2 h-px bg-primary/20" />
+    <footer className="relative overflow-hidden bg-[hsl(var(--footer-bg))]">
+      <div className="absolute inset-x-0 top-0 h-px bg-[var(--brand-accent)]/40" />
       <div
         className="pointer-events-none absolute left-1/2 top-10 h-96 w-[720px] -translate-x-1/2 rounded-full opacity-10 blur-3xl"
-        style={{ background: "hsl(177 100% 41%)" }}
+        style={{ background: "var(--brand-accent)" }}
       />
 
       <div className="relative mx-auto max-w-7xl px-6 pb-14 pt-24 lg:pb-16 lg:pt-20">
         <div className="flex flex-col gap-8 border-b border-primary/20 pb-10 text-center">
-          <p className="text-[10px] font-body uppercase tracking-[0.55em] text-primary/60">
+          <p className="text-[10px] font-body uppercase tracking-[0.55em] text-[color-mix(in_srgb,var(--brand-accent)_60%,transparent)]">
             Dehradun, India - Full-circle patient care
           </p>
           <Link
             to="/"
             className="font-display text-5xl font-bold leading-none tracking-[-0.055em] text-foreground sm:text-7xl lg:text-8xl"
           >
-            Aarogya<span className="text-gradient-teal">360</span>
+            Aarogya<span className="text-[var(--brand-accent)]">360</span>
           </Link>
           <p className="mx-auto max-w-xl text-sm font-body italic leading-relaxed text-muted-foreground">
             One record for every stakeholder, every handoff, and every stage of care.
@@ -116,7 +115,7 @@ export default function Footer() {
                     className="group flex items-center justify-between border-b border-dashed border-foreground/10 py-3 text-lg font-display text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <span>{link.label}</span>
-                    <span className="text-[10px] font-body tabular-nums text-primary/50 transition-colors group-hover:text-primary">
+                    <span className="text-[10px] font-body tabular-nums text-[color-mix(in_srgb,var(--brand-accent)_55%,transparent)] transition-colors group-hover:text-[var(--brand-accent)]">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                   </Link>
@@ -129,7 +128,7 @@ export default function Footer() {
             <FooterHeading>Correspondence</FooterHeading>
             <div className="space-y-7">
               <div>
-                <p className="mb-2 text-[10px] font-body uppercase tracking-[0.36em] text-primary/50">
+                <p className="mb-2 text-[10px] font-body uppercase tracking-[0.36em] text-[color-mix(in_srgb,var(--brand-accent)_55%,transparent)]">
                   Electronic post
                 </p>
                 <a
@@ -141,7 +140,7 @@ export default function Footer() {
                 </a>
               </div>
               <div>
-                <p className="mb-2 text-[10px] font-body uppercase tracking-[0.36em] text-primary/50">
+                <p className="mb-2 text-[10px] font-body uppercase tracking-[0.36em] text-[color-mix(in_srgb,var(--brand-accent)_55%,transparent)]">
                   Phone
                 </p>
                 <a
@@ -153,7 +152,7 @@ export default function Footer() {
                 </a>
               </div>
               <div>
-                <p className="mb-2 text-[10px] font-body uppercase tracking-[0.36em] text-primary/50">
+                <p className="mb-2 text-[10px] font-body uppercase tracking-[0.36em] text-[color-mix(in_srgb,var(--brand-accent)_55%,transparent)]">
                   Bureau
                 </p>
                 <p className="inline-flex items-start gap-2 text-sm font-body leading-relaxed text-muted-foreground">

@@ -82,7 +82,7 @@ export default function CareersPage() {
       <Section>
         <FadeUp>
           <div className="relative rounded-3xl p-12 text-center overflow-hidden border border-primary/20 border-glow-teal">
-            <div className="absolute inset-0 opacity-20" style={{ background: "radial-gradient(ellipse at center, rgba(0,212,200,0.15) 0%, transparent 70%)" }} />
+            <div className="absolute inset-0 opacity-20" style={{ background: "radial-gradient(ellipse at center, rgba(var(--brand-accent-rgb),0.15) 0%, transparent 70%)" }} />
             <div className="relative z-10">
               <Send className="w-10 h-10 text-primary mx-auto mb-4" strokeWidth={1.5} />
               <h2 className="text-2xl font-display font-bold text-foreground mb-2">

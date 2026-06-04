@@ -53,7 +53,7 @@ export function ClinicalCard({
           ? {
               y: -5,
               boxShadow:
-                "0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0, 212, 200, 0.1)",
+                "0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(var(--brand-accent-rgb), 0.1)",
             }
           : undefined
       }

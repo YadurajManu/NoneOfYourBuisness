@@ -74,7 +74,7 @@ export default function PortalProfilePage() {
 
   const virtualCard = asRecord(cardQuery.data);
   const roleTheme = asRecord(virtualCard.roleTheme);
-  const themePrimary = String(roleTheme.primary || "#14B8A6");
+  const themePrimary = String(roleTheme.primary || "var(--brand-accent)");
   const themeAccent = String(roleTheme.accent || "#0EA5E9");
   const avatarUrl = resolveApiAssetUrl(String(profile.avatarUrl || user?.avatarUrl || ""));
   const currentName = String(profile.displayName || user?.displayName || "").trim();

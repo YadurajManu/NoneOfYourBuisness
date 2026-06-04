@@ -768,7 +768,7 @@ export default function AdminPatientsPage() {
                 onClick={() => setSelectedPatientId(patient.id)}
                 className={`w-full rounded-[24px] border p-4 text-left transition-all ${
                   selectedPatientId === patient.id
-                    ? "border-primary/30 bg-primary/[0.08] shadow-[0_0_0_1px_rgba(0,212,200,0.1)]"
+                    ? "border-primary/30 bg-primary/[0.08] shadow-[0_0_0_1px_rgba(var(--brand-accent-rgb),0.1)]"
                     : "border-white/8 bg-white/[0.03] hover:border-white/15 hover:bg-white/[0.05]"
                 }`}
               >

@@ -262,7 +262,7 @@ export default function LifecyclePage() {
               </div>
               <div className="mt-5 h-2 overflow-hidden rounded-full bg-foreground/5">
                 <motion.div
-                  className="h-full rounded-full bg-primary shadow-[0_0_18px_rgba(0,212,200,0.45)]"
+                  className="h-full rounded-full bg-primary shadow-[0_0_18px_rgba(var(--brand-accent-rgb),0.45)]"
                   animate={{ width: `${((activeStage + 1) / stages.length) * 100}%` }}
                   transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 />
@@ -302,7 +302,7 @@ export default function LifecyclePage() {
               className="absolute left-5 top-6 w-px bg-primary lg:left-8"
               style={{
                 height: progressHeight,
-                boxShadow: "0 0 14px rgba(0,212,200,0.5), 0 0 32px rgba(0,212,200,0.18)",
+                boxShadow: "0 0 14px rgba(var(--brand-accent-rgb),0.5), 0 0 32px rgba(var(--brand-accent-rgb),0.18)",
               }}
             />
 
@@ -325,7 +325,7 @@ export default function LifecyclePage() {
                       onClick={() => scrollToStage(index)}
                       className={`absolute left-0 top-2 z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all lg:left-3 ${
                         isActive
-                          ? "border-primary bg-primary text-primary-foreground shadow-[0_0_24px_rgba(0,212,200,0.35)]"
+                          ? "border-primary bg-primary text-primary-foreground shadow-[0_0_24px_rgba(var(--brand-accent-rgb),0.35)]"
                           : "border-primary/30 bg-card text-primary hover:border-primary"
                       }`}
                       aria-label={`Jump to stage ${stage.num}`}

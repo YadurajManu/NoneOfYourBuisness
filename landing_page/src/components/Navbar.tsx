@@ -45,7 +45,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <span className="font-display font-bold text-xl tracking-tight text-foreground">
-              Aarogya<span className="text-primary">360</span>
+              Aarogya<span className="text-[var(--brand-accent)]">360</span>
             </span>
             {/* Pulse ring icon */}
             <span className="relative flex items-center justify-center w-5 h-5">

@@ -94,7 +94,7 @@ export default function HomePage() {
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden px-6">
         <motion.div style={{ y: heroY }} className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-30 animate-float"
-            style={{ background: "radial-gradient(circle, rgba(0,212,200,0.2) 0%, rgba(0,212,200,0.05) 40%, transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle, rgba(var(--brand-accent-rgb),0.2) 0%, rgba(var(--brand-accent-rgb),0.05) 40%, transparent 70%)" }} />
           <div className="absolute top-1/3 left-1/3 w-[600px] h-[600px] rounded-full opacity-20 animate-float"
             style={{ background: "radial-gradient(circle, rgba(13,27,42,0.8) 0%, transparent 70%)", animationDelay: "2s" }} />
         </motion.div>
@@ -285,7 +285,7 @@ export default function HomePage() {
       <Section>
         <FadeUp>
           <div className="relative rounded-3xl p-12 text-center overflow-hidden border border-primary/20 border-glow-teal">
-            <div className="absolute inset-0 opacity-20" style={{ background: "radial-gradient(ellipse at center, rgba(0,212,200,0.15) 0%, transparent 70%)" }} />
+            <div className="absolute inset-0 opacity-20" style={{ background: "radial-gradient(ellipse at center, rgba(var(--brand-accent-rgb),0.15) 0%, transparent 70%)" }} />
             <div className="relative z-10">
               <h2 className="text-3xl lg:text-4xl font-display font-bold tracking-[-0.03em] text-foreground mb-4">
                 Ready to close the gaps in patient care?

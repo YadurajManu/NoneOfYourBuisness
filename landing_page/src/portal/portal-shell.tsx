@@ -92,16 +92,16 @@ export function PortalShell({ title, children }: { title: string; children: Reac
   return (
     <div className="relative min-h-screen overflow-hidden bg-background pt-20 text-foreground">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-10rem] top-[-6rem] h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(0,212,200,0.18),transparent_62%)] blur-3xl" />
+        <div className="absolute left-[-10rem] top-[-6rem] h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(var(--brand-accent-rgb),0.18),transparent_62%)] blur-3xl" />
         <div className="absolute right-[-8rem] top-24 h-[24rem] w-[24rem] rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.12),transparent_68%)] blur-3xl" />
-        <div className="absolute bottom-[-10rem] left-1/3 h-[22rem] w-[22rem] rounded-full bg-[radial-gradient(circle,rgba(0,212,200,0.08),transparent_65%)] blur-3xl" />
+        <div className="absolute bottom-[-10rem] left-1/3 h-[22rem] w-[22rem] rounded-full bg-[radial-gradient(circle,rgba(var(--brand-accent-rgb),0.08),transparent_65%)] blur-3xl" />
         <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)", backgroundSize: "72px 72px" }} />
       </div>
 
       <header className="fixed left-0 right-0 top-0 z-50 h-20 border-b border-white/8 bg-[rgba(8,15,25,0.72)] backdrop-blur-2xl">
         <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
           <Link to="/" className="font-display text-xl font-bold tracking-tight">
-            Aarogya<span className="text-primary">360</span>
+            Aarogya<span className="text-[var(--brand-accent)]">360</span>
           </Link>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 md:flex">
@@ -157,7 +157,7 @@ export function PortalShell({ title, children }: { title: string; children: Reac
                 className={({ isActive }) =>
                   `group block rounded-2xl border px-4 py-3 transition-all ${
                     isActive
-                      ? "border-primary/25 bg-primary/[0.12] text-foreground shadow-[0_0_0_1px_rgba(0,212,200,0.08),0_18px_30px_-20px_rgba(0,212,200,0.45)]"
+                      ? "border-primary/25 bg-primary/[0.12] text-foreground shadow-[0_0_0_1px_rgba(var(--brand-accent-rgb),0.08),0_18px_30px_-20px_rgba(var(--brand-accent-rgb),0.45)]"
                       : "border-transparent text-muted-foreground hover:border-white/10 hover:bg-white/[0.04] hover:text-foreground"
                   }`
                 }
