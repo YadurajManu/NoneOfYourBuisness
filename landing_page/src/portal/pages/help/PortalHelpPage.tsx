@@ -31,6 +31,26 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Family member data visibility depends on patient consent status.",
     ],
   },
+  CARE_COORDINATOR: {
+    title: "Care Coordinator Intake Guide",
+    workflow: [
+      "Open Intake from the portal sidebar.",
+      "Create patient demographics and contact details from referral/front-desk information.",
+      "Route the patient to a primary doctor and optionally a specialist pool.",
+      "Create the first doctor intake task so clinical review starts from caseload.",
+    ],
+    features: [
+      "Shared patient intake workspace",
+      "Initial lifecycle stage selection",
+      "Doctor and specialist routing",
+      "Intake task/referral bootstrapping",
+      "Organization-scoped recent intake visibility",
+    ],
+    limits: [
+      "Care coordinators do not manage users, leads, or account suspension.",
+      "Clinical decisions and lifecycle interpretation remain doctor/specialist responsibilities.",
+    ],
+  },
   DOCTOR: {
     title: "Doctor Clinical Guide",
     workflow: [
@@ -111,8 +131,9 @@ const guideByRole: Record<UserRole, RoleGuide> = {
 };
 
 const roleMatrix = [
-  { role: "Admin", upload: "Yes", consent: "Manage + audit", dashboard: "Operations + users + leads" },
-  { role: "Doctor", upload: "Yes", consent: "Invite family", dashboard: "Clinical caseload + patient actions" },
+  { role: "Admin", upload: "Yes", consent: "Manage + audit", dashboard: "Operations + users + leads + intake" },
+  { role: "Care Coordinator", upload: "Yes", consent: "Route for review", dashboard: "Shared intake + care-team routing" },
+  { role: "Doctor", upload: "Yes", consent: "Invite family", dashboard: "Clinical caseload + patient actions + intake" },
   { role: "Specialist", upload: "Yes", consent: "View from patient context", dashboard: "Referral queue + specialist actions" },
   { role: "Patient", upload: "Yes", consent: "Approve/reject + grant/revoke", dashboard: "Self profile + docs + family access" },
   { role: "Family", upload: "Conditional", consent: "Consent recipient", dashboard: "Shared patient + notifications + questions" },
@@ -168,6 +189,34 @@ export default function PortalHelpPage() {
       </Panel>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <Panel
+          title="Shared Intake Workflow"
+          eyebrow="How To Access"
+          description="Use this flow when a patient enters through front desk, care coordination, doctor referral, or direct clinical handoff."
+          className="xl:col-span-2"
+        >
+          <ol className="grid grid-cols-1 gap-2 text-sm text-foreground/90 md:grid-cols-2">
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              1. Log in as Admin, Doctor, or Care Coordinator.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              2. Open Portal → Intake from the sidebar.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              3. Enter demographics, MRN, contact details, and initial lifecycle stage.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              4. Select a primary doctor and optional preferred specialist.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              5. Keep “Create initial doctor intake task” enabled when clinical review is required.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              6. Submit; the record appears in organization patient lists and routed caseloads.
+            </li>
+          </ol>
+        </Panel>
+
         <Panel
           title="Cross-Role Capability Matrix"
           eyebrow="Who Can Do What"

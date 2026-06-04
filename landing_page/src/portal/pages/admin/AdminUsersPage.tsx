@@ -19,9 +19,22 @@ import { useAuth } from "@/portal/auth-context";
 import { PortalShell } from "@/portal/portal-shell";
 import { Panel } from "@/portal/panel";
 
-type Role = "ADMIN" | "DOCTOR" | "SPECIALIST" | "PATIENT" | "FAMILY_MEMBER";
+type Role =
+  | "ADMIN"
+  | "CARE_COORDINATOR"
+  | "DOCTOR"
+  | "SPECIALIST"
+  | "PATIENT"
+  | "FAMILY_MEMBER";
 
-const roles: Role[] = ["ADMIN", "DOCTOR", "SPECIALIST", "PATIENT", "FAMILY_MEMBER"];
+const roles: Role[] = [
+  "ADMIN",
+  "CARE_COORDINATOR",
+  "DOCTOR",
+  "SPECIALIST",
+  "PATIENT",
+  "FAMILY_MEMBER",
+];
 
 const roleConfig: Record<
   Role,
@@ -33,6 +46,10 @@ const roleConfig: Record<
   ADMIN: {
     label: "Admin",
     hint: "Platform and access governance",
+  },
+  CARE_COORDINATOR: {
+    label: "Care Coordinator",
+    hint: "Patient intake and care-team routing",
   },
   DOCTOR: {
     label: "Doctor",

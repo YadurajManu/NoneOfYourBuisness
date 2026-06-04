@@ -489,7 +489,13 @@ export function listAdminUsers() {
 export function createAdminUser(payload: {
   email: string;
   password: string;
-  role: "ADMIN" | "DOCTOR" | "SPECIALIST" | "PATIENT" | "FAMILY_MEMBER";
+  role:
+    | "ADMIN"
+    | "CARE_COORDINATOR"
+    | "DOCTOR"
+    | "SPECIALIST"
+    | "PATIENT"
+    | "FAMILY_MEMBER";
   patientProfileId?: string;
   patientName?: string;
   displayName?: string;
@@ -503,7 +509,13 @@ export function createAdminUser(payload: {
 
 export function updateAdminUserRole(
   userId: string,
-  role: "ADMIN" | "DOCTOR" | "SPECIALIST" | "PATIENT" | "FAMILY_MEMBER",
+  role:
+    | "ADMIN"
+    | "CARE_COORDINATOR"
+    | "DOCTOR"
+    | "SPECIALIST"
+    | "PATIENT"
+    | "FAMILY_MEMBER",
 ) {
   return request<Record<string, unknown>>(`/admin/users/${userId}/role`, {
     method: "PATCH",

@@ -22,7 +22,12 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('patients')
 @UseGuards(JwtAuthGuard)
-@Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.SPECIALIST)
+@Roles(
+  UserRole.ADMIN,
+  UserRole.CARE_COORDINATOR,
+  UserRole.DOCTOR,
+  UserRole.SPECIALIST,
+)
 export class PatientsController {
   constructor(private patientsService: PatientsService) {}
 
@@ -88,7 +93,7 @@ export class PatientsController {
   }
 
   @Patch(':id/profile')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.CARE_COORDINATOR, UserRole.DOCTOR)
   updateProfile(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdatePatientProfileDto,
@@ -103,7 +108,7 @@ export class PatientsController {
   }
 
   @Patch(':id/care-team')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.CARE_COORDINATOR, UserRole.DOCTOR)
   assignCareTeam(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: AssignPatientCareTeamDto,

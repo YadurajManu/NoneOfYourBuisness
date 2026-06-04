@@ -506,6 +506,13 @@ export class UsersService {
         accent: '#22D3EE',
       };
     }
+    if (role === UserRole.CARE_COORDINATOR) {
+      return {
+        label: 'Coordinator Teal',
+        primary: '#2DD4BF',
+        accent: '#38BDF8',
+      };
+    }
     if (role === UserRole.SPECIALIST) {
       return {
         label: 'Specialist Amber',

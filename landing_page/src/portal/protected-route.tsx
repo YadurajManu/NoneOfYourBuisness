@@ -34,6 +34,7 @@ export function ProtectedRoute({
 
 export function roleHomeRoute(role: UserRole) {
   if (role === "ADMIN") return "/portal/admin";
+  if (role === "CARE_COORDINATOR") return "/portal/intake";
   if (role === "DOCTOR") return "/portal/doctor";
   if (role === "SPECIALIST") return "/portal/specialist";
   if (role === "PATIENT") return "/portal/patient";

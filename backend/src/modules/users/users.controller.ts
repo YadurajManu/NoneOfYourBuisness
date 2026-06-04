@@ -31,14 +31,24 @@ export class UsersController {
 
   @Get('doctors')
   @UseGuards(JwtAuthGuard)
-  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.SPECIALIST)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.CARE_COORDINATOR,
+    UserRole.DOCTOR,
+    UserRole.SPECIALIST,
+  )
   listDoctors(@Req() req: { user: AuthenticatedUser }) {
     return this.usersService.listActiveDoctorsByOrganization(req.user.orgId);
   }
 
   @Get('specialists')
   @UseGuards(JwtAuthGuard)
-  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.SPECIALIST)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.CARE_COORDINATOR,
+    UserRole.DOCTOR,
+    UserRole.SPECIALIST,
+  )
   listSpecialists(@Req() req: { user: AuthenticatedUser }) {
     return this.usersService.listActiveSpecialistsByOrganization(
       req.user.orgId,

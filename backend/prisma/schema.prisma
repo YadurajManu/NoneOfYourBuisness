@@ -564,6 +564,7 @@ model FamilyQuestion {
 
 enum UserRole {
   ADMIN
+  CARE_COORDINATOR
   DOCTOR
   SPECIALIST
   PATIENT

@@ -5,6 +5,7 @@ import {
   BookOpenText,
   BriefcaseMedical,
   ChevronRight,
+  ClipboardList,
   HeartHandshake,
   LayoutDashboard,
   ListChecks,
@@ -32,12 +33,17 @@ type NavItem = {
 const navByRole: Record<UserRole, NavItem[]> = {
   ADMIN: [
     { to: "/portal/admin", label: "Overview", hint: "Operations pulse", icon: LayoutDashboard },
+    { to: "/portal/intake", label: "Intake", hint: "Create patients", icon: ClipboardList },
     { to: "/portal/admin/patients", label: "Patients", hint: "Intake and staffing", icon: UserRound },
     { to: "/portal/admin/leads", label: "Leads", hint: "Inbound pipeline", icon: Sparkles },
     { to: "/portal/admin/users", label: "Users", hint: "Access control", icon: UserRoundCog },
   ],
+  CARE_COORDINATOR: [
+    { to: "/portal/intake", label: "Intake", hint: "New patients", icon: ClipboardList },
+  ],
   DOCTOR: [
     { to: "/portal/doctor", label: "Dashboard", hint: "Clinical overview", icon: Stethoscope },
+    { to: "/portal/intake", label: "Intake", hint: "Start patients", icon: ClipboardList },
     { to: "/portal/doctor/caseload", label: "Caseload", hint: "Patients in motion", icon: BriefcaseMedical },
   ],
   SPECIALIST: [
@@ -56,6 +62,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
 
 const roleLabels: Record<UserRole, string> = {
   ADMIN: "Operations Admin",
+  CARE_COORDINATOR: "Care Coordinator",
   DOCTOR: "Primary Doctor",
   SPECIALIST: "Specialist",
   PATIENT: "Patient",

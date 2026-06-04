@@ -36,6 +36,7 @@ import PatientFamilyAccessPage from "@/portal/pages/patient/PatientFamilyAccessP
 import FamilyDashboardPage from "@/portal/pages/family/FamilyDashboardPage";
 import FamilyQuestionsPage from "@/portal/pages/family/FamilyQuestionsPage";
 import PortalHelpPage from "@/portal/pages/help/PortalHelpPage";
+import PortalIntakePage from "@/portal/pages/intake/PortalIntakePage";
 import PortalProfilePage from "@/portal/pages/profile/PortalProfilePage";
 
 const queryClient = new QueryClient();
@@ -77,6 +78,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <PortalIndexPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/portal/intake"
+            element={
+              <ProtectedRoute allow={["ADMIN", "CARE_COORDINATOR", "DOCTOR"]}>
+                <PortalIntakePage />
               </ProtectedRoute>
             }
           />

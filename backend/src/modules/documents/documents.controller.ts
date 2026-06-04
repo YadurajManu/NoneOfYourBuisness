@@ -22,7 +22,12 @@ import { DOCUMENT_UPLOAD_INTERCEPTOR_OPTIONS } from './document-upload.config';
 
 @Controller('documents')
 @UseGuards(JwtAuthGuard)
-@Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.SPECIALIST)
+@Roles(
+  UserRole.ADMIN,
+  UserRole.CARE_COORDINATOR,
+  UserRole.DOCTOR,
+  UserRole.SPECIALIST,
+)
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
