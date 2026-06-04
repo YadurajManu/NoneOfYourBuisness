@@ -105,6 +105,7 @@ export class UsersController {
 
     res.setHeader('Content-Type', avatar.contentType);
     res.setHeader('Cache-Control', 'public, max-age=300');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     return res.sendFile(avatar.absolutePath);
   }
 }
