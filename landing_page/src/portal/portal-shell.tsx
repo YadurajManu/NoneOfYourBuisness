@@ -20,6 +20,8 @@ import type { UserRole } from "@/lib/api/types";
 import { resolveApiAssetUrl } from "@/lib/api/client";
 import { useAuth } from "@/portal/auth-context";
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "/api";
+
 type NavItem = {
   to: string;
   label: string;
@@ -100,6 +102,81 @@ function HeaderAvatar({
     <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-primary/12 text-[11px] font-semibold text-primary">
       {initials || "U"}
     </div>
+  );
+}
+
+function PortalFooter() {
+  const year = new Date().getFullYear();
+  const footerGroups = [
+    {
+      title: "Support",
+      links: [
+        { label: "Help Center", to: "/portal/help" },
+        { label: "Contact Admin", to: "/contact" },
+        { label: "Report an Issue", to: "/contact" },
+      ],
+    },
+    {
+      title: "Privacy & Consent",
+      links: [
+        { label: "Privacy Policy", to: "/privacy" },
+        { label: "Terms of Use", to: "/terms" },
+        { label: "Consent Notice", to: "/baa" },
+        { label: "Data Security", to: "/integrations" },
+      ],
+    },
+  ];
+
+  return (
+    <footer className="mt-8 rounded-[32px] border border-white/8 bg-[linear-gradient(135deg,rgba(17,27,39,0.82),rgba(8,15,25,0.92))] p-6 shadow-[var(--shadow-clinical)]">
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1.2fr_1.4fr_0.8fr]">
+        <div>
+          <Link to="/portal" className="font-display text-xl font-bold tracking-tight text-foreground">
+            Aarogya<span className="text-[var(--brand-accent)]">360</span> Portal
+          </Link>
+          <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
+            Secure care coordination workspace for lifecycle workflows, clinical documents,
+            consent-based family access, and role-based patient operations.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {footerGroups.map((group) => (
+            <div key={group.title}>
+              <p className="text-[10px] uppercase tracking-[0.26em] text-primary/70">{group.title}</p>
+              <div className="mt-3 space-y-2">
+                {group.links.map((link) => (
+                  <Link
+                    key={link.label}
+                    to={link.to}
+                    className="block text-sm text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.26em] text-primary/70">System</p>
+          <div className="mt-3 space-y-2 text-sm text-muted-foreground">
+            <a
+              href={apiBaseUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="block transition-colors hover:text-primary"
+            >
+              API Status
+            </a>
+            <p>Version 1.0</p>
+            <p>{import.meta.env.VITE_APP_ENV || "Production"}</p>
+            <p>© {year} Aarogya360</p>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -246,6 +323,7 @@ export function PortalShell({ title, children }: { title: string; children: Reac
             </div>
           </div>
           {children}
+          <PortalFooter />
         </section>
       </div>
     </div>
