@@ -31,6 +31,34 @@ function parseAuthUser(data: Record<string, unknown>): AuthUser {
   };
 }
 
+function ProfileAvatar({
+  src,
+  alt,
+}: {
+  src: string | null;
+  alt: string;
+}) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const canRenderImage = Boolean(src) && src !== failedSrc;
+
+  if (canRenderImage && src) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className="h-24 w-24 rounded-full border border-white/15 object-cover"
+        onError={() => setFailedSrc(src)}
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-24 w-24 items-center justify-center rounded-full border border-white/15 bg-white/[0.03] text-primary">
+      <UserCircle2 className="h-12 w-12" strokeWidth={1.6} />
+    </div>
+  );
+}
+
 export default function PortalProfilePage() {
   const qc = useQueryClient();
   const { user, setSession } = useAuth();
@@ -105,17 +133,7 @@ export default function PortalProfilePage() {
         >
           <div className="space-y-4">
             <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:flex-row sm:items-center">
-              {previewUrl || avatarUrl ? (
-                <img
-                  src={previewUrl || avatarUrl}
-                  alt={currentName || currentEmail}
-                  className="h-24 w-24 rounded-full border border-white/15 object-cover"
-                />
-              ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-full border border-white/15 bg-white/[0.03] text-primary">
-                  <UserCircle2 className="h-12 w-12" strokeWidth={1.6} />
-                </div>
-              )}
+              <ProfileAvatar src={previewUrl || avatarUrl || null} alt={currentName || currentEmail} />
               <div className="min-w-0 text-center sm:text-left">
                 <p className="font-display text-2xl font-semibold tracking-[-0.03em] text-foreground">
                   {currentName || "Set your display name"}

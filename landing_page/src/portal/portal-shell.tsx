@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import {
   ActivitySquare,
@@ -74,6 +74,35 @@ const profileNavItem: NavItem = {
   icon: UserCircle2,
 };
 
+function HeaderAvatar({
+  src,
+  alt,
+  initials,
+}: {
+  src: string;
+  alt: string;
+  initials: string;
+}) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  if (src && src !== failedSrc) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className="h-8 w-8 rounded-full border border-white/15 object-cover"
+        onError={() => setFailedSrc(src)}
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-primary/12 text-[11px] font-semibold text-primary">
+      {initials || "U"}
+    </div>
+  );
+}
+
 export function PortalShell({ title, children }: { title: string; children: ReactNode }) {
   const { user, signOut } = useAuth();
 
@@ -105,17 +134,7 @@ export function PortalShell({ title, children }: { title: string; children: Reac
           </Link>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 md:flex">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={user.displayName || user.email}
-                  className="h-8 w-8 rounded-full border border-white/15 object-cover"
-                />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-primary/12 text-[11px] font-semibold text-primary">
-                  {initials || "U"}
-                </div>
-              )}
+              <HeaderAvatar src={avatarUrl} alt={user.displayName || user.email} initials={initials} />
               <div className="text-right">
                 <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground">
                   {roleLabels[user.role]}
