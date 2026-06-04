@@ -8,6 +8,7 @@ import {
   ClipboardList,
   HeartHandshake,
   LayoutDashboard,
+  LifeBuoy,
   ListChecks,
   Sparkles,
   Stethoscope,
@@ -76,6 +77,13 @@ const helpNavItem: NavItem = {
   icon: BookOpenText,
 };
 
+const supportNavItem: NavItem = {
+  to: "/portal/support",
+  label: "Support",
+  hint: "Message staff",
+  icon: LifeBuoy,
+};
+
 const profileNavItem: NavItem = {
   to: "/portal/profile",
   label: "Profile",
@@ -119,8 +127,8 @@ function PortalFooter() {
       title: "Support",
       links: [
         { label: "Help Center", to: "/portal/help" },
-        { label: "Contact Admin", to: "/contact" },
-        { label: "Report an Issue", to: "/contact" },
+        { label: "Contact Admin", to: "/portal/support" },
+        { label: "Report an Issue", to: "/portal/support" },
       ],
     },
     {
@@ -192,7 +200,12 @@ export function PortalShell({ title, children }: { title: string; children: Reac
 
   if (!user) return null;
 
-  const items = [...(navByRole[user.role] || []), profileNavItem, helpNavItem];
+  const items = [
+    ...(navByRole[user.role] || []),
+    supportNavItem,
+    profileNavItem,
+    helpNavItem,
+  ];
   const avatarUrl = resolveApiAssetUrl(user.avatarUrl || "");
   const initials = (user.displayName || user.email || "U")
     .split(" ")

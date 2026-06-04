@@ -38,6 +38,7 @@ import FamilyQuestionsPage from "@/portal/pages/family/FamilyQuestionsPage";
 import PortalHelpPage from "@/portal/pages/help/PortalHelpPage";
 import PortalIntakePage from "@/portal/pages/intake/PortalIntakePage";
 import PortalProfilePage from "@/portal/pages/profile/PortalProfilePage";
+import PortalSupportPage from "@/portal/pages/support/PortalSupportPage";
 
 const queryClient = new QueryClient();
 
@@ -213,6 +214,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <PortalHelpPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/portal/support"
+            element={
+              <ProtectedRoute>
+                <PortalSupportPage />
               </ProtectedRoute>
             }
           />

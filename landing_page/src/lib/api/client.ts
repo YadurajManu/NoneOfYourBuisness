@@ -569,6 +569,81 @@ export function getMyVirtualCard() {
   });
 }
 
+export type SupportTicketCategory =
+  | "ACCOUNT_LOGIN"
+  | "PATIENT_INTAKE"
+  | "DOCUMENT_UPLOAD"
+  | "CARE_TEAM_ASSIGNMENT"
+  | "FAMILY_ACCESS_CONSENT"
+  | "CLINICAL_WORKFLOW"
+  | "BILLING_ADMIN"
+  | "TECHNICAL_ISSUE"
+  | "OTHER";
+
+export type SupportTicketPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
+export type SupportTicketStatus =
+  | "OPEN"
+  | "IN_REVIEW"
+  | "WAITING_ON_USER"
+  | "RESOLVED"
+  | "CLOSED";
+
+export function listSupportTickets() {
+  return request<Array<Record<string, unknown>>>("/support/tickets", {
+    auth: true,
+  });
+}
+
+export function getSupportTicket(ticketId: string) {
+  return request<Record<string, unknown>>(`/support/tickets/${ticketId}`, {
+    auth: true,
+  });
+}
+
+export function createSupportTicket(payload: {
+  category: SupportTicketCategory;
+  priority?: SupportTicketPriority;
+  subject: string;
+  body: string;
+  patientId?: string;
+  assignedToUserId?: string;
+}) {
+  return request<Record<string, unknown>>("/support/tickets", {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function replyToSupportTicket(ticketId: string, body: string) {
+  return request<Record<string, unknown>>(`/support/tickets/${ticketId}/messages`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify({ body }),
+  });
+}
+
+export function updateSupportTicket(
+  ticketId: string,
+  payload: {
+    status?: SupportTicketStatus;
+    priority?: SupportTicketPriority;
+    assignedToUserId?: string | null;
+  },
+) {
+  return request<Record<string, unknown>>(`/support/tickets/${ticketId}`, {
+    method: "PATCH",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function listSupportAssignees() {
+  return request<Array<Record<string, unknown>>>("/support/assignees", {
+    auth: true,
+  });
+}
+
 export function listAdminLeads() {
   return request<Array<Record<string, unknown>>>("/admin/leads", { auth: true });
 }

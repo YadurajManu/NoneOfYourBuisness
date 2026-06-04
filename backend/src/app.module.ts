@@ -18,6 +18,7 @@ import { LeadsModule } from './modules/leads/leads.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PatientPortalModule } from './modules/patient-portal/patient-portal.module';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
+import { SupportModule } from './modules/support/support.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
     LeadsModule,
     AdminModule,
     PatientPortalModule,
+    SupportModule,
   ],
   controllers: [AppController],
   providers: [
