@@ -73,7 +73,7 @@ function maxCount(items: BreakdownItem[]) {
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <p className="rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-sm text-muted-foreground">
+    <p className="rounded-2xl border border-white/8 bg-white/[0.02] px-3 py-2.5 text-sm text-muted-foreground">
       {label}
     </p>
   );
@@ -101,7 +101,7 @@ function QueueRow({
   meta: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+    <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground">
@@ -112,6 +112,43 @@ function QueueRow({
         <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
           Stage {toNumber(asRecord(item.patient).lifecycleStage || item.lifecycleStage)}
         </span>
+      </div>
+    </div>
+  );
+}
+
+function CompactQueue({
+  title,
+  eyebrow,
+  items,
+  emptyLabel,
+  renderMeta,
+}: {
+  title: string;
+  eyebrow: string;
+  items: OverviewItem[];
+  emptyLabel: string;
+  renderMeta: (item: OverviewItem) => string;
+}) {
+  return (
+    <div className="rounded-[22px] border border-white/8 bg-white/[0.025] p-3">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-primary/70">{eyebrow}</p>
+          <p className="mt-1 text-base font-semibold text-foreground">{title}</p>
+        </div>
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-foreground">
+          {items.length}
+        </span>
+      </div>
+      <div className="space-y-2">
+        {items.length === 0 ? (
+          <EmptyState label={emptyLabel} />
+        ) : (
+          items.slice(0, 4).map((item) => (
+            <QueueRow key={String(item.id)} item={item} meta={renderMeta(item)} />
+          ))
+        )}
       </div>
     </div>
   );
@@ -171,39 +208,36 @@ export default function AdminOverviewPage() {
 
   return (
     <PortalShell title="Admin Overview">
-      <Panel
-        title="Operations Command Center"
-        eyebrow="What Needs Action Now"
-        description="Admin dashboard is organized around bottlenecks, ownership gaps, escalations, and workload balance."
-      >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {healthCards.map((metric) => (
-            <div key={metric.label} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{metric.label}</p>
-                  <p className="mt-3 font-display text-4xl font-bold tracking-[-0.05em] text-foreground">
-                    {metric.value}
-                  </p>
+      <div className="grid grid-cols-1 gap-4 2xl:grid-cols-[0.72fr_1.28fr]">
+        <Panel
+          title="Operations Snapshot"
+          eyebrow="Live Health"
+          description="The smallest set of numbers admins need before choosing an action."
+          className="h-full"
+        >
+          <div className="grid grid-cols-2 gap-2">
+            {healthCards.map((metric) => (
+              <div key={metric.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{metric.label}</p>
+                  <metric.icon className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.8} />
                 </div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                  <metric.icon className="h-5 w-5" strokeWidth={1.8} />
-                </div>
+                <p className="mt-2 font-display text-3xl font-bold tracking-[-0.05em] text-foreground">
+                  {metric.value}
+                </p>
+                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{metric.hint}</p>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">{metric.hint}</p>
-            </div>
-          ))}
-        </div>
-      </Panel>
+            ))}
+          </div>
+        </Panel>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[0.95fr_1.05fr]">
         <Panel
           title="Priority Actions"
           eyebrow="Admin Queue"
-          description="Start here. These cards are sorted around what blocks operations."
+          description="Compact action list sorted around what blocks operations."
           className="h-full"
         >
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 2xl:grid-cols-3">
             {priorityActions.map((action) => {
               const row = asRecord(action);
               const route = String(row.route || "/portal/admin/patients");
@@ -212,17 +246,17 @@ export default function AdminOverviewPage() {
                 <Link
                   key={String(row.key || row.label)}
                   to={route}
-                  className={`rounded-2xl border p-4 transition-transform hover:-translate-y-0.5 ${severityClass(severity)}`}
+                  className={`rounded-2xl border px-3 py-2.5 transition-transform hover:-translate-y-0.5 ${severityClass(severity)}`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.18em] opacity-75">{formatLabel(severity)}</p>
-                      <p className="mt-2 text-lg font-semibold text-foreground">{String(row.label || "Action")}</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-[0.16em] opacity-75">{formatLabel(severity)}</p>
+                      <p className="mt-1 truncate text-sm font-semibold text-foreground">{String(row.label || "Action")}</p>
                     </div>
-                    <p className="font-display text-4xl font-bold tracking-[-0.05em]">{toNumber(row.count)}</p>
+                    <p className="font-display text-3xl font-bold tracking-[-0.05em]">{toNumber(row.count)}</p>
                   </div>
-                  <p className="mt-3 text-sm text-muted-foreground">{String(row.description || "")}</p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em]">
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{String(row.description || "")}</p>
+                  <span className="mt-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em]">
                     Open queue <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
                   </span>
                 </Link>
@@ -230,137 +264,109 @@ export default function AdminOverviewPage() {
             })}
           </div>
         </Panel>
+      </div>
 
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_0.65fr]">
         <Panel
-          title="Care Team Assignment Gaps"
-          eyebrow="Ownership"
-          description="Patients missing a primary doctor or specialist should be assigned before workflow volume grows."
-          className="h-full"
+          title="Risk and Exception Board"
+          eyebrow="Queues"
+          description="Four admin queues in one view. Each card shows the top active items only."
         >
-          <div className="space-y-3">
-            {asArray(riskQueues.unassignedPatients).length === 0 ? (
-              <EmptyState label="No care-team assignment gaps found." />
-            ) : (
-              asArray(riskQueues.unassignedPatients).map((item) => {
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <CompactQueue
+              title="Care Team Gaps"
+              eyebrow="Ownership"
+              items={asArray(riskQueues.unassignedPatients)}
+              emptyLabel="No care-team assignment gaps."
+              renderMeta={(item) => {
                 const row = asRecord(item);
                 const missing = [
                   row.missingPrimaryDoctor ? "primary doctor" : null,
                   row.missingSpecialist ? "specialist" : null,
                 ].filter(Boolean);
-                return (
-                  <QueueRow
-                    key={String(row.id)}
-                    item={row}
-                    meta={`Missing ${missing.join(" and ")} · Updated ${dateLabel(row.updatedAt)}`}
-                  />
-                );
-              })
-            )}
-          </div>
-        </Panel>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <Panel
-          title="Clinical Risk"
-          eyebrow="Open Alerts"
-          description="Open alerts that need clinical attention or admin escalation."
-        >
-          <div className="space-y-3">
-            {asArray(riskQueues.urgentAlerts).length === 0 ? (
-              <EmptyState label="No open clinical alerts." />
-            ) : (
-              asArray(riskQueues.urgentAlerts).map((item) => {
+                return `Missing ${missing.join(" and ")} · ${dateLabel(row.updatedAt)}`;
+              }}
+            />
+            <CompactQueue
+              title="Clinical Risk"
+              eyebrow="Open Alerts"
+              items={asArray(riskQueues.urgentAlerts)}
+              emptyLabel="No open clinical alerts."
+              renderMeta={(item) => {
                 const row = asRecord(item);
-                return (
-                  <QueueRow
-                    key={String(row.id)}
-                    item={row}
-                    meta={`${String(row.priority || "MEDIUM")} · ${String(row.title || "Clinical alert")} · ${dateLabel(row.createdAt)}`}
-                  />
-                );
-              })
-            )}
-          </div>
-        </Panel>
-
-        <Panel
-          title="Overdue Work"
-          eyebrow="SLA Risk"
-          description="Care tasks and referrals past due should be reassigned or escalated."
-        >
-          <div className="space-y-3">
-            {[...asArray(riskQueues.overdueTasks), ...asArray(riskQueues.overdueReferrals)].length === 0 ? (
-              <EmptyState label="No overdue work found." />
-            ) : (
-              [...asArray(riskQueues.overdueTasks), ...asArray(riskQueues.overdueReferrals)].slice(0, 8).map((item) => {
+                return `${String(row.priority || "MEDIUM")} · ${String(row.title || "Clinical alert")} · ${dateLabel(row.createdAt)}`;
+              }}
+            />
+            <CompactQueue
+              title="Overdue Work"
+              eyebrow="SLA Risk"
+              items={[...asArray(riskQueues.overdueTasks), ...asArray(riskQueues.overdueReferrals)]}
+              emptyLabel="No overdue work found."
+              renderMeta={(item) => {
                 const row = asRecord(item);
                 const assignee = asRecord(row.assignedToUser);
-                return (
-                  <QueueRow
-                    key={String(row.id)}
-                    item={row}
-                    meta={`${String(row.title || row.destinationName || "Work item")} · Due ${dateLabel(row.dueAt)} · ${String(assignee.displayName || assignee.email || "Unassigned")}`}
-                  />
-                );
-              })
-            )}
-          </div>
-        </Panel>
-
-        <Panel
-          title="Document and Support Exceptions"
-          eyebrow="Operational Cleanup"
-          description="Failures and tickets that need an admin owner."
-        >
-          <div className="space-y-3">
-            {asArray(riskQueues.failedDocuments).slice(0, 3).map((item) => {
-              const row = asRecord(item);
-              return (
-                <QueueRow
-                  key={`document-${String(row.id)}`}
-                  item={row}
-                  meta={`Failed document · ${String(row.type || "Clinical document")} · ${dateLabel(row.updatedAt)}`}
-                />
-              );
-            })}
-            {asArray(riskQueues.openSupportTickets).slice(0, 5).map((item) => {
-              const row = asRecord(item);
-              return (
-                <div key={`ticket-${String(row.id)}`} className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-foreground">{String(row.subject || "Support ticket")}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {formatLabel(String(row.category || "OTHER"))} · {formatLabel(String(row.priority || "NORMAL"))} · {formatLabel(String(row.status || "OPEN"))}
-                      </p>
-                    </div>
-                    <LifeBuoy className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.8} />
-                  </div>
+                return `${String(row.title || row.destinationName || "Work item")} · Due ${dateLabel(row.dueAt)} · ${String(assignee.displayName || assignee.email || "Unassigned")}`;
+              }}
+            />
+            <div className="rounded-[22px] border border-white/8 bg-white/[0.025] p-3">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-primary/70">Cleanup</p>
+                  <p className="mt-1 text-base font-semibold text-foreground">Docs and Support</p>
                 </div>
-              );
-            })}
-            {asArray(riskQueues.failedDocuments).length === 0 && asArray(riskQueues.openSupportTickets).length === 0 ? (
-              <EmptyState label="No failed documents or open support tickets." />
-            ) : null}
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-foreground">
+                  {asArray(riskQueues.failedDocuments).length + asArray(riskQueues.openSupportTickets).length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {asArray(riskQueues.failedDocuments).slice(0, 2).map((item) => {
+                  const row = asRecord(item);
+                  return (
+                    <QueueRow
+                      key={`document-${String(row.id)}`}
+                      item={row}
+                      meta={`Failed document · ${String(row.type || "Clinical document")} · ${dateLabel(row.updatedAt)}`}
+                    />
+                  );
+                })}
+                {asArray(riskQueues.openSupportTickets).slice(0, 2).map((item) => {
+                  const row = asRecord(item);
+                  return (
+                    <div key={`ticket-${String(row.id)}`} className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">{String(row.subject || "Support ticket")}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {formatLabel(String(row.category || "OTHER"))} · {formatLabel(String(row.priority || "NORMAL"))}
+                          </p>
+                        </div>
+                        <LifeBuoy className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.8} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {asArray(riskQueues.failedDocuments).length === 0 && asArray(riskQueues.openSupportTickets).length === 0 ? (
+                  <EmptyState label="No failed documents or open support tickets." />
+                ) : null}
+              </div>
+            </div>
           </div>
         </Panel>
-      </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[0.85fr_1.15fr]">
         <Panel
           title="Staff Workload"
           eyebrow="Load Balance"
           description="Open tasks, orders, and referrals by staff member."
+          className="h-full"
         >
-          <div className="space-y-3">
+          <div className="space-y-2">
             {staffWorkload.length === 0 ? (
               <EmptyState label="No staff workload data yet." />
             ) : (
-              staffWorkload.map((item) => {
+              staffWorkload.slice(0, 6).map((item) => {
                 const row = asRecord(item);
                 return (
-                  <div key={String(row.id)} className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                  <div key={String(row.id)} className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-foreground">
@@ -372,10 +378,10 @@ export default function AdminOverviewPage() {
                         {toNumber(row.totalOpenWork)}
                       </span>
                     </div>
-                    <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
-                      <span className="rounded-xl bg-background/50 px-2 py-2">Tasks {toNumber(row.activeTasks)}</span>
-                      <span className="rounded-xl bg-background/50 px-2 py-2">Orders {toNumber(row.activeOrders)}</span>
-                      <span className="rounded-xl bg-background/50 px-2 py-2">Referrals {toNumber(row.activeReferrals)}</span>
+                    <div className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[11px] text-muted-foreground">
+                      <span className="rounded-xl bg-background/50 px-2 py-1.5">Tasks {toNumber(row.activeTasks)}</span>
+                      <span className="rounded-xl bg-background/50 px-2 py-1.5">Orders {toNumber(row.activeOrders)}</span>
+                      <span className="rounded-xl bg-background/50 px-2 py-1.5">Refs {toNumber(row.activeReferrals)}</span>
                     </div>
                   </div>
                 );
@@ -383,14 +389,16 @@ export default function AdminOverviewPage() {
             )}
           </div>
         </Panel>
+      </div>
 
+      <div className="mt-4">
         <Panel
           title="Lifecycle Shape"
           eyebrow="Pipeline"
           description="Patient distribution by lifecycle stage and latest records with operational movement."
         >
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+            <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
               <p className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 <ClipboardCheck className="h-4 w-4 text-primary" strokeWidth={1.8} />
                 Stage Distribution
@@ -417,7 +425,7 @@ export default function AdminOverviewPage() {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               {recentPatients.slice(0, 5).map((item) => {
                 const row = asRecord(item);
                 return (
