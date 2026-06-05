@@ -33,6 +33,7 @@ import SpecialistCaseloadPage from "@/portal/pages/specialist/SpecialistCaseload
 import SpecialistPatientDetailPage from "@/portal/pages/specialist/SpecialistPatientDetailPage";
 import PatientDashboardPage from "@/portal/pages/patient/PatientDashboardPage";
 import PatientFamilyAccessPage from "@/portal/pages/patient/PatientFamilyAccessPage";
+import StaffPatientProfilePage from "@/portal/pages/patient/StaffPatientProfilePage";
 import FamilyDashboardPage from "@/portal/pages/family/FamilyDashboardPage";
 import FamilyQuestionsPage from "@/portal/pages/family/FamilyQuestionsPage";
 import PortalHelpPage from "@/portal/pages/help/PortalHelpPage";
@@ -189,6 +190,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute allow={["PATIENT"]}>
                 <PatientFamilyAccessPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/portal/patient-profile/:patientId"
+            element={
+              <ProtectedRoute allow={["ADMIN", "CARE_COORDINATOR", "DOCTOR", "SPECIALIST"]}>
+                <StaffPatientProfilePage />
               </ProtectedRoute>
             }
           />

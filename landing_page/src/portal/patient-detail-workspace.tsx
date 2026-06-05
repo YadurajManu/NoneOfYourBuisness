@@ -37,7 +37,7 @@ import {
 import { Panel } from "@/portal/panel";
 import { PortalShell } from "@/portal/portal-shell";
 
-export type ClinicalRoleMode = "DOCTOR" | "SPECIALIST";
+export type ClinicalRoleMode = "DOCTOR" | "SPECIALIST" | "STAFF";
 
 function asArray<T = Record<string, unknown>>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
@@ -578,8 +578,18 @@ export function PatientDetailWorkspace({ mode }: { mode: ClinicalRoleMode }) {
     inviteFamilyMutation.mutate();
   }
 
-  const pageTitle = mode === "DOCTOR" ? "Doctor Patient Detail" : "Specialist Patient Detail";
-  const backPath = mode === "DOCTOR" ? "/portal/doctor/caseload" : "/portal/specialist/caseload";
+  const pageTitle =
+    mode === "DOCTOR"
+      ? "Doctor Patient Detail"
+      : mode === "SPECIALIST"
+        ? "Specialist Patient Detail"
+        : "Patient Profile";
+  const backPath =
+    mode === "DOCTOR"
+      ? "/portal/doctor/caseload"
+      : mode === "SPECIALIST"
+        ? "/portal/specialist/caseload"
+        : "/portal/messages";
 
   return (
     <PortalShell title={pageTitle}>

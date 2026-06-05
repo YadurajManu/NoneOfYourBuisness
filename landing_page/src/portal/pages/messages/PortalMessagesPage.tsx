@@ -1,6 +1,7 @@
 import { FormEvent, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Link2, MessageCircle, Search, Send, ShieldAlert, UserRoundPlus } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   getDirectConversation,
   listMessageContextDocuments,
@@ -87,7 +88,7 @@ function patientWorkspacePath(role: UserRole | undefined, patientId: string) {
   if (role === "SPECIALIST") return `/portal/specialist/patient/${patientId}`;
   if (role === "PATIENT") return "/portal";
   if (role === "FAMILY_MEMBER") return "/portal";
-  return "/portal/admin/patients";
+  return `/portal/patient-profile/${patientId}`;
 }
 
 function otherParticipant(conversation: Record<string, unknown>, currentUserId: string) {
@@ -95,6 +96,23 @@ function otherParticipant(conversation: Record<string, unknown>, currentUserId: 
     .map((row) => asRecord(asRecord(row).user))
     .filter((row) => String(row.id || "") !== currentUserId);
   return participants[0] || {};
+}
+
+function myParticipant(conversation: Record<string, unknown>, currentUserId: string) {
+  return asArray(conversation.participants)
+    .map(asRecord)
+    .find((row) => String(row.userId || asRecord(row.user).id || "") === currentUserId);
+}
+
+function hasUnreadMessage(conversation: Record<string, unknown>, currentUserId: string) {
+  const latest = asRecord(asArray(conversation.messages)[0]);
+  if (!latest.createdAt || String(latest.senderUserId || asRecord(latest.sender).id || "") === currentUserId) {
+    return false;
+  }
+
+  const participant = asRecord(myParticipant(conversation, currentUserId));
+  const lastReadAt = participant.lastReadAt ? new Date(String(participant.lastReadAt)).getTime() : 0;
+  return new Date(String(latest.createdAt)).getTime() > lastReadAt;
 }
 
 export default function PortalMessagesPage() {
@@ -122,6 +140,7 @@ export default function PortalMessagesPage() {
   const conversationsQuery = useQuery({
     queryKey: ["messages", "conversations"],
     queryFn: listDirectConversations,
+    refetchInterval: 10000,
   });
   const patientsQuery = useQuery({
     queryKey: ["messages", "context", "patients", deferredPatientSearch],
@@ -141,6 +160,7 @@ export default function PortalMessagesPage() {
     queryKey: ["messages", "conversations", selectedConversationId],
     queryFn: () => getDirectConversation(selectedConversationId as string),
     enabled: Boolean(selectedConversationId),
+    refetchInterval: selectedConversationId ? 8000 : false,
   });
 
   const users = useMemo(
@@ -169,8 +189,12 @@ export default function PortalMessagesPage() {
 
   useEffect(() => {
     if (!selectedConversationId) return;
-    markDirectConversationRead(selectedConversationId).catch(() => undefined);
-  }, [selectedConversationId, selectedConversationQuery.data]);
+    markDirectConversationRead(selectedConversationId)
+      .then(() => {
+        qc.invalidateQueries({ queryKey: ["messages", "conversations"] });
+      })
+      .catch(() => undefined);
+  }, [qc, selectedConversationId, selectedConversationQuery.data]);
 
   const startMutation = useMutation({
     mutationFn: () =>
@@ -411,6 +435,7 @@ export default function PortalMessagesPage() {
                 const id = String(conversation.id || "");
                 const other = otherParticipant(conversation, user?.id || "");
                 const latest = asRecord(asArray(conversation.messages)[0]);
+                const isUnread = hasUnreadMessage(conversation, user?.id || "");
                 return (
                   <button
                     key={id}
@@ -419,16 +444,28 @@ export default function PortalMessagesPage() {
                     className={`w-full rounded-2xl border p-3 text-left transition-colors ${
                       selectedConversationId === id
                         ? "border-primary/30 bg-primary/[0.08]"
-                        : "border-white/8 bg-white/[0.03] hover:border-white/15"
+                        : isUnread
+                          ? "border-red-400/30 bg-red-400/[0.07] hover:border-red-300/40"
+                          : "border-white/8 bg-white/[0.03] hover:border-white/15"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-primary/10 text-xs font-semibold text-primary">
+                      <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-primary/10 text-xs font-semibold text-primary">
                         {initials(userLabel(other))}
+                        {isUnread ? (
+                          <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-background bg-red-500 shadow-[0_0_16px_rgba(239,68,68,0.75)]" />
+                        ) : null}
                       </div>
-                      <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">{userLabel(other)}</p>
-                      <p className="truncate text-xs text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`truncate text-sm font-medium ${isUnread ? "text-red-50" : "text-foreground"}`}>{userLabel(other)}</p>
+                        {isUnread ? (
+                          <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-100">
+                            New
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className={`truncate text-xs ${isUnread ? "font-medium text-red-100/85" : "text-muted-foreground"}`}>
                           {latest.priority && latest.priority !== "NORMAL" ? `${formatRole(String(latest.priority))} · ` : ""}
                           {latest.body ? String(latest.body) : "No messages yet"}
                       </p>
@@ -482,15 +519,15 @@ export default function PortalMessagesPage() {
                             </span>
                           ) : null}
                           {typed.patient ? (
-                            <a
-                              href={patientWorkspacePath(user?.role, String(asRecord(typed.patient).id || ""))}
+                            <Link
+                              to={patientWorkspacePath(user?.role, String(asRecord(typed.patient).id || ""))}
                               className="flex items-start gap-2 rounded-xl border border-primary/15 bg-primary/[0.06] p-2 text-xs text-primary transition-colors hover:bg-primary/[0.1]"
                             >
                               <Link2 className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.8} />
                               <span>
                                 Linked patient: {patientLabel(asRecord(typed.patient))}
                               </span>
-                            </a>
+                            </Link>
                           ) : null}
                           {typed.document ? (
                             <div className="flex items-start gap-2 rounded-xl border border-white/8 bg-white/[0.03] p-2 text-xs text-muted-foreground">
