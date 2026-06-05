@@ -644,6 +644,80 @@ export function listSupportAssignees() {
   });
 }
 
+export function searchMessageUsers(search: string) {
+  const params = new URLSearchParams();
+  if (search.trim()) params.set("search", search.trim());
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return request<Array<Record<string, unknown>>>(`/messages/users${suffix}`, {
+    auth: true,
+  });
+}
+
+export function listDirectConversations() {
+  return request<Array<Record<string, unknown>>>("/messages/conversations", {
+    auth: true,
+  });
+}
+
+export function listMessageContextPatients(search: string) {
+  const params = new URLSearchParams();
+  if (search.trim()) params.set("search", search.trim());
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return request<Array<Record<string, unknown>>>(`/messages/context/patients${suffix}`, {
+    auth: true,
+  });
+}
+
+export function listMessageContextDocuments(patientId: string) {
+  return request<Array<Record<string, unknown>>>(
+    `/messages/context/patients/${patientId}/documents`,
+    { auth: true },
+  );
+}
+
+export function getDirectConversation(conversationId: string) {
+  return request<Record<string, unknown>>(`/messages/conversations/${conversationId}`, {
+    auth: true,
+  });
+}
+
+export function startDirectConversation(payload: {
+  recipientUserId: string;
+  initialMessage?: string;
+  patientId?: string;
+  documentId?: string;
+  priority?: "NORMAL" | "IMPORTANT" | "URGENT";
+}) {
+  return request<Record<string, unknown>>("/messages/conversations", {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function sendDirectMessage(
+  conversationId: string,
+  payload: {
+    body: string;
+    patientId?: string;
+    documentId?: string;
+    priority?: "NORMAL" | "IMPORTANT" | "URGENT";
+  },
+) {
+  return request<Record<string, unknown>>(`/messages/conversations/${conversationId}/messages`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function markDirectConversationRead(conversationId: string) {
+  return request<{ success: boolean }>(`/messages/conversations/${conversationId}/read`, {
+    method: "PATCH",
+    auth: true,
+  });
+}
+
 export function listAdminLeads() {
   return request<Array<Record<string, unknown>>>("/admin/leads", { auth: true });
 }

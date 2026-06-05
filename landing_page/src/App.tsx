@@ -37,6 +37,7 @@ import FamilyDashboardPage from "@/portal/pages/family/FamilyDashboardPage";
 import FamilyQuestionsPage from "@/portal/pages/family/FamilyQuestionsPage";
 import PortalHelpPage from "@/portal/pages/help/PortalHelpPage";
 import PortalIntakePage from "@/portal/pages/intake/PortalIntakePage";
+import PortalMessagesPage from "@/portal/pages/messages/PortalMessagesPage";
 import PortalProfilePage from "@/portal/pages/profile/PortalProfilePage";
 import PortalSupportPage from "@/portal/pages/support/PortalSupportPage";
 
@@ -223,6 +224,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <PortalSupportPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/portal/messages"
+            element={
+              <ProtectedRoute>
+                <PortalMessagesPage />
               </ProtectedRoute>
             }
           />

@@ -19,6 +19,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { PatientPortalModule } from './modules/patient-portal/patient-portal.module';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { SupportModule } from './modules/support/support.module';
+import { MessagesModule } from './modules/messages/messages.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { SupportModule } from './modules/support/support.module';
     AdminModule,
     PatientPortalModule,
     SupportModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [

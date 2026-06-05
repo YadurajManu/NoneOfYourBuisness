@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   ListChecks,
+  MessageCircle,
   Sparkles,
   Stethoscope,
   UserCircle2,
@@ -82,6 +83,13 @@ const supportNavItem: NavItem = {
   label: "Support",
   hint: "Message staff",
   icon: LifeBuoy,
+};
+
+const messagesNavItem: NavItem = {
+  to: "/portal/messages",
+  label: "Messages",
+  hint: "Direct chat",
+  icon: MessageCircle,
 };
 
 const profileNavItem: NavItem = {
@@ -202,6 +210,7 @@ export function PortalShell({ title, children }: { title: string; children: Reac
 
   const items = [
     ...(navByRole[user.role] || []),
+    messagesNavItem,
     supportNavItem,
     profileNavItem,
     helpNavItem,

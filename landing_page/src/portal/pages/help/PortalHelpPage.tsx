@@ -17,6 +17,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Create organization users (doctor, specialist, patient, family).",
       "Create and assign patients to doctor/specialist care owners.",
       "Triage Support Desk tickets, assign owners, and close resolved requests.",
+      "Use Direct Messages for quick staff or user coordination.",
       "Monitor dashboard metrics, lifecycle stage movement, and lead pipeline.",
       "Audit consent, family access, and account suspension history.",
     ],
@@ -26,6 +27,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Lead management and status updates",
       "User creation, role changes, suspension controls",
       "Organization-wide Support Desk queue and assignment",
+      "Direct Messages with organization users",
       "Patient-context family invitation and audit visibility",
     ],
     limits: [
@@ -41,6 +43,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Route the patient to a primary doctor and optionally a specialist pool.",
       "Create the first doctor intake task so clinical review starts from caseload.",
       "Use Support Desk for access, upload, assignment, and consent requests.",
+      "Use Direct Messages for quick one-to-one coordination with staff.",
     ],
     features: [
       "Shared patient intake workspace",
@@ -48,6 +51,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Doctor and specialist routing",
       "Intake task/referral bootstrapping",
       "Support Desk triage, assignment, reply, and resolution",
+      "Direct Messages with staff and users in the organization",
       "Organization-scoped recent intake visibility",
     ],
     limits: [
@@ -63,6 +67,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Upload report photo or PDF; OCR + structured extraction runs automatically.",
       "Invite family from patient context when consent workflow is needed.",
       "Use Support Desk for assignment, referral, and upload/OCR issues.",
+      "Use Direct Messages for quick staff coordination.",
     ],
     features: [
       "Caseload command center with stage/order/referral operations",
@@ -71,6 +76,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Document upload with mobile camera capture support",
       "Family question response and consent-aware communication",
       "Support ticket creation and assigned-ticket replies",
+      "Direct Messages with messageable organization users",
     ],
     limits: [
       "Doctor can view only organization-scoped data.",
@@ -85,6 +91,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Update referral/order statuses and log specialist events.",
       "Upload specialist report images/PDF for shared care visibility.",
       "Use Support Desk when referral details or patient context are missing.",
+      "Use Direct Messages for quick doctor/coordinator/admin coordination.",
     ],
     features: [
       "Specialist pool claim flow and assigned caseload",
@@ -92,6 +99,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Patient full-profile navigation for complete context",
       "Document uploads with OCR extraction for rapid review",
       "Support ticket creation and assigned-ticket replies",
+      "Direct Messages with messageable staff",
     ],
     limits: [
       "Specialist panel only shows patients assigned/claimed to specialist flow.",
@@ -106,6 +114,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Review and respond to pending family access invites.",
       "Grant/revoke family access and monitor audit history.",
       "Use Support Desk for access, document, or workflow help.",
+      "Use Direct Messages for simple non-emergency staff communication.",
     ],
     features: [
       "Patient timeline and document status cards",
@@ -113,6 +122,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Family consent inbox (approve/reject)",
       "Family access audit and expiration visibility",
       "Own support request creation and reply tracking",
+      "Direct Messages with messageable staff",
     ],
     limits: [
       "Patient account must be linked to one patient profile.",
@@ -127,6 +137,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Ask care-team questions through Questions page.",
       "If access level allows, upload supporting report photo/PDF.",
       "Use Support Desk for invite, access, or document upload problems.",
+      "Use Direct Messages for simple non-emergency staff communication.",
     ],
     features: [
       "Consent-scoped patient visibility and stage updates",
@@ -134,6 +145,7 @@ const guideByRole: Record<UserRole, RoleGuide> = {
       "Family question submission and response tracking",
       "Document view + upload (when not VIEW_ONLY)",
       "Own support request creation and reply tracking",
+      "Direct Messages with messageable staff",
     ],
     limits: [
       "Access expires automatically when configured by patient/care team.",
@@ -201,6 +213,43 @@ export default function PortalHelpPage() {
       </Panel>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <Panel
+          title="Direct Messages Workflow"
+          eyebrow="Quick One-To-One Communication"
+          description="Use Direct Messages for simple coordination. Use Support Desk when the issue needs status tracking, assignment, or resolution."
+          className="xl:col-span-2"
+        >
+          <ol className="grid grid-cols-1 gap-2 text-sm text-foreground/90 md:grid-cols-2">
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              1. Open Portal → Messages from the sidebar.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              2. Search active users by name or email inside your organization.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              3. Start a one-to-one conversation or continue an existing thread.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              4. Optionally link an accessible patient so the recipient can open the right care context.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              5. After selecting a patient, optionally link an existing report, PDF, image, or clinical document from that patient record.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              6. Set Normal, Important, or Urgent priority for triage. Urgent is still non-emergency coordination.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              7. Patients and family can message admins/care coordinators; staff can coordinate with staff.
+            </li>
+            <li className="rounded-xl border border-white/10 bg-background/50 px-3 py-2">
+              8. For formal issues, create a Support Desk ticket instead of using chat.
+            </li>
+            <li className="rounded-xl border border-amber/20 bg-amber/[0.06] px-3 py-2 text-amber/90">
+              9. Direct Messages are not for emergencies.
+            </li>
+          </ol>
+        </Panel>
+
         <Panel
           title="Support Desk Workflow"
           eyebrow="Internal Messaging"

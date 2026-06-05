@@ -10,6 +10,10 @@ import { json, urlencoded } from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const numberConfig = (key: string, fallback: number) => {
+    const parsed = Number(configService.get<string | number>(key) ?? fallback);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
 
   const normalizeOrigin = (origin: string) => origin.trim().replace(/\/+$/, '');
   const originConfig = configService.get<string>('CORS_ALLOWED_ORIGINS') ?? '';
@@ -53,9 +57,8 @@ async function bootstrap() {
   app.use(
     '/api/public',
     rateLimit({
-      windowMs:
-        configService.get<number>('PUBLIC_RATE_LIMIT_WINDOW_MS') ?? 60_000,
-      max: configService.get<number>('PUBLIC_RATE_LIMIT_MAX') ?? 30,
+      windowMs: numberConfig('PUBLIC_RATE_LIMIT_WINDOW_MS', 60_000),
+      max: numberConfig('PUBLIC_RATE_LIMIT_MAX', 30),
       standardHeaders: true,
       legacyHeaders: false,
     }),

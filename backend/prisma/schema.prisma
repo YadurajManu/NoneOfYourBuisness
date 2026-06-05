@@ -33,6 +33,7 @@ model Organization {
   refreshSessions         RefreshSession[]
   familyQuestions         FamilyQuestion[]
   supportTickets          SupportTicket[]
+  directConversations     DirectConversation[]
 }
 
 model User {
@@ -80,6 +81,8 @@ model User {
   supportTicketsCreated        SupportTicket[]                 @relation("SupportTicketCreatedBy")
   supportTicketsAssigned       SupportTicket[]                 @relation("SupportTicketAssignedTo")
   supportMessages              SupportMessage[]                @relation("SupportMessageSender")
+  directConversationMemberships DirectConversationParticipant[]
+  directMessagesSent           DirectMessage[]                  @relation("DirectMessageSender")
   createdAt                    DateTime                        @default(now())
   updatedAt                    DateTime                        @updatedAt
 }
@@ -108,6 +111,7 @@ model Patient {
   familyAccessInvites     FamilyAccessInvite[]
   familyQuestions         FamilyQuestion[]
   supportTickets          SupportTicket[]
+  directMessages          DirectMessage[]
   createdAt               DateTime                     @default(now())
   updatedAt               DateTime                     @updatedAt
 }
@@ -150,6 +154,52 @@ model SupportMessage {
   @@index([senderUserId, createdAt])
 }
 
+model DirectConversation {
+  id             String                          @id @default(uuid())
+  organizationId String
+  organization   Organization                    @relation(fields: [organizationId], references: [id])
+  participants   DirectConversationParticipant[]
+  messages       DirectMessage[]
+  createdAt      DateTime                        @default(now())
+  updatedAt      DateTime                        @updatedAt
+
+  @@index([organizationId, updatedAt])
+}
+
+model DirectConversationParticipant {
+  id             String             @id @default(uuid())
+  conversationId String
+  conversation   DirectConversation @relation(fields: [conversationId], references: [id])
+  userId         String
+  user           User               @relation(fields: [userId], references: [id])
+  lastReadAt     DateTime?
+  createdAt      DateTime           @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId, lastReadAt])
+}
+
+model DirectMessage {
+  id             String                @id @default(uuid())
+  conversationId String
+  conversation   DirectConversation    @relation(fields: [conversationId], references: [id])
+  senderUserId   String
+  sender         User                  @relation("DirectMessageSender", fields: [senderUserId], references: [id])
+  patientId      String?
+  patient        Patient?              @relation(fields: [patientId], references: [id])
+  documentId     String?
+  document       Document?             @relation(fields: [documentId], references: [id])
+  priority       DirectMessagePriority @default(NORMAL)
+  body           String
+  createdAt      DateTime              @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderUserId, createdAt])
+  @@index([patientId, createdAt])
+  @@index([documentId, createdAt])
+  @@index([priority, createdAt])
+}
+
 model Document {
   id        String    @id @default(uuid())
   patientId String
@@ -158,6 +208,7 @@ model Document {
   type      String // e.g., "LAB_REPORT", "DISCHARGE_SUMMARY"
   metadata  Json? // AI extracted data
   status    DocStatus @default(PENDING)
+  directMessages DirectMessage[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -864,4 +915,10 @@ enum SupportTicketStatus {
   WAITING_ON_USER
   RESOLVED
   CLOSED
+}
+
+enum DirectMessagePriority {
+  NORMAL
+  IMPORTANT
+  URGENT
 }
