@@ -203,7 +203,25 @@ function PortalFooter() {
   );
 }
 
-export function PortalShell({ title, children }: { title: string; children: ReactNode }) {
+export function PortalShell({
+  title,
+  children,
+  subtitle,
+  statusChip,
+  headerActions,
+  compactHeader = false,
+}: {
+  title: string;
+  children: ReactNode;
+  /** Ops-style subtitle (e.g. live counts). Falls back to default marketing line. */
+  subtitle?: ReactNode;
+  /** Optional single status chip instead of Mode/Access cards */
+  statusChip?: ReactNode;
+  /** Right-side header actions (export, refresh, etc.) */
+  headerActions?: ReactNode;
+  /** Tighter header for command-center pages */
+  compactHeader?: boolean;
+}) {
   const { user, signOut } = useAuth();
 
   if (!user) return null;
@@ -223,6 +241,9 @@ export function PortalShell({ title, children }: { title: string; children: Reac
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  const defaultSubtitle =
+    "A care operations workspace that mirrors the landing brand language while keeping role-based workflows readable under pressure.";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background pt-20 text-foreground">
@@ -270,7 +291,9 @@ export function PortalShell({ title, children }: { title: string; children: Reac
                 {roleLabels[user.role]}
               </h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Shared patient operations styled with the same Aarogya360 visual system as the landing experience.
+                {user.organization
+                  ? `${user.organization} · role-scoped operations`
+                  : "Organization-scoped care operations"}
               </p>
             </div>
 
@@ -319,7 +342,7 @@ export function PortalShell({ title, children }: { title: string; children: Reac
                 <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">Session</p>
                 <p className="mt-3 text-sm font-medium text-foreground/90">{user.organization}</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Role-aware access and portal navigation stay scoped to your organization context.
+                  Role-aware access stays scoped to your organization.
                 </p>
               </div>
             </div>
@@ -327,27 +350,51 @@ export function PortalShell({ title, children }: { title: string; children: Reac
         </aside>
 
         <section>
-          <div className="mb-6 rounded-[32px] border border-white/8 bg-[linear-gradient(180deg,rgba(17,27,39,0.92),rgba(12,20,31,0.88))] px-6 py-6 shadow-[var(--shadow-clinical)] sm:px-7">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-primary/70">Connected Portal</p>
-                <h1 className="mt-3 max-w-3xl font-display text-4xl font-bold tracking-[-0.05em] text-foreground sm:text-5xl">
+          <div
+            className={`mb-5 rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(17,27,39,0.92),rgba(12,20,31,0.88))] shadow-[var(--shadow-clinical)] ${
+              compactHeader ? "px-5 py-4 sm:px-6" : "px-6 py-6 sm:px-7"
+            }`}
+          >
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-primary/70">
+                  {compactHeader ? "Command center" : "Connected Portal"}
+                </p>
+                <h1
+                  className={`mt-2 max-w-3xl font-display font-bold tracking-[-0.04em] text-foreground ${
+                    compactHeader
+                      ? "text-2xl sm:text-3xl"
+                      : "text-4xl sm:text-5xl tracking-[-0.05em]"
+                  }`}
+                >
                   {title}
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-[15px]">
-                  A care operations workspace that mirrors the landing brand language while keeping role-based workflows readable under pressure.
-                </p>
+                <div
+                  className={`mt-2 max-w-2xl text-sm leading-6 text-muted-foreground ${
+                    compactHeader ? "sm:text-[13.5px]" : "sm:text-[15px]"
+                  }`}
+                >
+                  {subtitle ?? defaultSubtitle}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:w-auto sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">Mode</p>
-                  <p className="mt-2 font-display text-lg font-semibold text-foreground">Live Portal</p>
-                </div>
-                <div className="rounded-2xl border border-primary/20 bg-primary/[0.08] px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-primary/70">Access</p>
-                  <p className="mt-2 font-display text-lg font-semibold text-foreground">{roleLabels[user.role]}</p>
-                </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {statusChip}
+                {!statusChip && !compactHeader ? (
+                  <>
+                    <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                      <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">Mode</p>
+                      <p className="mt-2 font-display text-lg font-semibold text-foreground">Live Portal</p>
+                    </div>
+                    <div className="rounded-2xl border border-primary/20 bg-primary/[0.08] px-4 py-3">
+                      <p className="text-[10px] uppercase tracking-[0.24em] text-primary/70">Access</p>
+                      <p className="mt-2 font-display text-lg font-semibold text-foreground">
+                        {roleLabels[user.role]}
+                      </p>
+                    </div>
+                  </>
+                ) : null}
+                {headerActions}
               </div>
             </div>
           </div>

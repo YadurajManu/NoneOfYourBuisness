@@ -486,6 +486,15 @@ export function listAdminUsers() {
   return request<Array<Record<string, unknown>>>("/admin/users", { auth: true });
 }
 
+/** Org-scoped audit feed: family access, workflow, lifecycle transitions */
+export function getAdminAuditEvents() {
+  return request<{
+    familyAccessAudits?: Array<Record<string, unknown>>;
+    workflowAudits?: Array<Record<string, unknown>>;
+    lifecycleTransitions?: Array<Record<string, unknown>>;
+  }>("/admin/audit-events", { auth: true });
+}
+
 export function createAdminUser(payload: {
   email: string;
   password: string;
