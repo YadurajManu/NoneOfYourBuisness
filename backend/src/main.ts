@@ -67,8 +67,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  const port = configService.get<number>('PORT') || 3005;
-  await app.listen(port);
-  console.log(`Backend is running on: http://localhost:${port}/api`);
+  // Railway (and most PaaS) inject PORT; bind 0.0.0.0 so the proxy can reach the process
+  const port = Number(configService.get<string | number>('PORT') ?? 3005) || 3005;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Backend is running on: http://0.0.0.0:${port}/api`);
 }
 void bootstrap();
