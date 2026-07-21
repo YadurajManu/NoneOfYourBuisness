@@ -14,6 +14,8 @@
     "start:prod": "node dist/main.js",
     "start:migrate": "prisma migrate deploy && node dist/main.js",
     "postinstall": "prisma generate",
+    "seed": "prisma db seed",
+    "seed:railway": "bash scripts/seed-railway.sh",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -91,5 +93,8 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "prisma": {
+    "seed": "ts-node --transpile-only prisma/seed.ts"
   }
 }
