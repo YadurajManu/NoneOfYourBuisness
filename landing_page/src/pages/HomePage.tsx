@@ -81,6 +81,19 @@ const features = [
 
 const pills = ["HIPAA Compliant", "HL7 FHIR R4", "SOC 2 Type II"];
 
+const ecosystemLogos = [
+  "Apollo Hospitals",
+  "Fortis Healthcare",
+  "Max Healthcare",
+  "AIIMS",
+  "Medanta",
+  "Epic",
+  "Oracle Health",
+  "HL7 FHIR",
+  "ABDM",
+  "NABH",
+];
+
 export default function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
@@ -142,16 +155,27 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* SOCIAL PROOF */}
-      <Section className="py-16 border-y border-foreground/5">
+      {/* ECOSYSTEM MARQUEE */}
+      <Section className="py-16 border-y border-foreground/5 overflow-hidden">
         <FadeUp>
           <p className="text-center text-xs font-body uppercase tracking-widest text-muted-foreground mb-8">
-            Trusted by Leading Healthcare Institutions
+            Built for workflows across the healthcare ecosystem
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-12 opacity-40">
-            {["Apollo Hospitals", "Fortis Healthcare", "Max Healthcare", "AIIMS", "Medanta"].map((name) => (
-              <span key={name} className="font-display font-semibold text-lg text-foreground">{name}</span>
-            ))}
+          <div className="relative -mx-6">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-background to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-background to-transparent" />
+            <div className="marquee-track flex w-max gap-4" aria-label="Healthcare ecosystem logos">
+              {[...ecosystemLogos, ...ecosystemLogos].map((name, index) => (
+                <div
+                  key={`${name}-${index}`}
+                  className="flex h-16 min-w-[190px] items-center justify-center rounded-2xl border border-foreground/10 bg-card/45 px-6 shadow-[0_12px_40px_rgba(0,0,0,0.18)]"
+                >
+                  <span className="font-display text-lg font-bold tracking-[-0.02em] text-foreground/55 transition-colors duration-300 hover:text-primary">
+                    {name}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </FadeUp>
       </Section>

@@ -91,6 +91,26 @@
   100% { background-position: 200% center; }
 }
 
+@keyframes marquee-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  animation: marquee-left 34s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    transform: translateX(0);
+  }
+}
+
 .btn-shimmer {
   background: linear-gradient(90deg, var(--brand-accent) 0%, var(--brand-accent) 50%, var(--brand-accent) 100%);
   background-size: 200% auto;

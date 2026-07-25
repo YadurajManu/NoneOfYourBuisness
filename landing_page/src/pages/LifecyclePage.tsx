@@ -224,7 +224,7 @@ export default function LifecyclePage() {
   };
 
   return (
-    <div className="bg-background pt-24" ref={containerRef}>
+    <div className="relative bg-background pt-24" ref={containerRef}>
       <Section className="relative pb-10 lg:pb-12">
         <motion.div
           className="absolute left-1/2 top-8 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-primary blur-3xl"
