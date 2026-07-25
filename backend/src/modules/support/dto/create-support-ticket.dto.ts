@@ -1,7 +1,4 @@
-import {
-  SupportTicketCategory,
-  SupportTicketPriority,
-} from '@prisma/client';
+import { SupportTicketCategory, SupportTicketPriority } from '@prisma/client';
 import {
   IsEnum,
   IsOptional,

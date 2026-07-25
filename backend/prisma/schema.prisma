@@ -34,6 +34,7 @@ model Organization {
   familyQuestions         FamilyQuestion[]
   supportTickets          SupportTicket[]
   directConversations     DirectConversation[]
+  aiConversations         AiConversation[]
 }
 
 model User {
@@ -83,6 +84,7 @@ model User {
   supportMessages              SupportMessage[]                @relation("SupportMessageSender")
   directConversationMemberships DirectConversationParticipant[]
   directMessagesSent           DirectMessage[]                  @relation("DirectMessageSender")
+  aiConversations              AiConversation[]                 @relation("AiConversationOwner")
   createdAt                    DateTime                        @default(now())
   updatedAt                    DateTime                        @updatedAt
 }
@@ -112,6 +114,7 @@ model Patient {
   familyQuestions         FamilyQuestion[]
   supportTickets          SupportTicket[]
   directMessages          DirectMessage[]
+  aiConversations         AiConversation[]
   createdAt               DateTime                     @default(now())
   updatedAt               DateTime                     @updatedAt
 }
@@ -921,4 +924,40 @@ enum DirectMessagePriority {
   NORMAL
   IMPORTANT
   URGENT
+}
+
+enum AiMessageRole {
+  SYSTEM
+  USER
+  ASSISTANT
+}
+
+model AiConversation {
+  id             String        @id @default(uuid())
+  organizationId String
+  userId         String
+  patientId      String?
+  authorRole     UserRole
+  title          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  user           User          @relation("AiConversationOwner", fields: [userId], references: [id])
+  patient        Patient?      @relation(fields: [patientId], references: [id])
+  messages       AiMessage[]
+
+  @@index([userId, patientId, updatedAt])
+  @@index([organizationId, updatedAt])
+}
+
+model AiMessage {
+  id             String         @id @default(uuid())
+  conversationId String
+  role           AiMessageRole
+  content        String
+  tokensUsed     Int?
+  createdAt      DateTime       @default(now())
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
 }

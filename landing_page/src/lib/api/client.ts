@@ -1,4 +1,9 @@
-import type { AuthResponse, DemoLeadInput } from "./types";
+import type {
+  AiConversationDetail,
+  AiConversationSummary,
+  AuthResponse,
+  DemoLeadInput,
+} from "./types";
 
 const rawBase = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
 const API_BASE_URL = rawBase.endsWith("/") ? rawBase.slice(0, -1) : rawBase;
@@ -940,4 +945,134 @@ export function askFamilyQuestion(patientId: string, question: string, context?:
     auth: true,
     body: JSON.stringify({ question, context }),
   });
+}
+
+// ---------------------------------------------------------------------------
+// AI Assistant
+// ---------------------------------------------------------------------------
+
+export function listAiConversations(patientId?: string) {
+  const query = patientId ? `?patientId=${encodeURIComponent(patientId)}` : "";
+  return request<AiConversationSummary[]>(`/ai/conversations${query}`, {
+    auth: true,
+  });
+}
+
+export function getAiConversation(conversationId: string) {
+  return request<AiConversationDetail>(`/ai/conversations/${conversationId}`, {
+    auth: true,
+  });
+}
+
+export interface AiChatStreamInput {
+  message: string;
+  patientId?: string | null;
+  conversationId?: string | null;
+}
+
+export interface AiChatStreamHandlers {
+  onToken: (token: string) => void;
+  onDone: (meta: { conversationId: string; patientId: string | null }) => void;
+  onError: (message: string) => void;
+  signal?: AbortSignal;
+}
+
+/**
+ * Streams a patient-grounded assistant reply token-by-token from the backend
+ * SSE endpoint. Handles a single transparent token refresh on 401.
+ */
+export async function streamAiChat(
+  input: AiChatStreamInput,
+  handlers: AiChatStreamHandlers,
+  retryOn401 = true,
+): Promise<void> {
+  const headers = new Headers({ "Content-Type": "application/json" });
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/ai/chat`, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: JSON.stringify({
+        message: input.message,
+        patientId: input.patientId ?? undefined,
+        conversationId: input.conversationId ?? undefined,
+      }),
+      signal: handlers.signal,
+    });
+  } catch {
+    handlers.onError("Could not reach the assistant service.");
+    return;
+  }
+
+  if (response.status === 401 && retryOn401) {
+    try {
+      await refreshSession();
+      return streamAiChat(input, handlers, false);
+    } catch {
+      clearAccessToken();
+      handlers.onError("Your session expired. Please sign in again.");
+      return;
+    }
+  }
+
+  if (!response.ok || !response.body) {
+    const data = await parseJsonSafe(response);
+    handlers.onError(parseMessage(data, "The assistant request failed."));
+    return;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  const handleEvent = (raw: string) => {
+    const line = raw.trim();
+    if (!line.startsWith("data:")) return;
+    const payload = line.slice(5).trim();
+    if (!payload) return;
+    try {
+      const event = JSON.parse(payload) as {
+        type: "token" | "done" | "error";
+        value?: string;
+        message?: string;
+        conversationId?: string;
+        patientId?: string | null;
+      };
+      if (event.type === "token" && event.value) {
+        handlers.onToken(event.value);
+      } else if (event.type === "done") {
+        handlers.onDone({
+          conversationId: event.conversationId ?? "",
+          patientId: event.patientId ?? null,
+        });
+      } else if (event.type === "error") {
+        handlers.onError(event.message || "The assistant hit an error.");
+      }
+    } catch {
+      // Ignore malformed frames.
+    }
+  };
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let boundary = buffer.indexOf("\n\n");
+      while (boundary !== -1) {
+        const chunk = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
+        handleEvent(chunk);
+        boundary = buffer.indexOf("\n\n");
+      }
+    }
+    if (buffer.trim()) handleEvent(buffer);
+  } catch {
+    if (!handlers.signal?.aborted) {
+      handlers.onError("The assistant connection was interrupted.");
+    }
+  }
 }

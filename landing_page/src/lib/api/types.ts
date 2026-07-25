@@ -22,6 +22,27 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export type AiMessageRole = "USER" | "ASSISTANT";
+
+export interface AiConversationSummary {
+  id: string;
+  title: string | null;
+  patientId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AiChatMessage {
+  id: string;
+  role: AiMessageRole;
+  content: string;
+  createdAt: string;
+}
+
+export interface AiConversationDetail extends AiConversationSummary {
+  messages: AiChatMessage[];
+}
+
 export interface DemoLeadInput {
   name: string;
   org: string;

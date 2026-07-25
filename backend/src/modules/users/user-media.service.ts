@@ -24,7 +24,9 @@ export class UserMediaService {
     const sharedStorageRoot = this.configService.get<string>('STORAGE_PATH');
     this.localRoot = resolve(
       this.configService.get<string>('USER_MEDIA_LOCAL_DIR') ||
-        (sharedStorageRoot ? join(sharedStorageRoot, 'user-media') : undefined) ||
+        (sharedStorageRoot
+          ? join(sharedStorageRoot, 'user-media')
+          : undefined) ||
         './data/user-media',
     );
   }

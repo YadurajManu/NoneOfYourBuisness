@@ -67,7 +67,11 @@ export class UsersController {
     @Req() req: { user: AuthenticatedUser },
     @Body() body: UpdateMyProfileDto,
   ) {
-    return this.usersService.updateMyProfile(req.user.orgId, req.user.userId, body);
+    return this.usersService.updateMyProfile(
+      req.user.orgId,
+      req.user.userId,
+      body,
+    );
   }
 
   @Post('me/avatar')
@@ -85,7 +89,11 @@ export class UsersController {
       );
     }
 
-    return this.usersService.updateMyAvatar(req.user.orgId, req.user.userId, file);
+    return this.usersService.updateMyAvatar(
+      req.user.orgId,
+      req.user.userId,
+      file,
+    );
   }
 
   @Get('me/virtual-card')

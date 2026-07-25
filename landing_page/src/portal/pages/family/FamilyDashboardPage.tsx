@@ -24,6 +24,7 @@ import {
 } from "@/lib/api/client";
 import { Panel } from "@/portal/panel";
 import { PortalShell } from "@/portal/portal-shell";
+import { AssistantPanel } from "@/portal/components/AssistantPanel";
 
 type FamilyGrant = {
   id: string;
@@ -565,6 +566,16 @@ export default function FamilyDashboardPage() {
       {notificationsQuery.isError ? <p className="mt-2 text-secondary">Unable to load notifications.</p> : null}
       {savePreferencesMutation.isError ? <p className="mt-2 text-secondary">Unable to save preferences.</p> : null}
       {uploadDocumentMutation.isError ? <p className="mt-2 text-secondary">Unable to upload family report.</p> : null}
+
+      {selectedPatientId ? (
+        <div className="mt-4">
+          <AssistantPanel
+            variant="family"
+            patientId={selectedPatientId}
+            patientName={selectedGrant?.patientName ?? null}
+          />
+        </div>
+      ) : null}
     </PortalShell>
   );
 }

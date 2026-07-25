@@ -10,6 +10,7 @@ import {
 } from "@/lib/api/client";
 import { Panel } from "@/portal/panel";
 import { PortalShell } from "@/portal/portal-shell";
+import { AssistantPanel } from "@/portal/components/AssistantPanel";
 
 function asArray<T = Record<string, unknown>>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
@@ -309,6 +310,14 @@ export default function PatientDashboardPage() {
       {timelineQuery.isError ? <p className="mt-2 text-secondary">Unable to load timeline.</p> : null}
       {documentsQuery.isError ? <p className="mt-2 text-secondary">Unable to load documents.</p> : null}
       {uploadMutation.isError ? <p className="mt-2 text-secondary">Unable to upload document.</p> : null}
+
+      <div className="mt-4">
+        <AssistantPanel
+          variant="patient"
+          patientId={patientId || null}
+          patientName={patientId ? patientName : null}
+        />
+      </div>
     </PortalShell>
   );
 }

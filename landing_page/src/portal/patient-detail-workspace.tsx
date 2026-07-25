@@ -36,6 +36,7 @@ import {
 } from "@/lib/api/client";
 import { Panel } from "@/portal/panel";
 import { PortalShell } from "@/portal/portal-shell";
+import { AssistantPanel } from "@/portal/components/AssistantPanel";
 
 export type ClinicalRoleMode = "DOCTOR" | "SPECIALIST" | "STAFF";
 
@@ -1283,6 +1284,14 @@ export function PatientDetailWorkspace({ mode }: { mode: ClinicalRoleMode }) {
           One action failed. Check values and retry.
         </div>
       ) : null}
+
+      <div className="mt-4">
+        <AssistantPanel
+          variant="clinical"
+          patientId={patientId}
+          patientName={patientName}
+        />
+      </div>
     </PortalShell>
   );
 }

@@ -189,7 +189,11 @@ export class UsersService {
     };
   }
 
-  async updateMyProfile(orgId: string, userId: string, dto: UpdateMyProfileDto) {
+  async updateMyProfile(
+    orgId: string,
+    userId: string,
+    dto: UpdateMyProfileDto,
+  ) {
     const result = await this.prisma.user.updateMany({
       where: {
         id: userId,
@@ -476,7 +480,8 @@ export class UsersService {
     return {
       ...user,
       displayName:
-        typeof user.displayName === 'string' && user.displayName.trim().length > 0
+        typeof user.displayName === 'string' &&
+        user.displayName.trim().length > 0
           ? user.displayName
           : null,
       avatarUrl: this.avatarUrl(userId, avatarPath, avatarUpdatedAt),

@@ -151,7 +151,10 @@ export class SupportService {
     const assignedToUserId =
       dto.assignedToUserId === null || dto.assignedToUserId === undefined
         ? dto.assignedToUserId
-        : await this.resolveAssignee(actor.organizationId, dto.assignedToUserId);
+        : await this.resolveAssignee(
+            actor.organizationId,
+            dto.assignedToUserId,
+          );
 
     const status = dto.status;
     await this.prisma.supportTicket.update({

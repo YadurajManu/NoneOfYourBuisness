@@ -1,7 +1,4 @@
-import {
-  SupportTicketPriority,
-  SupportTicketStatus,
-} from '@prisma/client';
+import { SupportTicketPriority, SupportTicketStatus } from '@prisma/client';
 import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 
 export class UpdateSupportTicketDto {

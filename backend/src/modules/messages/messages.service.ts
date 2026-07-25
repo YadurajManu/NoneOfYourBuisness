@@ -405,7 +405,10 @@ export class MessagesService {
     throw new ForbiddenException('Patient context is not accessible');
   }
 
-  private async resolveRecipient(organizationId: string, recipientUserId: string) {
+  private async resolveRecipient(
+    organizationId: string,
+    recipientUserId: string,
+  ) {
     const recipient = await this.prisma.user.findFirst({
       where: {
         id: recipientUserId,
@@ -465,14 +468,15 @@ export class MessagesService {
     actor: { id: string; organizationId: string },
     conversationId: string,
   ) {
-    const participant = await this.prisma.directConversationParticipant.findFirst({
-      where: {
-        conversationId,
-        userId: actor.id,
-        conversation: { organizationId: actor.organizationId },
-      },
-      select: { id: true },
-    });
+    const participant =
+      await this.prisma.directConversationParticipant.findFirst({
+        where: {
+          conversationId,
+          userId: actor.id,
+          conversation: { organizationId: actor.organizationId },
+        },
+        select: { id: true },
+      });
 
     if (!participant) {
       throw new NotFoundException('Conversation not found');

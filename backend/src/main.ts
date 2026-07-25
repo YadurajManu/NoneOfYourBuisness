@@ -68,7 +68,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   // Railway (and most PaaS) inject PORT; bind 0.0.0.0 so the proxy can reach the process
-  const port = Number(configService.get<string | number>('PORT') ?? 3005) || 3005;
+  const port =
+    Number(configService.get<string | number>('PORT') ?? 3005) || 3005;
   await app.listen(port, '0.0.0.0');
   console.log(`Backend is running on: http://0.0.0.0:${port}/api`);
 }
